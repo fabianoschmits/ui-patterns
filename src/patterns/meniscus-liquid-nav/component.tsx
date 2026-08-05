@@ -1,6 +1,6 @@
 "use client";
 
-import { useLayoutEffect, useRef, useState, type CSSProperties } from "react";
+import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
 import {
   Briefcase,
   HelpCircle,
@@ -12,274 +12,383 @@ import {
   User,
   Users,
 } from "lucide-react";
-import { AnimatePresence, motion } from "motion/react";
 import type { PatternPreviewProps } from "@/types/pattern";
 import { MenuShowcase, MENU_ACCENTS } from "@/patterns/shared/menu-showcase";
-import { cn } from "@/lib/utils";
 import "./meniscus.css";
 
 type Mode = "public" | "logged";
 
-interface MenuItem {
+interface MeniscusItem {
   id: string;
   label: string;
-  icon: React.ComponentType<{ className?: string }>;
+  Icon: React.ComponentType<{ className?: string; strokeWidth?: number }>;
 }
 
-const publicActions: MenuItem[] = [
-  { id: "home", label: "Home", icon: Home },
-  { id: "login", label: "Login", icon: LogIn },
-  { id: "about", label: "Sobre", icon: Info },
-  { id: "help", label: "Ajuda", icon: HelpCircle },
-  { id: "contact", label: "Contato", icon: Mail },
+const publicActions: MeniscusItem[] = [
+  { id: "home", label: "Home", Icon: Home },
+  { id: "login", label: "Login", Icon: LogIn },
+  { id: "about", label: "Sobre", Icon: Info },
+  { id: "help", label: "Ajuda", Icon: HelpCircle },
+  { id: "contact", label: "Contato", Icon: Mail },
 ];
 
-const loggedActions: MenuItem[] = [
-  { id: "home", label: "Home", icon: Home },
-  { id: "feed", label: "Feed", icon: Users },
-  { id: "search", label: "Buscar", icon: Search },
-  { id: "classifieds", label: "Classificados", icon: Briefcase },
-  { id: "profile", label: "Perfil", icon: User },
+const loggedActions: MeniscusItem[] = [
+  { id: "home", label: "Home", Icon: Home },
+  { id: "feed", label: "Feed", Icon: Users },
+  { id: "search", label: "Buscar", Icon: Search },
+  { id: "classifieds", label: "Classificados", Icon: Briefcase },
+  { id: "profile", label: "Perfil", Icon: User },
 ];
 
-const PILL_RISE = 16;
-const CORNER_R = 22;
-/** Clearance between the pill edge and the bar contour (outside the circle). */
-const OUTSIDE_GAP = 11;
-
-const pillSpring = {
-  type: "spring" as const,
-  stiffness: 380,
-  damping: 24,
-  mass: 0.9,
-};
-
-const riseSpring = {
-  type: "spring" as const,
-  stiffness: 300,
-  damping: 28,
-};
-
-function roundedBar(W: number, H: number, R: number) {
-  const n = (v: number) => v.toFixed(2);
-  return (
-    `M${n(R)} 0` +
-    `L${n(W - R)} 0` +
-    `A${n(R)} ${n(R)} 0 0 1 ${n(W)} ${n(R)}` +
-    `L${n(W)} ${n(H - R)}` +
-    `A${n(R)} ${n(R)} 0 0 1 ${n(W - R)} ${n(H)}` +
-    `L${n(R)} ${n(H)}` +
-    `A${n(R)} ${n(R)} 0 0 1 0 ${n(H - R)}` +
-    `L0 ${n(R)}` +
-    `A${n(R)} ${n(R)} 0 0 1 ${n(R)} 0` +
-    `Z`
-  );
+function hexToRgb(hex: string): [number, number, number] {
+  const h = hex.replace("#", "");
+  const n = parseInt(h.length === 3 ? h.replace(/./g, "$&$&") : h, 16);
+  return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
 }
 
-/**
- * Bar shape with a U cut that wraps the pill from the OUTSIDE —
- * the contour goes under the circle bottom, not through its sides.
- */
-function meniscusPath(
+function rgbString(rgb: [number, number, number]) {
+  return `${rgb[0]} ${rgb[1]} ${rgb[2]}`;
+}
+
+const clamp = (v: number, a: number, b: number) => (v < a ? a : v > b ? b : v);
+const smooth = (t: number) => t * t * (3 - 2 * t);
+const reach = (s: number, rb: number, by: number) =>
+  Math.sqrt(Math.max((s + rb) ** 2 - (s - by) ** 2, 1));
+
+function trough(
   W: number,
   H: number,
   R: number,
-  cx: number,
-  cy: number,
-  pillR: number,
+  bx: number,
+  by: number,
+  rb: number,
+  sL: number,
+  sR: number,
 ) {
+  const wing = (s: number, side: number) => {
+    const L = s + rb;
+    const half = reach(s, rb, by);
+    const sx = bx + side * half;
+    return {
+      sx,
+      tx: sx + ((bx - sx) / L) * s,
+      ty: s + ((by - s) / L) * s,
+    };
+  };
+  const A = wing(sL, -1);
+  const B = wing(sR, +1);
+  const a0 = Math.atan2(A.ty - by, A.tx - bx);
+  const a1 = Math.atan2(B.ty - by, B.tx - bx);
+  let sweep = ((a0 - a1) * 180) / Math.PI;
+  while (sweep < 0) sweep += 360;
+  const large = sweep > 180 ? 1 : 0;
   const n = (v: number) => v.toFixed(2);
-  const sr = pillR + OUTSIDE_GAP;
-  const bottom = cy + sr;
-
-  // Socket must reach the top edge so we can cut a notch into the bar.
-  if (bottom <= 8 || sr <= Math.abs(cy) + 1) {
-    return roundedBar(W, H, R);
-  }
-
-  // Intersection of the outer socket circle with the bar's top edge (y = 0).
-  const disc = sr * sr - cy * cy;
-  if (disc <= 4) {
-    // Center too low for a clean y=0 join — drop shoulders then arc under.
-    const half = sr + 6;
-    const left = Math.max(R + 4, cx - half);
-    const right = Math.min(W - R - 4, cx + half);
-    const deep = Math.min(bottom, H - 12);
-    return (
-      `M${n(R)} 0` +
-      `L${n(left)} 0` +
-      `C${n(left + 10)} 0 ${n(cx - sr * 0.9)} ${n(deep * 0.55)} ${n(cx)} ${n(deep)}` +
-      `C${n(cx + sr * 0.9)} ${n(deep * 0.55)} ${n(right - 10)} 0 ${n(right)} 0` +
-      `L${n(W - R)} 0` +
-      `A${n(R)} ${n(R)} 0 0 1 ${n(W)} ${n(R)}` +
-      `L${n(W)} ${n(H - R)}` +
-      `A${n(R)} ${n(R)} 0 0 1 ${n(W - R)} ${n(H)}` +
-      `L${n(R)} ${n(H)}` +
-      `A${n(R)} ${n(R)} 0 0 1 0 ${n(H - R)}` +
-      `L0 ${n(R)}` +
-      `A${n(R)} ${n(R)} 0 0 1 ${n(R)} 0` +
-      `Z`
-    );
-  }
-
-  const spread = Math.sqrt(disc);
-  const left = Math.max(R + 2, cx - spread);
-  const right = Math.min(W - R - 2, cx + spread);
-
-  // Circular arc on the OUTSIDE of the pill, through the bottom (y-down SVG).
-  // large-arc=1 + sweep=1 walks the long way under the circle.
   return (
-    `M${n(R)} 0` +
-    `L${n(left)} 0` +
-    `A${n(sr)} ${n(sr)} 0 1 1 ${n(right)} 0` +
+    `M0 ${n(R)}` +
+    `A${n(R)} ${n(R)} 0 0 1 ${n(R)} 0` +
+    `L${n(clamp(A.sx, R, W - R))} 0` +
+    `A${n(sL)} ${n(sL)} 0 0 1 ${n(A.tx)} ${n(A.ty)}` +
+    `A${n(rb)} ${n(rb)} 0 ${large} 0 ${n(B.tx)} ${n(B.ty)}` +
+    `A${n(sR)} ${n(sR)} 0 0 1 ${n(clamp(B.sx, R, W - R))} 0` +
     `L${n(W - R)} 0` +
     `A${n(R)} ${n(R)} 0 0 1 ${n(W)} ${n(R)}` +
     `L${n(W)} ${n(H - R)}` +
     `A${n(R)} ${n(R)} 0 0 1 ${n(W - R)} ${n(H)}` +
     `L${n(R)} ${n(H)}` +
     `A${n(R)} ${n(R)} 0 0 1 0 ${n(H - R)}` +
-    `L0 ${n(R)}` +
-    `A${n(R)} ${n(R)} 0 0 1 ${n(R)} 0` +
     `Z`
   );
 }
 
 export default function MeniscusLiquidNav(_props: PatternPreviewProps) {
-  const [mode, setMode] = useState<Mode>("logged");
-  const [active, setActive] = useState("home");
-  const [accent, setAccent] = useState(MENU_ACCENTS[0].value);
-  const [shaped, setShaped] = useState(false);
+  const uid = useId().replace(/:/g, "");
+  const rootRef = useRef<HTMLDivElement>(null);
+  const dockRef = useRef<HTMLDivElement>(null);
+  const fillRef = useRef<SVGPathElement>(null);
+  const beadRef = useRef<HTMLSpanElement>(null);
+  const tabRefs = useRef<(HTMLButtonElement | null)[]>([]);
+  const currentRef = useRef(0);
+  const actionsRef = useRef(loggedActions);
 
-  const surfaceRef = useRef<HTMLDivElement>(null);
-  const pathRef = useRef<SVGPathElement>(null);
-  const svgRef = useRef<SVGSVGElement>(null);
-  const itemRefs = useRef<(HTMLButtonElement | null)[]>([]);
-  const boxRef = useRef({ w: 400, h: 68 });
-  const pillRef = useRef({ cx: 0, cy: 0, r: 22 });
-  const rafRef = useRef(0);
-  const trackingRef = useRef(false);
+  const [mode, setMode] = useState<Mode>("logged");
+  const [current, setCurrent] = useState(0);
+  const [ready, setReady] = useState(false);
+  const [box, setBox] = useState({ w: 400, h: 80 });
+  const [accent, setAccent] = useState(MENU_ACCENTS[0].value);
 
   const actions = mode === "logged" ? loggedActions : publicActions;
-  const activeLabel = actions.find((a) => a.id === active)?.label ?? "Home";
-  const activeIndex = Math.max(0, actions.findIndex((a) => a.id === active));
+  actionsRef.current = actions;
+  const accentRgb = useMemo(() => hexToRgb(accent), [accent]);
+  const active = actions[current] ?? actions[0];
 
-  const paintFromPill = (pill: { cx: number; cy: number; r: number }) => {
-    const { w, h } = boxRef.current;
-    if (!pathRef.current || w < 40) return;
-    pathRef.current.setAttribute(
-      "d",
-      meniscusPath(w, h, CORNER_R, pill.cx, pill.cy, pill.r),
-    );
-  };
+  const physics = useRef({
+    x: 0,
+    v: 0,
+    target: 0,
+    dragging: false,
+    moved: false,
+    slots: [] as number[],
+    span: 80,
+    W: 0,
+    H: 0,
+    R: 17,
+    D: 56,
+    RB: 35,
+    S: 17,
+    CY: 0,
+    raf: 0,
+    last: 0,
+  });
 
-  const readBox = () => {
-    const surface = surfaceRef.current;
-    if (!surface) return false;
-    const br = surface.getBoundingClientRect();
-    const w = Math.round(br.width);
-    const h = Math.round(br.height);
-    if (w < 40 || h < 30) return false;
-    boxRef.current = { w, h };
-    svgRef.current?.setAttribute("viewBox", `0 0 ${w} ${h}`);
-    return true;
-  };
+  currentRef.current = current;
 
-  /** Live geometry of the active pill relative to the bar surface. */
-  const readPill = () => {
-    const surface = surfaceRef.current;
-    if (!surface) return null;
-    const br = surface.getBoundingClientRect();
+  const paint = useCallback(() => {
+    const G = physics.current;
+    const fill = fillRef.current;
+    const bead = beadRef.current;
+    const root = rootRef.current;
+    if (!fill || !bead || !root || G.W < 40) return;
 
-    const live = surface.parentElement?.querySelector(
-      ".qam-active-pill",
-    ) as HTMLElement | null;
-    if (live) {
-      const pr = live.getBoundingClientRect();
-      if (pr.width > 8) {
-        return {
-          cx: pr.left - br.left + pr.width / 2,
-          cy: pr.top - br.top + pr.height / 2,
-          r: pr.width / 2,
-        };
-      }
-    }
+    const q = clamp(G.v / 1100, -1, 1) * (G.dragging ? 0.5 : 1);
+    const mag = Math.abs(q);
+    const sL = clamp(G.S * (1 + 0.06 * mag + 0.4 * q), G.S * 0.55, G.S * 2.1);
+    const sR = clamp(G.S * (1 + 0.06 * mag - 0.4 * q), G.S * 0.55, G.S * 2.1);
 
-    const btn = itemRefs.current[activeIndex];
-    const wrap = btn?.querySelector(".qam-icon-wrap") as HTMLElement | null;
-    if (!wrap) return null;
-    const wr = wrap.getBoundingClientRect();
-    return {
-      cx: wr.left - br.left + wr.width / 2,
-      cy: wr.top - br.top + wr.height / 2,
-      r: wr.width / 2,
-    };
-  };
+    fill.setAttribute("d", trough(G.W, G.H, G.R, G.x, G.CY, G.RB, sL, sR));
 
-  const stopTracking = () => {
-    trackingRef.current = false;
-    if (rafRef.current) {
-      cancelAnimationFrame(rafRef.current);
-      rafRef.current = 0;
-    }
-  };
+    const sx = 1 + 0.07 * mag;
+    bead.style.transform = `translate3d(${G.x.toFixed(2)}px,0,0) scale(${sx.toFixed(3)},${(1 / sx).toFixed(3)})`;
 
-  /** Keep the contour locked to the pill (including during layoutId travel). */
-  const trackPill = (frames = 90) => {
-    stopTracking();
-    trackingRef.current = true;
-    let left = frames;
-
-    const tick = () => {
-      if (!trackingRef.current) return;
-      if (!readBox()) {
-        rafRef.current = requestAnimationFrame(tick);
-        return;
-      }
-      const pill = readPill();
-      if (pill) {
-        pillRef.current = pill;
-        paintFromPill(pill);
-        setShaped(true);
-      }
-      left -= 1;
-      if (left > 0) {
-        rafRef.current = requestAnimationFrame(tick);
-      } else {
-        trackingRef.current = false;
-        rafRef.current = 0;
-      }
-    };
-
-    rafRef.current = requestAnimationFrame(tick);
-  };
-
-  useLayoutEffect(() => {
-    trackPill(activeIndex === 0 && !shaped ? 12 : 75);
-    return stopTracking;
-  }, [activeIndex, mode]);
-
-  useLayoutEffect(() => {
-    const surface = surfaceRef.current;
-    if (!surface) return;
-    const ro = new ResizeObserver(() => {
-      if (!readBox()) return;
-      const pill = readPill();
-      if (!pill) return;
-      pillRef.current = pill;
-      paintFromPill(pill);
-      setShaped(true);
+    tabRefs.current.forEach((tab, i) => {
+      if (!tab) return;
+      const dx = Math.abs(G.x - (G.slots[i] ?? 0));
+      tab.style.setProperty("--t", smooth(clamp(1 - dx / (G.span * 0.55), 0, 1)).toFixed(3));
     });
-    ro.observe(surface);
-    return () => ro.disconnect();
-  }, [mode, activeIndex]);
+
+    root.style.setProperty("--glow-rgb", rgbString(accentRgb));
+  }, [accentRgb]);
+
+  const run = useCallback(() => {
+    const G = physics.current;
+    if (G.raf) return;
+    G.last = performance.now();
+    const loop = (now: number) => {
+      G.raf = 0;
+      const dt = Math.min((now - G.last) / 1000, 1 / 30);
+      G.last = now;
+      const K = G.dragging ? 900 : 142;
+      const C = G.dragging ? 52 : 19.3;
+      let step = dt;
+      while (step > 0) {
+        const h = Math.min(step, 1 / 240);
+        G.v += (-K * (G.x - G.target) - C * G.v) * h;
+        G.x += G.v * h;
+        step -= h;
+      }
+      paint();
+      if (Math.abs(G.x - G.target) > 0.05 || Math.abs(G.v) > 0.6 || G.dragging) {
+        G.raf = requestAnimationFrame(loop);
+      } else {
+        G.x = G.target;
+        G.v = 0;
+        paint();
+      }
+    };
+    G.raf = requestAnimationFrame(loop);
+  }, [paint]);
+
+  const measure = useCallback(() => {
+    const dock = dockRef.current;
+    if (!dock) return false;
+    const r = dock.getBoundingClientRect();
+    const W = Math.round(r.width);
+    const H = Math.round(r.height);
+    if (W < 40 || H < 30) return false;
+
+    const G = physics.current;
+    const count = actionsRef.current.length;
+    G.slots = Array.from({ length: count }, (_, i) => {
+      const tab = tabRefs.current[i];
+      if (!tab) return 0;
+      const b = tab.getBoundingClientRect();
+      return b.left - r.left + b.width / 2;
+    });
+    G.span = G.slots.length > 1 ? G.slots[1] - G.slots[0] : W;
+    G.W = W;
+    G.H = H;
+    G.R = clamp(H * 0.2, 13, 20);
+    G.CY = 0;
+
+    let D = Math.min(H * 0.68, G.span * 0.78);
+    const room = (G.slots[0] ?? W / 2) - G.R - 6;
+    for (let i = 0; i < 3; i++) {
+      const hw = reach(D * 0.22, D / 2 + 6, G.CY);
+      if (hw <= room) break;
+      D *= room / hw;
+    }
+    G.D = Math.max(Math.round(D), 30);
+    G.S = G.D * 0.22;
+    G.RB = G.D / 2 + 6;
+
+    dock.style.setProperty("--dock-r", `${G.R.toFixed(1)}px`);
+    dock.style.setProperty("--bead-d", `${G.D}px`);
+    dock.style.setProperty("--bead-cy", `${G.CY}px`);
+    dock.style.setProperty("--rise", `${(H / 2 - G.CY).toFixed(1)}px`);
+    setBox({ w: W, h: H });
+    return true;
+  }, []);
+
+  const select = useCallback(
+    (i: number, { focus = false, animate = true } = {}) => {
+      const len = actionsRef.current.length;
+      const next = ((i % len) + len) % len;
+      currentRef.current = next;
+      setCurrent(next);
+      const G = physics.current;
+      if (!G.slots.length || G.slots[next] == null) return;
+      const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      if (!animate || reduced) {
+        G.x = G.target = G.slots[next];
+        G.v = 0;
+        paint();
+      } else {
+        G.target = G.slots[next];
+        run();
+      }
+      if (focus) tabRefs.current[next]?.focus();
+    },
+    [paint, run],
+  );
+
+  // Measure on mount / resize — never reset on tab change (that killed click animation).
+  useEffect(() => {
+    const sync = (forceSnap: boolean) => {
+      if (!measure()) return;
+      const G = physics.current;
+      const slot = G.slots[currentRef.current] ?? G.slots[0] ?? 0;
+      if (forceSnap) {
+        G.x = G.target = slot;
+        G.v = 0;
+        paint();
+      } else {
+        G.target = slot;
+        if (!G.dragging) run();
+        else paint();
+      }
+      setReady(true);
+    };
+
+    sync(true);
+    const ro = new ResizeObserver(() => sync(false));
+    if (dockRef.current) ro.observe(dockRef.current);
+    return () => {
+      ro.disconnect();
+      cancelAnimationFrame(physics.current.raf);
+      physics.current.raf = 0;
+    };
+  }, [measure, paint, run, mode]);
+
+  useEffect(() => {
+    paint();
+  }, [accent, paint]);
+
+  // Drag only after a movement threshold so clicks reach the tab buttons.
+  useEffect(() => {
+    const dock = dockRef.current;
+    if (!dock) return;
+
+    let pid: number | null = null;
+    let startX = 0;
+    let capturing = false;
+
+    const onDown = (e: PointerEvent) => {
+      if (e.button !== 0 && e.pointerType === "mouse") return;
+      pid = e.pointerId;
+      startX = e.clientX;
+      capturing = false;
+      physics.current.dragging = false;
+      physics.current.moved = false;
+    };
+
+    const onMove = (e: PointerEvent) => {
+      if (pid !== e.pointerId) return;
+      if (!capturing) {
+        if (Math.abs(e.clientX - startX) < 8) return;
+        capturing = true;
+        physics.current.dragging = true;
+        physics.current.moved = true;
+        dock.setPointerCapture(e.pointerId);
+      }
+      const r = dock.getBoundingClientRect();
+      const G = physics.current;
+      if (!G.slots.length) return;
+      G.target = clamp(e.clientX - r.left, G.slots[0], G.slots[G.slots.length - 1]);
+      run();
+    };
+
+    const onUp = (e: PointerEvent) => {
+      if (pid !== e.pointerId) return;
+      pid = null;
+      const G = physics.current;
+      const wasDrag = G.moved;
+      G.dragging = false;
+      G.moved = false;
+
+      if (!wasDrag) return;
+
+      let near = 0;
+      let nd = Infinity;
+      G.slots.forEach((s, i) => {
+        const d = Math.abs(G.x - s);
+        if (d < nd) {
+          nd = d;
+          near = i;
+        }
+      });
+      select(near, { animate: true });
+
+      const block = (ev: Event) => {
+        ev.preventDefault();
+        ev.stopPropagation();
+        dock.removeEventListener("click", block, true);
+      };
+      dock.addEventListener("click", block, true);
+    };
+
+    dock.addEventListener("pointerdown", onDown);
+    dock.addEventListener("pointermove", onMove);
+    dock.addEventListener("pointerup", onUp);
+    dock.addEventListener("pointercancel", onUp);
+    return () => {
+      dock.removeEventListener("pointerdown", onDown);
+      dock.removeEventListener("pointermove", onMove);
+      dock.removeEventListener("pointerup", onUp);
+      dock.removeEventListener("pointercancel", onUp);
+    };
+  }, [run, select, mode]);
+
+  const onKeyDown = (e: React.KeyboardEvent) => {
+    const step = ({ ArrowRight: 1, ArrowDown: 1, ArrowLeft: -1, ArrowUp: -1 } as Record<string, number>)[e.key];
+    let next: number | null = null;
+    if (step) next = current + step;
+    else if (e.key === "Home") next = 0;
+    else if (e.key === "End") next = actions.length - 1;
+    if (next === null) return;
+    e.preventDefault();
+    select(next, { focus: true });
+  };
+
+  const onTabClick = (index: number) => (e: React.MouseEvent) => {
+    e.preventDefault();
+    select(index, { animate: true });
+  };
 
   return (
     <MenuShowcase
       className="meniscus-show"
-      style={{ "--qam-accent": accent } as CSSProperties}
       eyebrow="Meniscus"
-      title={activeLabel}
-      description="Toque uma aba — a pill sobe com o ícone."
+      title={active.label}
+      description="Toque uma aba — a gota arrasta o menisco atrás dela."
       accent={accent}
       onAccentChange={setAccent}
       modes={[
@@ -289,78 +398,72 @@ export default function MeniscusLiquidNav(_props: PatternPreviewProps) {
       mode={mode}
       onModeChange={(id) => {
         setMode(id as Mode);
-        setActive("home");
-        setShaped(false);
+        setCurrent(0);
+        currentRef.current = 0;
+        setReady(false);
       }}
     >
-      <nav className={cn("qam-bar", "meniscus-bar", shaped && "is-shaped")} aria-label="Meniscus">
-        <div className="meniscus-surface" ref={surfaceRef}>
-          <div className="qam-bar-bg meniscus-bar-flat" aria-hidden="true" />
+      <div
+        className="meniscus"
+        ref={rootRef}
+        style={{ ["--glow-rgb" as string]: rgbString(accentRgb) }}
+      >
+        <div className={`meniscus-dock${ready ? " is-ready" : ""}`} ref={dockRef}>
+          <span className="meniscus-cast" aria-hidden="true" />
           <svg
-            ref={svgRef}
-            className="meniscus-bar-skin"
-            viewBox="0 0 400 68"
+            className="meniscus-skin"
+            viewBox={`0 0 ${box.w} ${box.h}`}
             preserveAspectRatio="none"
             aria-hidden="true"
           >
-            <path ref={pathRef} className="meniscus-bar-fill" d="" />
+            <defs>
+              <linearGradient id={`mnPlate-${uid}`} x1="0" y1="0" x2="0" y2="1">
+                <stop className="meniscus-plate-hi" offset="0" />
+                <stop className="meniscus-plate-lo" offset="1" />
+              </linearGradient>
+              <linearGradient id={`mnRim-${uid}`} x1="0" y1="0" x2="0" y2="1">
+                <stop className="meniscus-rim-hi" offset="0" />
+                <stop className="meniscus-rim-lo" offset="1" />
+              </linearGradient>
+            </defs>
+            <path
+              ref={fillRef}
+              className="meniscus-fill"
+              style={{ fill: `url(#mnPlate-${uid})`, stroke: `url(#mnRim-${uid})` }}
+              d=""
+            />
           </svg>
-        </div>
-
-        <div className="qam-items" key={mode}>
-          {actions.map((action, index) => {
-            const Icon = action.icon;
-            const isActive = active === action.id;
-
-            return (
-              <button
-                key={action.id}
-                ref={(el) => {
-                  itemRefs.current[index] = el;
-                }}
-                type="button"
-                className="qam-item"
-                aria-label={action.label}
-                aria-current={isActive ? "page" : undefined}
-                onClick={() => setActive(action.id)}
-              >
-                <div className="qam-icon-slot">
-                  <motion.div
-                    className="qam-icon-wrap"
-                    animate={{ y: isActive ? -PILL_RISE : 0 }}
-                    transition={riseSpring}
-                    onAnimationComplete={() => {
-                      if (isActive) trackPill(20);
-                    }}
-                  >
-                    <AnimatePresence initial={false}>
-                      {isActive && (
-                        <motion.span
-                          layoutId="meniscus-active-pill"
-                          className="qam-active-pill"
-                          initial={{ opacity: 0, scaleX: 1.45, scaleY: 0.55 }}
-                          animate={{ opacity: 1, scaleX: 1, scaleY: 1 }}
-                          exit={{ opacity: 0, scaleX: 0.55, scaleY: 1.4 }}
-                          transition={pillSpring}
-                        />
-                      )}
-                    </AnimatePresence>
-                    <Icon className={cn("qam-icon", isActive && "is-active")} />
-                  </motion.div>
-                </div>
-
-                <motion.span
-                  className={cn("qam-label", isActive && "is-active")}
-                  animate={{ scale: isActive ? 1.04 : 1 }}
-                  transition={{ type: "spring", stiffness: 280, damping: 28 }}
+          <span className="meniscus-bead" ref={beadRef} aria-hidden="true" />
+          <div
+            className="meniscus-tabs"
+            role="tablist"
+            aria-label="Navegação Meniscus"
+            onKeyDown={onKeyDown}
+          >
+            {actions.map((tab, i) => {
+              const Icon = tab.Icon;
+              return (
+                <button
+                  key={`${mode}-${tab.id}`}
+                  ref={(el) => {
+                    tabRefs.current[i] = el;
+                  }}
+                  type="button"
+                  role="tab"
+                  className="meniscus-tab"
+                  aria-label={tab.label}
+                  aria-selected={current === i}
+                  tabIndex={current === i ? 0 : -1}
+                  onClick={onTabClick(i)}
                 >
-                  {action.label}
-                </motion.span>
-              </button>
-            );
-          })}
+                  <Icon className="meniscus-icon" strokeWidth={1.8} />
+                  <span className="meniscus-label">{tab.label}</span>
+                </button>
+              );
+            })}
+          </div>
         </div>
-      </nav>
+      </div>
     </MenuShowcase>
   );
 }
