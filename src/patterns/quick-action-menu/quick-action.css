@@ -1,0 +1,237 @@
+.qam-show {
+  --qam-ink: var(--ink);
+  --qam-muted: var(--muted);
+  --qam-faint: color-mix(in srgb, var(--muted) 78%, transparent);
+  --qam-chip-border: var(--line);
+  --qam-chip-bg: color-mix(in srgb, var(--canvas) 70%, transparent);
+  --qam-bar-bg: color-mix(in srgb, var(--canvas) 92%, transparent);
+  --qam-bar-border: var(--line);
+  --qam-bar-shadow: 0 18px 50px color-mix(in srgb, var(--ink) 12%, transparent);
+  --qam-label-on: var(--ink);
+  --qam-accent: #00b0b0;
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 100%;
+  min-height: 100%;
+  background: transparent !important;
+  color: var(--qam-ink);
+  border-radius: 0 !important;
+  box-shadow: none !important;
+}
+
+html[data-theme="dark"] .qam-show {
+  --qam-bar-bg: color-mix(in srgb, var(--canvas-deep) 88%, transparent);
+  --qam-bar-shadow: 0 18px 50px rgb(0 0 0 / 0.35);
+}
+
+.qam-show-body {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  width: 100%;
+  height: 100%;
+  min-height: 100%;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem 1rem 5.5rem;
+}
+
+.qam-show-head {
+  display: flex;
+  width: 100%;
+  max-width: 420px;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.qam-show-head > span {
+  color: var(--qam-muted);
+  font-size: 0.68rem;
+  font-weight: 650;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.qam-show-head h2 {
+  margin: 0.7rem 0 0.4rem;
+  font-family: var(--font-editorial);
+  font-size: clamp(2.4rem, 8vw, 3.6rem);
+  letter-spacing: -0.04em;
+  line-height: 0.95;
+  color: var(--qam-ink);
+}
+
+.qam-show-head p {
+  margin: 0;
+  color: var(--qam-muted);
+  font-size: 0.88rem;
+}
+
+.qam-mode {
+  display: inline-flex;
+  gap: 0.2rem;
+  margin-top: 1.25rem;
+  border: 1px solid var(--qam-chip-border);
+  border-radius: 999px;
+  padding: 0.2rem;
+  background: var(--qam-chip-bg);
+  backdrop-filter: blur(10px);
+}
+
+.qam-mode button {
+  border-radius: 999px;
+  background: transparent;
+  padding: 0.35rem 0.75rem;
+  color: var(--qam-muted);
+  font-size: 0.7rem;
+  font-weight: 650;
+}
+
+.qam-mode button.active {
+  background: var(--qam-accent);
+  color: #fff;
+}
+
+.qam-show-head .qam-bar {
+  width: 100%;
+  margin-top: 1.35rem;
+}
+
+.qam-swatches {
+  position: absolute;
+  bottom: 4.5rem;
+  left: 50%;
+  z-index: 2;
+  display: flex;
+  width: calc(100% - 2rem);
+  max-width: 420px;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.45rem;
+  transform: translateX(-50%);
+}
+
+.qam-swatch {
+  width: 1.35rem;
+  height: 1.35rem;
+  border-radius: 50%;
+  border: 2px solid color-mix(in srgb, var(--canvas) 55%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--ink) 12%, transparent);
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+}
+
+.qam-swatch:hover {
+  transform: scale(1.08);
+}
+
+.qam-swatch.is-selected {
+  box-shadow:
+    inset 0 0 0 1px color-mix(in srgb, var(--ink) 12%, transparent),
+    0 0 0 2px var(--canvas),
+    0 0 0 3.5px var(--qam-accent);
+}
+
+.qam-bar {
+  position: relative;
+  width: 100%;
+  overflow: visible;
+  padding-bottom: 0.35rem;
+}
+
+.qam-bar-bg {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  border: 1px solid var(--qam-bar-border);
+  border-radius: 22px;
+  background: var(--qam-bar-bg);
+  box-shadow: var(--qam-bar-shadow);
+  backdrop-filter: blur(12px);
+}
+
+.qam-items {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  width: 100%;
+  height: 4.25rem;
+  align-items: center;
+  justify-content: space-around;
+  padding: 0 0.35rem;
+}
+
+.qam-item {
+  display: flex;
+  flex: 1;
+  height: 100%;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.15rem;
+  background: transparent;
+  color: var(--qam-faint);
+}
+
+.qam-item:active {
+  transform: scale(0.92);
+}
+
+.qam-icon-slot {
+  position: relative;
+  display: grid;
+  width: 3rem;
+  height: 2.5rem;
+  place-items: center;
+}
+
+.qam-icon-wrap {
+  position: relative;
+  display: grid;
+  width: 2.75rem;
+  height: 2.75rem;
+  place-items: center;
+}
+
+.qam-active-pill {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  border-radius: 50%;
+  background: var(--qam-accent);
+  box-shadow: 0 10px 22px color-mix(in srgb, var(--qam-accent) 35%, transparent);
+}
+
+html[data-theme="dark"] .qam-active-pill {
+  box-shadow: 0 10px 28px color-mix(in srgb, var(--qam-accent) 45%, transparent);
+}
+
+.qam-icon {
+  position: relative;
+  z-index: 2;
+  width: 1.25rem;
+  height: 1.25rem;
+  stroke-width: 1.8;
+}
+
+.qam-icon.is-active {
+  width: 1.4rem;
+  height: 1.4rem;
+  color: #fff;
+  stroke-width: 2.4;
+}
+
+.qam-label {
+  font-size: 0.58rem;
+  font-weight: 550;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.qam-label.is-active {
+  color: var(--qam-label-on);
+  font-weight: 700;
+}

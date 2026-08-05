@@ -1,0 +1,201 @@
+.esb-demo {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  display: grid;
+  place-items: center;
+  background:
+    radial-gradient(ellipse 60% 50% at 30% 40%, rgb(90 120 110 / 0.22), transparent 70%),
+    linear-gradient(160deg, #1a1b20, #121318 55%, #18191e);
+  color: #1c1d22;
+  font-family: var(--font-ui), system-ui, sans-serif;
+}
+
+.esb-app {
+  display: flex;
+  width: min(92%, 520px);
+  height: min(88%, 360px);
+  overflow: hidden;
+  border-radius: 18px;
+  background: #f4f3f0;
+  box-shadow: 0 28px 60px rgb(0 0 0 / 0.35), 0 0 0 1px rgb(255 255 255 / 0.06);
+}
+
+.esb-side {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  flex-shrink: 0;
+  padding: 0.85rem 0.55rem;
+  background: #ebe9e4;
+  border-right: 1px solid rgb(28 29 34 / 0.08);
+  overflow: hidden;
+}
+
+.esb-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  height: 32px;
+  padding: 0 0.35rem;
+  color: #2f6f5e;
+  font-size: 0.72rem;
+  font-weight: 750;
+  white-space: nowrap;
+}
+
+.esb-brand span {
+  overflow: hidden;
+}
+
+.esb-toggle {
+  position: absolute;
+  top: 2.6rem;
+  right: -11px;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border: 1px solid rgb(28 29 34 / 0.12);
+  border-radius: 50%;
+  background: #f4f3f0;
+  color: #5c5e68;
+  cursor: pointer;
+}
+
+.esb-nav {
+  display: grid;
+  gap: 0.2rem;
+  margin-top: 0.85rem;
+}
+
+.esb-item {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  height: 34px;
+  padding: 0 0.55rem;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: #6a6d78;
+  font-size: 0.65rem;
+  white-space: nowrap;
+  cursor: pointer;
+  overflow: hidden;
+}
+
+.esb-item svg { flex-shrink: 0; }
+.esb-item.is-active { color: #2f6f5e; font-weight: 650; }
+.esb-pill {
+  position: absolute;
+  inset: 0;
+  border-radius: 10px;
+  background: color-mix(in srgb, #2f6f5e 14%, transparent);
+}
+.esb-badge {
+  margin-left: auto;
+  display: grid;
+  place-items: center;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  border-radius: 99px;
+  background: #2f6f5e;
+  color: #fff;
+  font-size: 0.48rem;
+  font-weight: 700;
+}
+
+.esb-user {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  margin-top: auto;
+  padding: 0.65rem 0.35rem 0;
+  border-top: 1px solid rgb(28 29 34 / 0.1);
+  overflow: hidden;
+  white-space: nowrap;
+}
+.esb-avatar {
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: #c8c1e5;
+  color: #403276;
+  font-size: 0.5rem;
+  font-weight: 700;
+}
+.esb-user b { display: block; font-size: 0.55rem; }
+.esb-user small { color: #8a8d98; font-size: 0.45rem; }
+
+.esb-main {
+  flex: 1;
+  min-width: 0;
+  padding: 1.1rem 1.15rem;
+}
+.esb-main-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: #8a8d98;
+  font-size: 0.48rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.esb-dot {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  margin-right: 0.35rem;
+  border-radius: 50%;
+  background: #69a87d;
+}
+.esb-main h3 {
+  margin: 1.2rem 0 0.15rem;
+  font-family: var(--font-editorial), Georgia, serif;
+  font-size: clamp(1.15rem, 3.5vw, 1.55rem);
+  font-weight: 520;
+  letter-spacing: -0.04em;
+}
+.esb-main > p { margin: 0 0 1rem; color: #7a7d88; font-size: 0.58rem; }
+.esb-stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem;
+}
+.esb-stat {
+  position: relative;
+  overflow: hidden;
+  min-height: 72px;
+  padding: 0.6rem;
+  border-radius: 12px;
+  border: 1px solid rgb(28 29 34 / 0.08);
+  background: #fff;
+}
+.esb-stat small { display: block; color: #8a8d98; font-size: 0.48rem; }
+.esb-stat b { display: block; margin-top: 0.25rem; font-size: 1.1rem; }
+.esb-stat i {
+  position: absolute;
+  right: -12px;
+  bottom: -20px;
+  width: 56px;
+  height: 56px;
+  border: 8px solid color-mix(in srgb, #2f6f5e 18%, transparent);
+  border-radius: 50%;
+}
+.esb-lines { display: grid; gap: 0.4rem; margin-top: 0.85rem; }
+.esb-lines i {
+  height: 7px;
+  border-radius: 3px;
+  background: rgb(28 29 34 / 0.07);
+}
+.esb-lines i:nth-child(2) { width: 78%; }
+.esb-lines i:nth-child(3) { width: 55%; }

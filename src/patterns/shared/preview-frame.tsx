@@ -9,7 +9,7 @@ interface PreviewFrameProps extends PatternPreviewProps {
   className?: string;
 }
 
-export function PreviewFrame({ children, className, compact, theme = "light", accent = "#6e59d9", radius = 12, shadow = 35, speed = 1, density = 1 }: PreviewFrameProps) {
+export function PreviewFrame({ children, className, compact, theme = "light", accent = "#2f6f5e", radius = 12, shadow = 35, speed = 1, density = 1 }: PreviewFrameProps) {
   const style = {
     "--demo-accent": accent,
     "--demo-radius": radius + "px",
