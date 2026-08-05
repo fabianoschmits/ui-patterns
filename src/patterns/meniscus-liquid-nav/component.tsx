@@ -21,6 +21,7 @@ import "./meniscus.css";
 
 type Mode = "public" | "logged";
 type Orientation = "horizontal" | "vertical";
+type Side = "left" | "right";
 
 interface MeniscusItem {
   id: string;
@@ -146,6 +147,48 @@ function troughLeft(
   return out;
 }
 
+/** Right-edge meniscus: mirror of the left trough across the dock width. */
+function troughRight(
+  W: number,
+  H: number,
+  R: number,
+  by: number,
+  bxFromRight: number,
+  rb: number,
+  sT: number,
+  sB: number,
+) {
+  const left = troughLeft(W, H, R, by, bxFromRight, rb, sT, sB);
+  const tokens = left.match(/[MLAZ]|-?\d*\.?\d+(?:e[-+]?\d+)?/gi) ?? [];
+  let i = 0;
+  let out = "";
+  while (i < tokens.length) {
+    const cmd = tokens[i++];
+    if (cmd === "Z" || cmd === "z") {
+      out += "Z";
+      continue;
+    }
+    if (cmd === "M" || cmd === "L") {
+      const x = Number(tokens[i++]);
+      const y = Number(tokens[i++]);
+      out += `${cmd}${(W - x).toFixed(2)} ${y.toFixed(2)}`;
+      continue;
+    }
+    if (cmd === "A") {
+      const rx = Number(tokens[i++]);
+      const ry = Number(tokens[i++]);
+      const rot = tokens[i++];
+      const large = tokens[i++];
+      const sweep = tokens[i++];
+      const x = Number(tokens[i++]);
+      const y = Number(tokens[i++]);
+      const sweepFlip = sweep === "1" ? "0" : "1";
+      out += `A${rx.toFixed(2)} ${ry.toFixed(2)} ${rot} ${large} ${sweepFlip} ${(W - x).toFixed(2)} ${y.toFixed(2)}`;
+    }
+  }
+  return out;
+}
+
 export default function MeniscusLiquidNav(_props: PatternPreviewProps) {
   const uid = useId().replace(/:/g, "");
   const rootRef = useRef<HTMLDivElement>(null);
@@ -157,9 +200,11 @@ export default function MeniscusLiquidNav(_props: PatternPreviewProps) {
   const currentRef = useRef(0);
   const actionsRef = useRef(loggedActions);
   const orientationRef = useRef<Orientation>("horizontal");
+  const sideRef = useRef<Side>("left");
 
   const [mode, setMode] = useState<Mode>("logged");
   const [orientation, setOrientation] = useState<Orientation>("horizontal");
+  const [side, setSide] = useState<Side>("left");
   const [expanded, setExpanded] = useState(true);
   const [current, setCurrent] = useState(0);
   const [ready, setReady] = useState(false);
@@ -169,8 +214,10 @@ export default function MeniscusLiquidNav(_props: PatternPreviewProps) {
   const actions = mode === "logged" ? loggedActions : publicActions;
   actionsRef.current = actions;
   orientationRef.current = orientation;
+  sideRef.current = side;
   const isVertical = orientation === "vertical";
   const isCollapsed = isVertical && !expanded;
+  const isRight = isVertical && side === "right";
   const accentRgb = useMemo(() => hexToRgb(accent), [accent]);
   const active = actions[current] ?? actions[0];
 
@@ -204,13 +251,21 @@ export default function MeniscusLiquidNav(_props: PatternPreviewProps) {
     if (!fill || !bead || !root || G.W < 40) return;
 
     const vertical = orientationRef.current === "vertical";
+    const onRight = vertical && sideRef.current === "right";
     const q = clamp(G.v / 1100, -1, 1) * (G.dragging ? 0.5 : 1);
     const mag = Math.abs(q);
     const sA = clamp(G.S * (1 + 0.06 * mag + 0.4 * q), G.S * 0.55, G.S * 2.1);
     const sB = clamp(G.S * (1 + 0.06 * mag - 0.4 * q), G.S * 0.55, G.S * 2.1);
 
     if (vertical) {
-      fill.setAttribute("d", troughLeft(G.W, G.H, G.R, G.x, G.CX, G.RB, sA, sB));
+      // CX is absolute bead X; left trough expects distance from the left edge.
+      const bx = onRight ? G.W - G.CX : G.CX;
+      fill.setAttribute(
+        "d",
+        onRight
+          ? troughRight(G.W, G.H, G.R, G.x, bx, G.RB, sA, sB)
+          : troughLeft(G.W, G.H, G.R, G.x, bx, G.RB, sA, sB),
+      );
       const sy = 1 + 0.07 * mag;
       bead.style.transform = `translate3d(0,${G.x.toFixed(2)}px,0) scale(${(1 / sy).toFixed(3)},${sy.toFixed(3)})`;
     } else {
@@ -283,7 +338,8 @@ export default function MeniscusLiquidNav(_props: PatternPreviewProps) {
     G.R = vertical
       ? clamp(W * 0.26, 18, 24)
       : clamp(Math.min(W, H) * 0.42, 12, 18);
-    G.CX = 0;
+    const onRight = vertical && sideRef.current === "right";
+    G.CX = onRight ? W : 0;
     G.CY = 0;
 
     const axis = vertical ? W : H;
@@ -321,7 +377,9 @@ export default function MeniscusLiquidNav(_props: PatternPreviewProps) {
       const slotEl = sample?.querySelector(".meniscus-icon-slot");
       const sb = (slotEl ?? sample)?.getBoundingClientRect();
       const iconCx = sb ? sb.left - r.left + sb.width / 2 : W * 0.35;
-      const rise = Math.max(iconCx - G.CX, G.D * 0.45);
+      const rise = onRight
+        ? Math.max(G.CX - iconCx, G.D * 0.45)
+        : Math.max(iconCx - G.CX, G.D * 0.45);
       dock.style.setProperty("--rise", `${rise.toFixed(1)}px`);
     } else {
       dock.style.setProperty("--rise", `${(H / 2 - G.CY).toFixed(1)}px`);
@@ -380,7 +438,7 @@ export default function MeniscusLiquidNav(_props: PatternPreviewProps) {
       cancelAnimationFrame(physics.current.raf);
       physics.current.raf = 0;
     };
-  }, [measure, paint, run, mode, orientation, expanded]);
+  }, [measure, paint, run, mode, orientation, expanded, side]);
 
   useEffect(() => {
     paint();
@@ -484,6 +542,7 @@ export default function MeniscusLiquidNav(_props: PatternPreviewProps) {
         "meniscus-show",
         isVertical && "is-vertical",
         isCollapsed && "is-collapsed",
+        isRight && "is-right",
       )}
       eyebrow="Meniscus"
       title={active.label}
@@ -544,7 +603,12 @@ export default function MeniscusLiquidNav(_props: PatternPreviewProps) {
     >
       <div className={cn("meniscus-stage", isVertical && "is-vertical")}>
         <div
-          className={cn("meniscus", isVertical && "is-vertical", isCollapsed && "is-collapsed")}
+          className={cn(
+            "meniscus",
+            isVertical && "is-vertical",
+            isCollapsed && "is-collapsed",
+            isRight && "is-right",
+          )}
           ref={rootRef}
           style={{ ["--glow-rgb" as string]: rgbString(accentRgb) }}
         >
@@ -554,6 +618,7 @@ export default function MeniscusLiquidNav(_props: PatternPreviewProps) {
               ready && "is-ready",
               isVertical && "is-vertical",
               isCollapsed && "is-collapsed",
+              isRight && "is-right",
             )}
             ref={dockRef}
           >
@@ -567,9 +632,9 @@ export default function MeniscusLiquidNav(_props: PatternPreviewProps) {
               <defs>
                 <linearGradient
                   id={`mnPlate-${uid}`}
-                  x1={isVertical ? "1" : "0"}
+                  x1={isVertical ? (isRight ? "0" : "1") : "0"}
                   y1="0"
-                  x2={isVertical ? "0" : "0"}
+                  x2={isVertical ? (isRight ? "1" : "0") : "0"}
                   y2={isVertical ? "0" : "1"}
                 >
                   <stop className="meniscus-plate-hi" offset="0" />
@@ -577,9 +642,9 @@ export default function MeniscusLiquidNav(_props: PatternPreviewProps) {
                 </linearGradient>
                 <linearGradient
                   id={`mnRim-${uid}`}
-                  x1={isVertical ? "1" : "0"}
+                  x1={isVertical ? (isRight ? "0" : "1") : "0"}
                   y1="0"
-                  x2={isVertical ? "0" : "0"}
+                  x2={isVertical ? (isRight ? "1" : "0") : "0"}
                   y2={isVertical ? "0" : "1"}
                 >
                   <stop className="meniscus-rim-hi" offset="0" />
@@ -604,7 +669,7 @@ export default function MeniscusLiquidNav(_props: PatternPreviewProps) {
                 const Icon = tab.Icon;
                 return (
                   <button
-                    key={`${mode}-${orientation}-${expanded}-${tab.id}`}
+                    key={`${mode}-${orientation}-${side}-${expanded}-${tab.id}`}
                     ref={(el) => {
                       tabRefs.current[i] = el;
                     }}
@@ -636,11 +701,42 @@ export default function MeniscusLiquidNav(_props: PatternPreviewProps) {
                   setReady(false);
                 }}
               >
-                {expanded ? <ChevronsLeft size={16} /> : <ChevronsRight size={16} />}
+                {isRight
+                  ? expanded
+                    ? <ChevronsRight size={16} />
+                    : <ChevronsLeft size={16} />
+                  : expanded
+                    ? <ChevronsLeft size={16} />
+                    : <ChevronsRight size={16} />}
               </button>
             ) : null}
           </div>
         </div>
+
+        {isVertical ? (
+          <div className="meniscus-side-toggle menu-show-mode" role="group" aria-label="Lado do menu">
+            <button
+              type="button"
+              className={side === "left" ? "active" : undefined}
+              onClick={() => {
+                setSide("left");
+                setReady(false);
+              }}
+            >
+              Esquerda
+            </button>
+            <button
+              type="button"
+              className={side === "right" ? "active" : undefined}
+              onClick={() => {
+                setSide("right");
+                setReady(false);
+              }}
+            >
+              Direita
+            </button>
+          </div>
+        ) : null}
       </div>
     </MenuShowcase>
   );

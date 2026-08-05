@@ -16,10 +16,17 @@
 }
 
 .meniscus-stage.is-vertical {
+  flex-direction: column;
   justify-content: center;
   align-items: center;
   min-height: 0;
   padding: 0.35rem 0;
+  gap: 1rem;
+}
+
+.meniscus-side-toggle {
+  flex: none;
+  margin-inline: auto;
 }
 
 .meniscus-show .meniscus {
@@ -64,7 +71,13 @@ html[data-theme="dark"] .meniscus-show .meniscus {
   padding-top: 0;
   /* Optical balance for the bead that hangs off the left edge */
   padding-left: calc(var(--bead-d, 68px) * 0.5);
+  padding-right: 0;
   box-sizing: content-box;
+}
+
+.meniscus-show.is-vertical .meniscus.is-right {
+  padding-left: 0;
+  padding-right: calc(var(--bead-d, 68px) * 0.5);
 }
 
 .meniscus-show.is-vertical .meniscus.is-collapsed {
@@ -176,6 +189,10 @@ html[data-theme="dark"] .meniscus-rim-hi { stop-opacity: 0.28; }
   gap: 0.15rem;
 }
 
+.meniscus-dock.is-vertical.is-right .meniscus-tabs {
+  padding: 2.15rem 0.7rem 3.25rem 0.55rem;
+}
+
 .meniscus-dock.is-vertical.is-collapsed .meniscus-tabs {
   padding-inline: 0.35rem;
   align-items: center;
@@ -206,9 +223,16 @@ html[data-theme="dark"] .meniscus-rim-hi { stop-opacity: 0.28; }
   padding: 0.1rem 0.2rem;
 }
 
+.meniscus-dock.is-vertical.is-right .meniscus-tab {
+  flex-direction: row-reverse;
+  text-align: end;
+}
+
 .meniscus-dock.is-vertical.is-collapsed .meniscus-tab {
   justify-content: center;
   padding-inline: 0;
+  flex-direction: row;
+  text-align: center;
 }
 
 .meniscus-tab:focus-visible {
@@ -262,6 +286,12 @@ html[data-theme="dark"] .meniscus-rim-hi { stop-opacity: 0.28; }
     translateX(calc(var(--t) * var(--rise) * -1));
 }
 
+.meniscus-dock.is-vertical.is-right .meniscus-icon {
+  transform:
+    translate(-50%, -50%)
+    translateX(calc(var(--t) * var(--rise)));
+}
+
 .meniscus-dock.is-vertical .meniscus-tab,
 .meniscus-dock.is-vertical .meniscus-tabs {
   overflow: visible;
@@ -308,6 +338,10 @@ html[data-theme="dark"] .meniscus-rim-hi { stop-opacity: 0.28; }
   font-weight: 600;
   color: var(--label);
   opacity: 1;
+}
+
+.meniscus-dock.is-vertical.is-right .meniscus-label {
+  text-align: end;
 }
 
 .meniscus-tab[aria-selected="true"] .meniscus-label {
