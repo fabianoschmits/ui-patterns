@@ -155,7 +155,8 @@ html[data-theme="dark"] .meniscus-rim-hi { stop-opacity: 0.28; }
   display: flex;
   width: 100%;
   box-sizing: border-box;
-  padding-inline: clamp(1.6rem, 7.7vw, 2.6rem);
+  /* End caps clear the rounded corners; keep modest so labels don't collide */
+  padding-inline: clamp(1.25rem, 5vw, 1.85rem);
 }
 
 .meniscus-dock.is-vertical .meniscus-tabs {
@@ -262,15 +263,22 @@ html[data-theme="dark"] .meniscus-rim-hi { stop-opacity: 0.28; }
 
 .meniscus-label {
   position: absolute;
-  left: 50%;
+  left: 0;
+  right: 0;
   bottom: 12%;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  padding-inline: 0.12rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
   color: var(--label);
   font-size: 0.62rem;
   font-weight: 550;
   letter-spacing: 0.01em;
   line-height: 1;
   opacity: calc(0.75 + var(--t) * 0.25);
-  transform: translateX(-50%);
+  text-align: center;
   white-space: nowrap;
   pointer-events: none;
 }
@@ -278,9 +286,14 @@ html[data-theme="dark"] .meniscus-rim-hi { stop-opacity: 0.28; }
 .meniscus-dock.is-vertical .meniscus-label {
   position: relative;
   left: auto;
+  right: auto;
   bottom: auto;
-  transform: none;
+  width: auto;
+  max-width: none;
+  padding-inline: 0;
   overflow: hidden;
+  text-overflow: ellipsis;
+  text-align: start;
   font-size: 0.8rem;
   font-weight: 600;
   color: var(--label);
@@ -366,9 +379,9 @@ html[data-theme="dark"] .meniscus-rim-hi { stop-opacity: 0.28; }
 }
 
 .meniscus-show .menu-show-body {
-  /* Extra outer side room so the bead/corners never clip the frame */
-  padding-left: max(6.65rem, calc(env(safe-area-inset-left) + 5.6rem));
-  padding-right: max(6.65rem, calc(env(safe-area-inset-right) + 5.6rem));
+  /* Outer side room so the bead/corners never clip the frame */
+  padding-left: max(4.75rem, calc(env(safe-area-inset-left) + 4rem));
+  padding-right: max(4.75rem, calc(env(safe-area-inset-right) + 4rem));
 }
 
 @media (max-width: 640px) {
@@ -388,22 +401,21 @@ html[data-theme="dark"] .meniscus-rim-hi { stop-opacity: 0.28; }
   }
 
   .meniscus-tabs {
-    /* ~40% larger end caps to keep the trough clear of rounded corners */
-    padding-inline: clamp(2.15rem, 9.1vw, 3rem);
+    padding-inline: clamp(1.35rem, 5.5vw, 1.9rem);
   }
 
   .meniscus-dock:not(.is-vertical) .meniscus-icon-slot {
-    width: 2.25rem;
-    height: 2.25rem;
+    width: 2.15rem;
+    height: 2.15rem;
   }
 
   .meniscus-dock:not(.is-vertical) .meniscus-icon {
-    width: 1.2rem;
-    height: 1.2rem;
+    width: 1.15rem;
+    height: 1.15rem;
   }
 
   .meniscus-dock:not(.is-vertical) .meniscus-label {
-    font-size: 0.52rem;
+    font-size: 0.5rem;
     letter-spacing: 0;
   }
 
@@ -417,7 +429,7 @@ html[data-theme="dark"] .meniscus-rim-hi { stop-opacity: 0.28; }
   }
 
   .meniscus-show .menu-show-body {
-    padding-left: max(4.9rem, calc(env(safe-area-inset-left) + 3.85rem));
-    padding-right: max(4.9rem, calc(env(safe-area-inset-right) + 3.85rem));
+    padding-left: max(3.25rem, calc(env(safe-area-inset-left) + 2.5rem));
+    padding-right: max(3.25rem, calc(env(safe-area-inset-right) + 2.5rem));
   }
 }
