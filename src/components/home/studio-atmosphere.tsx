@@ -5,6 +5,7 @@ import { PointMaterial, Points } from "@react-three/drei";
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { Points as ThreePoints } from "three";
 import * as THREE from "three";
+import { useTheme } from "@/providers/theme-provider";
 
 const FULL_COUNT = 1600;
 const REDUCED_COUNT = 360;
@@ -39,7 +40,15 @@ function useScrollOffset() {
   return offset;
 }
 
-function SandField({ reduced }: { reduced: boolean }) {
+function SandField({
+  reduced,
+  color,
+  opacity,
+}: {
+  reduced: boolean;
+  color: string;
+  opacity: number;
+}) {
   const pointsRef = useRef<ThreePoints>(null);
   const scroll = useScrollOffset();
   const count = reduced ? REDUCED_COUNT : FULL_COUNT;
@@ -88,18 +97,26 @@ function SandField({ reduced }: { reduced: boolean }) {
     >
       <PointMaterial
         transparent
-        color="#d4c4a4"
-        size={reduced ? 0.045 : 0.06}
+        color={color}
+        size={reduced ? 0.032 : 0.042}
         sizeAttenuation
         depthWrite={false}
-        opacity={0.85}
+        opacity={opacity}
         blending={THREE.AdditiveBlending}
       />
     </Points>
   );
 }
 
-function AccentDust({ reduced }: { reduced: boolean }) {
+function AccentDust({
+  reduced,
+  color,
+  opacity,
+}: {
+  reduced: boolean;
+  color: string;
+  opacity: number;
+}) {
   const pointsRef = useRef<ThreePoints>(null);
   const scroll = useScrollOffset();
 
@@ -133,11 +150,11 @@ function AccentDust({ reduced }: { reduced: boolean }) {
     >
       <PointMaterial
         transparent
-        color="#7eb9a5"
-        size={reduced ? 0.03 : 0.04}
+        color={color}
+        size={reduced ? 0.022 : 0.028}
         sizeAttenuation
         depthWrite={false}
-        opacity={0.55}
+        opacity={opacity}
         blending={THREE.AdditiveBlending}
       />
     </Points>
@@ -146,11 +163,17 @@ function AccentDust({ reduced }: { reduced: boolean }) {
 
 export function StudioAtmosphere() {
   const reduced = usePrefersReducedMotion();
+  const { theme } = useTheme();
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  const sandColor = theme === "dark" ? "#d4c4a4" : "#8a7a5c";
+  const accentColor = theme === "dark" ? "#7eb9a5" : "#3d7a68";
+  const sandOpacity = theme === "dark" ? 0.28 : 0.22;
+  const accentOpacity = theme === "dark" ? 0.18 : 0.14;
 
   return (
     <div className="studio-atmosphere" aria-hidden="true">
@@ -167,8 +190,16 @@ export function StudioAtmosphere() {
           }}
           style={{ pointerEvents: "none" }}
         >
-          <SandField reduced={reduced} />
-          <AccentDust reduced={reduced} />
+          <SandField
+            reduced={reduced}
+            color={sandColor}
+            opacity={sandOpacity}
+          />
+          <AccentDust
+            reduced={reduced}
+            color={accentColor}
+            opacity={accentOpacity}
+          />
         </Canvas>
       ) : null}
     </div>

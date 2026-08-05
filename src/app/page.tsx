@@ -1,11 +1,13 @@
 import { patterns } from "@/data/patterns";
 import { TransitionLink } from "@/components/transitions/transition-link";
 import { StudioAtmosphere } from "@/components/home/studio-atmosphere";
+import { StudioThemeToggle } from "@/components/home/studio-theme-toggle";
 
 export default function HomePage() {
   return (
     <div className="studio">
       <StudioAtmosphere />
+      <StudioThemeToggle />
 
       <div className="studio-content">
         <header className="studio-header">
