@@ -1,8 +1,8 @@
 .meniscus-show .meniscus {
-  --bar: color-mix(in srgb, var(--canvas) 92%, transparent);
-  --bar-hi: color-mix(in srgb, var(--canvas) 96%, #fff);
-  --bar-lo: color-mix(in srgb, var(--canvas) 88%, transparent);
-  --bar-border: var(--line);
+  --bar: color-mix(in srgb, var(--menu-surface, var(--canvas)) 90%, transparent);
+  --bar-hi: color-mix(in srgb, var(--menu-surface, var(--canvas)) 96%, #fff);
+  --bar-lo: color-mix(in srgb, var(--menu-surface, var(--canvas)) 84%, transparent);
+  --bar-border: color-mix(in srgb, var(--menu-surface, var(--ink)) 18%, var(--line));
   --icon-off: color-mix(in srgb, var(--muted) 78%, transparent);
   --icon-on: #fff;
   --glow: rgb(var(--glow-rgb));
@@ -18,9 +18,9 @@
 }
 
 html[data-theme="dark"] .meniscus-show .meniscus {
-  --bar: color-mix(in srgb, var(--canvas-deep) 88%, transparent);
-  --bar-hi: color-mix(in srgb, var(--canvas-deep) 92%, #fff);
-  --bar-lo: color-mix(in srgb, var(--canvas-deep) 84%, transparent);
+  --bar: color-mix(in srgb, var(--menu-surface, var(--canvas-deep)) 88%, transparent);
+  --bar-hi: color-mix(in srgb, var(--menu-surface, var(--canvas-deep)) 92%, #fff);
+  --bar-lo: color-mix(in srgb, var(--menu-surface, var(--canvas-deep)) 82%, transparent);
 }
 
 .meniscus-dock {

@@ -1,6 +1,6 @@
 "use client";
 
-import type { CSSProperties, ReactNode } from "react";
+import { useState, type CSSProperties, type ReactNode } from "react";
 import { cn } from "@/lib/utils";
 import "./menu-showcase.css";
 
@@ -19,6 +19,16 @@ export const MENU_ACCENTS: AccentSwatch[] = [
   { name: "Ocean", value: "#3b82f6" },
 ];
 
+export const MENU_SURFACES: AccentSwatch[] = [
+  { name: "Gelo", value: "#f3f1ec" },
+  { name: "Névoa", value: "#e7edf2" },
+  { name: "Areia", value: "#e8dfd0" },
+  { name: "Sage", value: "#d7e4dc" },
+  { name: "Lavanda", value: "#e2dde8" },
+  { name: "Carvão", value: "#2b2e36" },
+  { name: "Noite", value: "#14161c" },
+];
+
 export interface MenuModeOption {
   id: string;
   label: string;
@@ -31,6 +41,10 @@ interface MenuShowcaseProps {
   accent: string;
   onAccentChange: (value: string) => void;
   accents?: AccentSwatch[];
+  surface?: string;
+  onSurfaceChange?: (value: string) => void;
+  surfaces?: AccentSwatch[];
+  showSurfaceColors?: boolean;
   modes?: MenuModeOption[];
   mode?: string;
   onModeChange?: (id: string) => void;
@@ -70,6 +84,42 @@ function ChipGroup({
   );
 }
 
+function SwatchRow({
+  label,
+  options,
+  value,
+  onChange,
+  selectedRing,
+}: {
+  label: string;
+  options: AccentSwatch[];
+  value: string;
+  onChange: (value: string) => void;
+  selectedRing: string;
+}) {
+  return (
+    <div className="menu-show-swatch-row">
+      <span className="menu-show-swatch-label">{label}</span>
+      <div className="menu-show-swatches" role="group" aria-label={label}>
+        {options.map((swatch) => (
+          <button
+            key={swatch.value}
+            type="button"
+            className={cn("menu-show-swatch", value === swatch.value && "is-selected")}
+            style={{
+              background: swatch.value,
+              ["--swatch-ring" as string]: selectedRing,
+            }}
+            aria-label={swatch.name}
+            aria-pressed={value === swatch.value}
+            onClick={() => onChange(swatch.value)}
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export function MenuShowcase({
   eyebrow,
   title,
@@ -77,6 +127,10 @@ export function MenuShowcase({
   accent,
   onAccentChange,
   accents = MENU_ACCENTS,
+  surface,
+  onSurfaceChange,
+  surfaces = MENU_SURFACES,
+  showSurfaceColors = true,
   modes,
   mode,
   onModeChange,
@@ -88,10 +142,20 @@ export function MenuShowcase({
   className,
   style,
 }: MenuShowcaseProps) {
+  const [internalSurface, setInternalSurface] = useState(MENU_SURFACES[0].value);
+  const surfaceValue = surface ?? internalSurface;
+  const handleSurfaceChange = onSurfaceChange ?? setInternalSurface;
+
   return (
     <div
       className={cn("menu-show", className)}
-      style={{ "--menu-accent": accent, ...style } as CSSProperties}
+      style={
+        {
+          "--menu-accent": accent,
+          "--menu-surface": surfaceValue,
+          ...style,
+        } as CSSProperties
+      }
     >
       <div className="menu-show-body">
         <header className="menu-show-head">
@@ -126,18 +190,24 @@ export function MenuShowcase({
 
         <div className="menu-show-slot">{children}</div>
 
-        <div className="menu-show-swatches" role="group" aria-label="Cor de destaque">
-          {accents.map((swatch) => (
-            <button
-              key={swatch.value}
-              type="button"
-              className={cn("menu-show-swatch", accent === swatch.value && "is-selected")}
-              style={{ background: swatch.value }}
-              aria-label={swatch.name}
-              aria-pressed={accent === swatch.value}
-              onClick={() => onAccentChange(swatch.value)}
+        <div className="menu-show-palette">
+          <SwatchRow
+            label="Indicador"
+            options={accents}
+            value={accent}
+            onChange={onAccentChange}
+            selectedRing={accent}
+          />
+
+          {showSurfaceColors ? (
+            <SwatchRow
+              label="Menu"
+              options={surfaces}
+              value={surfaceValue}
+              onChange={handleSurfaceChange}
+              selectedRing={accent}
             />
-          ))}
+          ) : null}
         </div>
       </div>
     </div>

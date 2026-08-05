@@ -2,15 +2,15 @@
   --qam-ink: var(--ink);
   --qam-muted: var(--muted);
   --qam-faint: color-mix(in srgb, var(--muted) 78%, transparent);
-  --qam-bar-bg: color-mix(in srgb, var(--canvas) 92%, transparent);
-  --qam-bar-border: var(--line);
+  --qam-bar-bg: color-mix(in srgb, var(--menu-surface, var(--canvas)) 90%, transparent);
+  --qam-bar-border: color-mix(in srgb, var(--menu-surface, var(--ink)) 18%, var(--line));
   --qam-bar-shadow: 0 18px 50px color-mix(in srgb, var(--ink) 12%, transparent);
   --qam-label-on: var(--ink);
   --qam-accent: var(--menu-accent, #00b0b0);
 }
 
 html[data-theme="dark"] .qam-show {
-  --qam-bar-bg: color-mix(in srgb, var(--canvas-deep) 88%, transparent);
+  --qam-bar-bg: color-mix(in srgb, var(--menu-surface, var(--canvas-deep)) 88%, transparent);
   --qam-bar-shadow: 0 18px 50px rgb(0 0 0 / 0.35);
 }
 
@@ -70,6 +70,7 @@ html[data-theme="dark"] .qam-show {
   background: var(--qam-bar-bg);
   box-shadow: var(--qam-bar-shadow);
   backdrop-filter: blur(12px);
+  transition: background 0.35s ease, border-color 0.35s ease, box-shadow 0.35s ease;
 }
 
 .qam-bar.is-vertical .qam-bar-bg {
@@ -260,7 +261,7 @@ html[data-theme="dark"] .qam-active-pill {
     padding: 0.5rem 0;
   }
 
-  .qam-show.is-vertical .menu-show-swatches {
+  .qam-show.is-vertical .menu-show-palette {
     grid-column: 1 / -1;
     grid-row: 4;
     justify-self: center;
