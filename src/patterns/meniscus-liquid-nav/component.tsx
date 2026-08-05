@@ -104,6 +104,7 @@ function troughTop(
   );
 }
 
+/** Left-edge meniscus via transpose of the proven top trough. */
 function troughLeft(
   W: number,
   H: number,
@@ -114,40 +115,35 @@ function troughLeft(
   sT: number,
   sB: number,
 ) {
-  const wing = (s: number, side: number) => {
-    const L = s + rb;
-    const half = reach(s, rb, bx);
-    const sy = by + side * half;
-    return {
-      sy,
-      tx: s + ((bx - s) / L) * s,
-      ty: sy + ((by - sy) / L) * s,
-    };
-  };
-  const A = wing(sT, -1);
-  const B = wing(sB, +1);
-  const a0 = Math.atan2(A.ty - by, A.tx - bx);
-  const a1 = Math.atan2(B.ty - by, B.tx - bx);
-  let sweep = ((a1 - a0) * 180) / Math.PI;
-  while (sweep < 0) sweep += 360;
-  const large = sweep > 180 ? 1 : 0;
-  const n = (v: number) => v.toFixed(2);
-  return (
-    `M${n(R)} 0` +
-    `A${n(R)} ${n(R)} 0 0 1 ${n(W - R)} 0` +
-    `A${n(R)} ${n(R)} 0 0 1 ${n(W)} ${n(R)}` +
-    `L${n(W)} ${n(H - R)}` +
-    `A${n(R)} ${n(R)} 0 0 1 ${n(W - R)} ${n(H)}` +
-    `A${n(R)} ${n(R)} 0 0 1 ${n(R)} ${n(H)}` +
-    `L0 ${n(H - R)}` +
-    `A${n(R)} ${n(R)} 0 0 1 0 ${n(clamp(B.sy, R, H - R))}` +
-    `A${n(sB)} ${n(sB)} 0 0 1 ${n(B.tx)} ${n(B.ty)}` +
-    `A${n(rb)} ${n(rb)} 0 ${large} 0 ${n(A.tx)} ${n(A.ty)}` +
-    `A${n(sT)} ${n(sT)} 0 0 1 0 ${n(clamp(A.sy, R, H - R))}` +
-    `L0 ${n(R)}` +
-    `A${n(R)} ${n(R)} 0 0 1 ${n(R)} 0` +
-    `Z`
-  );
+  const top = troughTop(H, W, R, by, bx, rb, sT, sB);
+  const tokens = top.match(/[MLAZ]|-?\d*\.?\d+(?:e[-+]?\d+)?/gi) ?? [];
+  let i = 0;
+  let out = "";
+  while (i < tokens.length) {
+    const cmd = tokens[i++];
+    if (cmd === "Z" || cmd === "z") {
+      out += "Z";
+      continue;
+    }
+    if (cmd === "M" || cmd === "L") {
+      const x = Number(tokens[i++]);
+      const y = Number(tokens[i++]);
+      out += `${cmd}${y.toFixed(2)} ${x.toFixed(2)}`;
+      continue;
+    }
+    if (cmd === "A") {
+      const rx = Number(tokens[i++]);
+      const ry = Number(tokens[i++]);
+      const rot = tokens[i++];
+      const large = tokens[i++];
+      const sweep = tokens[i++];
+      const x = Number(tokens[i++]);
+      const y = Number(tokens[i++]);
+      const sweepFlip = sweep === "1" ? "0" : "1";
+      out += `A${ry.toFixed(2)} ${rx.toFixed(2)} ${rot} ${large} ${sweepFlip} ${y.toFixed(2)} ${x.toFixed(2)}`;
+    }
+  }
+  return out;
 }
 
 export default function MeniscusLiquidNav(_props: PatternPreviewProps) {
@@ -282,20 +278,21 @@ export default function MeniscusLiquidNav(_props: PatternPreviewProps) {
     G.span = G.slots.length > 1 ? G.slots[1] - G.slots[0] : vertical ? H : W;
     G.W = W;
     G.H = H;
-    // Larger corners so mobile matches desktop and avoids short corner clipping.
-    G.R = clamp(Math.min(W, H) * 0.34, 20, 30);
+    G.R = vertical
+      ? clamp(W * 0.26, 18, 24)
+      : clamp(Math.min(W, H) * 0.34, 20, 30);
     G.CX = 0;
     G.CY = 0;
 
     const axis = vertical ? W : H;
-    let D = Math.min(axis * 0.88, G.span * 0.82);
-    const edgeRoom = (G.slots[0] ?? (vertical ? H : W) / 2) - G.R - 10;
+    let D = Math.min(axis * (vertical ? 0.7 : 0.88), G.span * (vertical ? 0.72 : 0.82));
+    const edgeRoom = (G.slots[0] ?? (vertical ? H : W) / 2) - G.R - (vertical ? 12 : 10);
     for (let i = 0; i < 4; i++) {
       const hw = reach(D * 0.22, D / 2 + 5, 0);
       if (hw <= edgeRoom) break;
       D *= edgeRoom / hw;
     }
-    G.D = Math.max(Math.round(D), 42);
+    G.D = Math.max(Math.round(D), vertical ? 44 : 42);
     G.S = G.D * 0.22;
     G.RB = G.D / 2 + 5;
 
@@ -306,7 +303,7 @@ export default function MeniscusLiquidNav(_props: PatternPreviewProps) {
     dock.style.setProperty(
       "--rise",
       vertical
-        ? `${Math.max(G.D * 0.14, 8).toFixed(1)}px`
+        ? `${Math.max(G.D * 0.18, 10).toFixed(1)}px`
         : `${(H / 2 - G.CY).toFixed(1)}px`,
     );
     setBox({ w: W, h: H });
@@ -595,7 +592,9 @@ export default function MeniscusLiquidNav(_props: PatternPreviewProps) {
                   title={isCollapsed ? tab.label : undefined}
                   onClick={onTabClick(i)}
                 >
-                  <Icon className="meniscus-icon" strokeWidth={1.8} />
+                  <span className="meniscus-icon-slot">
+                    <Icon className="meniscus-icon" strokeWidth={1.8} />
+                  </span>
                   {!isCollapsed ? <span className="meniscus-label">{tab.label}</span> : null}
                 </button>
               );

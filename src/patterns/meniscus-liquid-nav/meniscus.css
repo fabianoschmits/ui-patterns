@@ -2,8 +2,10 @@
   --bar: color-mix(in srgb, var(--menu-surface, var(--canvas)) 90%, transparent);
   --bar-hi: color-mix(in srgb, var(--menu-surface, var(--canvas)) 96%, #fff);
   --bar-lo: color-mix(in srgb, var(--menu-surface, var(--canvas)) 84%, transparent);
-  --icon-off: color-mix(in srgb, var(--muted) 78%, transparent);
+  --icon-off: color-mix(in srgb, var(--muted) 72%, transparent);
   --icon-on: #fff;
+  --label: color-mix(in srgb, var(--ink) 62%, transparent);
+  --label-on: var(--ink);
   --glow: rgb(var(--glow-rgb));
   --dock-r: 24px;
   --bead-d: 68px;
@@ -46,19 +48,15 @@ html[data-theme="dark"] .meniscus-show .meniscus {
 }
 
 .meniscus-dock.is-vertical {
-  display: flex;
-  width: min(13rem, 100%);
-  height: auto;
-  min-height: 18rem;
+  width: min(12.75rem, calc(100vw - 2rem));
+  height: 22.5rem;
+  min-height: 22.5rem;
   margin-inline: auto;
-  flex-direction: column;
-  padding: 0.55rem 0.4rem 0.45rem;
-  gap: 0.25rem;
+  overflow: visible;
 }
 
 .meniscus-dock.is-vertical.is-collapsed {
-  width: 4.5rem;
-  padding-inline: 0.35rem;
+  width: 4.85rem;
 }
 
 .meniscus-skin {
@@ -118,13 +116,15 @@ html[data-theme="dark"] .meniscus-rim-hi { stop-opacity: 0.28; }
 }
 
 .meniscus-dock.is-vertical .meniscus-tabs {
-  position: relative;
-  inset: auto;
-  flex: 1;
   flex-direction: column;
-  justify-content: space-evenly;
-  padding: 0.35rem 0.15rem;
+  justify-content: space-between;
+  padding: 1.55rem 0.55rem 3.1rem 0.7rem;
   gap: 0.15rem;
+}
+
+.meniscus-dock.is-vertical.is-collapsed .meniscus-tabs {
+  padding-inline: 0.35rem;
+  align-items: center;
 }
 
 .meniscus-tab {
@@ -141,19 +141,19 @@ html[data-theme="dark"] .meniscus-rim-hi { stop-opacity: 0.28; }
 }
 
 .meniscus-dock.is-vertical .meniscus-tab {
-  flex: 0 0 auto;
+  flex: 1 1 0;
   display: flex;
   width: 100%;
-  height: auto;
-  min-height: 2.85rem;
+  min-height: 0;
   align-items: center;
   justify-content: flex-start;
-  gap: 0.45rem;
-  padding: 0.15rem 0.3rem;
+  gap: 0.55rem;
+  padding: 0.1rem 0.2rem;
 }
 
 .meniscus-dock.is-vertical.is-collapsed .meniscus-tab {
   justify-content: center;
+  padding-inline: 0;
 }
 
 .meniscus-tab:focus-visible {
@@ -164,6 +164,25 @@ html[data-theme="dark"] .meniscus-rim-hi { stop-opacity: 0.28; }
 
 .meniscus-tab:active {
   transform: scale(0.96);
+}
+
+.meniscus-icon-slot {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  display: grid;
+  width: 2.75rem;
+  height: 2.75rem;
+  flex: none;
+  place-items: center;
+  transform: translate(-50%, -50%);
+}
+
+.meniscus-dock.is-vertical .meniscus-icon-slot {
+  position: relative;
+  left: auto;
+  top: auto;
+  transform: none;
 }
 
 .meniscus-icon {
@@ -182,11 +201,8 @@ html[data-theme="dark"] .meniscus-rim-hi { stop-opacity: 0.28; }
 }
 
 .meniscus-dock.is-vertical .meniscus-icon {
-  position: relative;
-  left: auto;
-  top: auto;
-  flex: none;
   transform:
+    translate(-50%, -50%)
     translateX(calc(var(--t) * var(--rise) * -1));
 }
 
@@ -198,12 +214,12 @@ html[data-theme="dark"] .meniscus-rim-hi { stop-opacity: 0.28; }
   position: absolute;
   left: 50%;
   bottom: 12%;
-  color: var(--icon-off);
+  color: var(--label);
   font-size: 0.62rem;
   font-weight: 550;
   letter-spacing: 0.01em;
   line-height: 1;
-  opacity: calc(0.7 + var(--t) * 0.3);
+  opacity: calc(0.75 + var(--t) * 0.25);
   transform: translateX(-50%);
   white-space: nowrap;
   pointer-events: none;
@@ -214,24 +230,29 @@ html[data-theme="dark"] .meniscus-rim-hi { stop-opacity: 0.28; }
   left: auto;
   bottom: auto;
   transform: none;
-  font-size: 0.78rem;
+  overflow: hidden;
+  font-size: 0.8rem;
   font-weight: 600;
+  color: var(--label);
+  opacity: 1;
 }
 
 .meniscus-tab[aria-selected="true"] .meniscus-label {
-  color: var(--ink);
+  color: var(--label-on);
   font-weight: 700;
 }
 
 .meniscus-rail-toggle {
-  position: relative;
-  z-index: 2;
+  position: absolute;
+  z-index: 3;
+  left: 0.45rem;
+  right: 0.45rem;
+  bottom: 0.45rem;
   display: grid;
-  width: 100%;
-  height: 2.25rem;
+  height: 2.2rem;
   place-items: center;
   border-radius: 999px;
-  background: color-mix(in srgb, var(--ink) 6%, transparent);
+  background: color-mix(in srgb, var(--ink) 7%, transparent);
   color: var(--muted);
 }
 
@@ -247,5 +268,10 @@ html[data-theme="dark"] .meniscus-rim-hi { stop-opacity: 0.28; }
 
   .meniscus-tabs {
     padding-inline: clamp(1.25rem, 7vw, 2rem);
+  }
+
+  .meniscus-dock.is-vertical {
+    height: 21rem;
+    min-height: 21rem;
   }
 }
