@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState, type CSSProperties, type ReactNode } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import { cn } from "@/lib/utils";
 import "./menu-showcase.css";
 
@@ -133,130 +133,149 @@ function ChipGroup({
   );
 }
 
-function SwatchRow({
+function ColorRoulette({
   label,
   options,
   value,
   onChange,
-  selectedRing,
 }: {
   label: string;
   options: AccentSwatch[];
   value: string;
   onChange: (value: string) => void;
-  selectedRing: string;
 }) {
   const trackRef = useRef<HTMLDivElement>(null);
-  const dragRef = useRef<{
-    pointerId: number;
-    startX: number;
-    startIndex: number;
-    lastIndex: number;
-    moved: boolean;
-  } | null>(null);
+  const settleRef = useRef(0);
+  const ignoreScrollRef = useRef(false);
+  const draggingRef = useRef(false);
+  const labelId = label.replace(/\s+/g, "-").toLowerCase();
 
-  const clampIndex = (index: number) =>
-    Math.max(0, Math.min(options.length - 1, index));
+  const selectedIndex = Math.max(
+    0,
+    options.findIndex((option) => option.value === value),
+  );
 
-  const scrollSwatchIntoView = (index: number) => {
-    const track = trackRef.current;
-    const button = track?.querySelectorAll<HTMLButtonElement>(".menu-show-swatch")[
-      index
-    ];
-    button?.scrollIntoView({ inline: "center", block: "nearest", behavior: "smooth" });
-  };
+  const centerOnIndex = useCallback(
+    (index: number, behavior: ScrollBehavior = "smooth") => {
+      const track = trackRef.current;
+      const button = track?.querySelectorAll<HTMLElement>(".menu-show-swatch")[index];
+      if (!track || !button) return;
+      const trackRect = track.getBoundingClientRect();
+      const buttonRect = button.getBoundingClientRect();
+      const delta =
+        buttonRect.left +
+        buttonRect.width / 2 -
+        (trackRect.left + trackRect.width / 2);
+      if (Math.abs(delta) < 1) return;
+      ignoreScrollRef.current = true;
+      track.scrollBy({ left: delta, behavior });
+      window.setTimeout(
+        () => {
+          ignoreScrollRef.current = false;
+        },
+        behavior === "smooth" ? 420 : 32,
+      );
+    },
+    [],
+  );
 
-  const applyIndex = (index: number) => {
-    const next = options[clampIndex(index)];
-    if (!next) return;
-    if (next.value !== value) onChange(next.value);
-    scrollSwatchIntoView(clampIndex(index));
-  };
+  const pickCenter = useCallback(
+    (snap = true) => {
+      const track = trackRef.current;
+      if (!track || ignoreScrollRef.current) return;
+      const buttons = Array.from(
+        track.querySelectorAll<HTMLElement>(".menu-show-swatch"),
+      );
+      if (!buttons.length) return;
+      const mid = track.getBoundingClientRect().left + track.clientWidth / 2;
+      let bestIndex = 0;
+      let bestDist = Infinity;
+      buttons.forEach((button, index) => {
+        const rect = button.getBoundingClientRect();
+        const dist = Math.abs(rect.left + rect.width / 2 - mid);
+        if (dist < bestDist) {
+          bestDist = dist;
+          bestIndex = index;
+        }
+      });
+      const next = options[bestIndex];
+      if (!next) return;
+      if (next.value !== value) onChange(next.value);
+      if (snap) centerOnIndex(bestIndex, "smooth");
+    },
+    [centerOnIndex, onChange, options, value],
+  );
+
+  useLayoutEffect(() => {
+    centerOnIndex(selectedIndex, "auto");
+  }, [centerOnIndex, options.length]);
+
+  useEffect(() => {
+    if (ignoreScrollRef.current || draggingRef.current) return;
+    centerOnIndex(selectedIndex, "smooth");
+  }, [centerOnIndex, selectedIndex]);
 
   return (
-    <div className="menu-show-swatch-row">
+    <div className="menu-show-roulette">
       <span className="menu-show-swatch-label">{label}</span>
-      <div
-        ref={trackRef}
-        className="menu-show-swatches"
-        role="group"
-        aria-label={label}
-        onPointerDown={(e) => {
-          if (e.button !== 0) return;
-          const track = trackRef.current;
-          if (!track) return;
-          const startIndex = Math.max(
-            0,
-            options.findIndex((option) => option.value === value),
-          );
-          dragRef.current = {
-            pointerId: e.pointerId,
-            startX: e.clientX,
-            startIndex,
-            lastIndex: startIndex,
-            moved: false,
-          };
-          track.setPointerCapture(e.pointerId);
-        }}
-        onPointerMove={(e) => {
-          const drag = dragRef.current;
-          if (!drag || drag.pointerId !== e.pointerId) return;
-          const dx = e.clientX - drag.startX;
-          if (Math.abs(dx) < 10) return;
-          drag.moved = true;
-          // Drag left → next colors; drag right → previous colors
-          const step = 22;
-          const nextIndex = clampIndex(drag.startIndex - Math.round(dx / step));
-          if (nextIndex !== drag.lastIndex) {
-            drag.lastIndex = nextIndex;
-            applyIndex(nextIndex);
-          }
-        }}
-        onPointerUp={(e) => {
-          const drag = dragRef.current;
-          const track = trackRef.current;
-          if (!drag || drag.pointerId !== e.pointerId) return;
-          if (track?.hasPointerCapture(e.pointerId)) {
-            track.releasePointerCapture(e.pointerId);
-          }
-          if (drag.moved) applyIndex(drag.lastIndex);
-          dragRef.current = null;
-        }}
-        onPointerCancel={() => {
-          dragRef.current = null;
-        }}
-      >
-        {options.map((swatch) => {
-          const isAuto = swatch.value === MENU_SURFACE_AUTO;
-          return (
-            <button
-              key={swatch.value}
-              type="button"
-              data-value={swatch.value}
-              className={cn(
-                "menu-show-swatch",
-                isAuto && "is-auto",
-                value === swatch.value && "is-selected",
-              )}
-              style={
-                isAuto
-                  ? { ["--swatch-ring" as string]: selectedRing }
-                  : {
-                      background: swatch.value,
-                      ["--swatch-ring" as string]: selectedRing,
-                    }
-              }
-              aria-label={swatch.name}
-              aria-pressed={value === swatch.value}
-              onClick={() => {
-                if (dragRef.current?.moved) return;
-                onChange(swatch.value);
-                const index = options.findIndex((option) => option.value === swatch.value);
-                if (index >= 0) scrollSwatchIntoView(index);
-              }}
-            />
-          );
-        })}
+      <div className="menu-show-roulette-frame">
+        <div className="menu-show-roulette-fade menu-show-roulette-fade-left" aria-hidden="true" />
+        <div className="menu-show-roulette-fade menu-show-roulette-fade-right" aria-hidden="true" />
+        <div className="menu-show-roulette-lens" aria-hidden="true" />
+        <div
+          ref={trackRef}
+          className="menu-show-roulette-track"
+          role="listbox"
+          aria-label={label}
+          aria-activedescendant={`swatch-${labelId}-${value}`}
+          onScroll={() => {
+            if (ignoreScrollRef.current || draggingRef.current) return;
+            window.clearTimeout(settleRef.current);
+            settleRef.current = window.setTimeout(() => pickCenter(true), 80);
+          }}
+          onPointerDown={() => {
+            draggingRef.current = true;
+          }}
+          onPointerUp={() => {
+            draggingRef.current = false;
+            window.setTimeout(() => pickCenter(true), 40);
+          }}
+          onPointerCancel={() => {
+            draggingRef.current = false;
+            window.setTimeout(() => pickCenter(true), 40);
+          }}
+          onTouchEnd={() => {
+            draggingRef.current = false;
+            window.setTimeout(() => pickCenter(true), 40);
+          }}
+        >
+          {options.map((swatch) => {
+            const isAuto = swatch.value === MENU_SURFACE_AUTO;
+            const selected = value === swatch.value;
+            return (
+              <button
+                key={swatch.value}
+                id={`swatch-${labelId}-${swatch.value}`}
+                type="button"
+                role="option"
+                aria-selected={selected}
+                aria-label={swatch.name}
+                title={swatch.name}
+                className={cn(
+                  "menu-show-swatch",
+                  isAuto && "is-auto",
+                  selected && "is-selected",
+                )}
+                style={isAuto ? undefined : { background: swatch.value }}
+                onClick={() => {
+                  onChange(swatch.value);
+                  const index = options.findIndex((item) => item.value === swatch.value);
+                  if (index >= 0) centerOnIndex(index, "smooth");
+                }}
+              />
+            );
+          })}
+        </div>
       </div>
     </div>
   );
@@ -343,21 +362,19 @@ export function MenuShowcase({
         </div>
 
         <div className="menu-show-palette">
-          <SwatchRow
+          <ColorRoulette
             label="Indicador"
             options={accents}
             value={accent}
             onChange={onAccentChange}
-            selectedRing={accent}
           />
 
           {showSurfaceColors ? (
-            <SwatchRow
+            <ColorRoulette
               label="Menu"
               options={surfaces}
               value={surfaceValue}
               onChange={handleSurfaceChange}
-              selectedRing={accent}
             />
           ) : null}
         </div>

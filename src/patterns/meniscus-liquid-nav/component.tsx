@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useId, useLayoutEffect, useRef, useState, type CSSProperties } from "react";
 import {
   Briefcase,
   ChevronsLeft,
@@ -14,6 +14,7 @@ import {
   User,
   Users,
 } from "lucide-react";
+import { AnimatePresence, LayoutGroup, motion } from "motion/react";
 import type { PatternPreviewProps } from "@/types/pattern";
 import { MenuShowcase, MENU_ACCENTS } from "@/patterns/shared/menu-showcase";
 import { cn } from "@/lib/utils";
@@ -22,6 +23,13 @@ import "./meniscus.css";
 type Mode = "public" | "logged";
 type Orientation = "horizontal" | "vertical";
 type Side = "left" | "right";
+
+const gooey = {
+  type: "spring" as const,
+  stiffness: 240,
+  damping: 22,
+  mass: 1.15,
+};
 
 interface MeniscusItem {
   id: string;
@@ -44,16 +52,6 @@ const loggedActions: MeniscusItem[] = [
   { id: "classifieds", label: "Classificados", Icon: Briefcase },
   { id: "profile", label: "Perfil", Icon: User },
 ];
-
-function hexToRgb(hex: string): [number, number, number] {
-  const h = hex.replace("#", "");
-  const n = parseInt(h.length === 3 ? h.replace(/./g, "$&$&") : h, 16);
-  return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
-}
-
-function rgbString(rgb: [number, number, number]) {
-  return `${rgb[0]} ${rgb[1]} ${rgb[2]}`;
-}
 
 const clamp = (v: number, a: number, b: number) => (v < a ? a : v > b ? b : v);
 const smooth = (t: number) => t * t * (3 - 2 * t);
@@ -193,14 +191,17 @@ export default function MeniscusLiquidNav(_props: PatternPreviewProps) {
   const uid = useId().replace(/:/g, "");
   const rootRef = useRef<HTMLDivElement>(null);
   const dockRef = useRef<HTMLDivElement>(null);
+  const glassRef = useRef<HTMLDivElement>(null);
   const skinRef = useRef<SVGSVGElement>(null);
   const fillRef = useRef<SVGPathElement>(null);
+  const clipRef = useRef<SVGPathElement>(null);
   const beadRef = useRef<HTMLSpanElement>(null);
   const tabRefs = useRef<(HTMLButtonElement | null)[]>([]);
   const currentRef = useRef(0);
   const actionsRef = useRef(loggedActions);
   const orientationRef = useRef<Orientation>("horizontal");
   const sideRef = useRef<Side>("left");
+  const morphingRef = useRef(false);
 
   const [mode, setMode] = useState<Mode>("logged");
   const [orientation, setOrientation] = useState<Orientation>("horizontal");
@@ -218,7 +219,6 @@ export default function MeniscusLiquidNav(_props: PatternPreviewProps) {
   const isVertical = orientation === "vertical";
   const isCollapsed = isVertical && !expanded;
   const isRight = isVertical && side === "right";
-  const accentRgb = useMemo(() => hexToRgb(accent), [accent]);
   const active = actions[current] ?? actions[0];
 
   const physics = useRef({
@@ -257,11 +257,21 @@ export default function MeniscusLiquidNav(_props: PatternPreviewProps) {
     const sA = clamp(G.S * (1 + 0.06 * mag + 0.4 * q), G.S * 0.55, G.S * 2.1);
     const sB = clamp(G.S * (1 + 0.06 * mag - 0.4 * q), G.S * 0.55, G.S * 2.1);
 
+    const applyShape = (d: string) => {
+      fill.setAttribute("d", d);
+      clipRef.current?.setAttribute("d", d);
+      const glass = glassRef.current;
+      if (glass) {
+        const clip = `path('${d}')`;
+        glass.style.clipPath = clip;
+        glass.style.setProperty("-webkit-clip-path", clip);
+      }
+    };
+
     if (vertical) {
       // CX is absolute bead X; left trough expects distance from the left edge.
       const bx = onRight ? G.W - G.CX : G.CX;
-      fill.setAttribute(
-        "d",
+      applyShape(
         onRight
           ? troughRight(G.W, G.H, G.R, G.x, bx, G.RB, sA, sB)
           : troughLeft(G.W, G.H, G.R, G.x, bx, G.RB, sA, sB),
@@ -269,7 +279,7 @@ export default function MeniscusLiquidNav(_props: PatternPreviewProps) {
       const sy = 1 + 0.07 * mag;
       bead.style.transform = `translate3d(0,${G.x.toFixed(2)}px,0) scale(${(1 / sy).toFixed(3)},${sy.toFixed(3)})`;
     } else {
-      fill.setAttribute("d", troughTop(G.W, G.H, G.R, G.x, G.CY, G.RB, sA, sB));
+      applyShape(troughTop(G.W, G.H, G.R, G.x, G.CY, G.RB, sA, sB));
       const sx = 1 + 0.07 * mag;
       bead.style.transform = `translate3d(${G.x.toFixed(2)}px,0,0) scale(${sx.toFixed(3)},${(1 / sx).toFixed(3)})`;
     }
@@ -279,9 +289,7 @@ export default function MeniscusLiquidNav(_props: PatternPreviewProps) {
       const dx = Math.abs(G.x - (G.slots[i] ?? 0));
       tab.style.setProperty("--t", smooth(clamp(1 - dx / (G.span * 0.55), 0, 1)).toFixed(3));
     });
-
-    root.style.setProperty("--glow-rgb", rgbString(accentRgb));
-  }, [accentRgb]);
+  }, []);
 
   const run = useCallback(() => {
     const G = physics.current;
@@ -431,7 +439,10 @@ export default function MeniscusLiquidNav(_props: PatternPreviewProps) {
     };
 
     sync(true);
-    const ro = new ResizeObserver(() => sync(false));
+    const ro = new ResizeObserver(() => {
+      if (morphingRef.current) return;
+      sync(false);
+    });
     if (dockRef.current) ro.observe(dockRef.current);
     return () => {
       ro.disconnect();
@@ -439,6 +450,17 @@ export default function MeniscusLiquidNav(_props: PatternPreviewProps) {
       physics.current.raf = 0;
     };
   }, [measure, paint, run, mode, orientation, expanded, side]);
+
+  const onDockLayoutComplete = useCallback(() => {
+    morphingRef.current = false;
+    if (!measure()) return;
+    const G = physics.current;
+    const slot = G.slots[currentRef.current] ?? G.slots[0] ?? 0;
+    G.x = G.target = slot;
+    G.v = 0;
+    paint();
+    setReady(true);
+  }, [measure, paint]);
 
   useEffect(() => {
     paint();
@@ -572,7 +594,7 @@ export default function MeniscusLiquidNav(_props: PatternPreviewProps) {
       onVariantChange={(id) => {
         setOrientation(id as Orientation);
         if (id === "horizontal") setExpanded(true);
-        setReady(false);
+        morphingRef.current = true;
       }}
       extras={
         isVertical ? (
@@ -582,7 +604,7 @@ export default function MeniscusLiquidNav(_props: PatternPreviewProps) {
               className={expanded ? "active" : undefined}
               onClick={() => {
                 setExpanded(true);
-                setReady(false);
+                morphingRef.current = true;
               }}
             >
               Aberto
@@ -592,7 +614,7 @@ export default function MeniscusLiquidNav(_props: PatternPreviewProps) {
               className={!expanded ? "active" : undefined}
               onClick={() => {
                 setExpanded(false);
-                setReady(false);
+                morphingRef.current = true;
               }}
             >
               Ícones
@@ -601,143 +623,179 @@ export default function MeniscusLiquidNav(_props: PatternPreviewProps) {
         ) : null
       }
     >
-      <div className={cn("meniscus-stage", isVertical && "is-vertical")}>
-        <div
-          className={cn(
-            "meniscus",
-            isVertical && "is-vertical",
-            isCollapsed && "is-collapsed",
-            isRight && "is-right",
-          )}
-          ref={rootRef}
-          style={{ ["--glow-rgb" as string]: rgbString(accentRgb) }}
-        >
-          <div
+      <LayoutGroup id="meniscus-layout">
+        <div className={cn("meniscus-stage", isVertical && "is-vertical")}>
+          <motion.div
+            layout
             className={cn(
-              "meniscus-dock",
-              ready && "is-ready",
+              "meniscus",
               isVertical && "is-vertical",
               isCollapsed && "is-collapsed",
               isRight && "is-right",
             )}
-            ref={dockRef}
+            ref={rootRef}
+            style={
+              {
+                "--glow": accent,
+                "--menu-accent": accent,
+              } as CSSProperties
+            }
+            transition={gooey}
           >
-            <svg
-              className="meniscus-skin"
-              ref={skinRef}
-              viewBox={`0 0 ${box.w} ${box.h}`}
-              preserveAspectRatio="none"
-              aria-hidden="true"
+            <motion.div
+              layout
+              className={cn(
+                "meniscus-dock",
+                ready && "is-ready",
+                isVertical && "is-vertical",
+                isCollapsed && "is-collapsed",
+                isRight && "is-right",
+              )}
+              ref={dockRef}
+              transition={gooey}
+              onLayoutAnimationStart={() => {
+                morphingRef.current = true;
+              }}
+              onLayoutAnimationComplete={onDockLayoutComplete}
             >
-              <defs>
-                <linearGradient
-                  id={`mnPlate-${uid}`}
-                  x1={isVertical ? (isRight ? "0" : "1") : "0"}
-                  y1="0"
-                  x2={isVertical ? (isRight ? "1" : "0") : "0"}
-                  y2={isVertical ? "0" : "1"}
-                >
-                  <stop className="meniscus-plate-hi" offset="0" />
-                  <stop className="meniscus-plate-lo" offset="1" />
-                </linearGradient>
-                <linearGradient
-                  id={`mnRim-${uid}`}
-                  x1={isVertical ? (isRight ? "0" : "1") : "0"}
-                  y1="0"
-                  x2={isVertical ? (isRight ? "1" : "0") : "0"}
-                  y2={isVertical ? "0" : "1"}
-                >
-                  <stop className="meniscus-rim-hi" offset="0" />
-                  <stop className="meniscus-rim-lo" offset="1" />
-                </linearGradient>
-              </defs>
-              <path
-                ref={fillRef}
-                className="meniscus-fill"
-                style={{ fill: `url(#mnPlate-${uid})`, stroke: `url(#mnRim-${uid})` }}
-                d=""
-              />
-            </svg>
-            <span className="meniscus-bead" ref={beadRef} aria-hidden="true" />
-            <div
-              className="meniscus-tabs"
-              role="tablist"
-              aria-label="Navegação Meniscus"
-              onKeyDown={onKeyDown}
-            >
-              {actions.map((tab, i) => {
-                const Icon = tab.Icon;
-                return (
-                  <button
-                    key={`${mode}-${orientation}-${side}-${expanded}-${tab.id}`}
-                    ref={(el) => {
-                      tabRefs.current[i] = el;
-                    }}
-                    type="button"
-                    role="tab"
-                    className="meniscus-tab"
-                    aria-label={tab.label}
-                    aria-selected={current === i}
-                    tabIndex={current === i ? 0 : -1}
-                    title={isCollapsed ? tab.label : undefined}
-                    onClick={onTabClick(i)}
-                  >
-                    <span className="meniscus-icon-slot">
-                      <Icon className="meniscus-icon" strokeWidth={1.8} />
-                    </span>
-                    {!isCollapsed ? <span className="meniscus-label">{tab.label}</span> : null}
-                  </button>
-                );
-              })}
-            </div>
-
-            {isVertical ? (
-              <button
-                type="button"
-                className="meniscus-rail-toggle"
-                aria-label={expanded ? "Retrair menu" : "Expandir menu"}
-                onClick={() => {
-                  setExpanded((value) => !value);
-                  setReady(false);
-                }}
+              <div className="meniscus-glass" ref={glassRef} aria-hidden="true">
+                <span className="meniscus-glass-base" />
+                <span className="meniscus-glass-tint" />
+                <span className="meniscus-glass-sheen" />
+                <span className="meniscus-glass-rim" />
+              </div>
+              <svg
+                className="meniscus-skin"
+                ref={skinRef}
+                viewBox={`0 0 ${box.w} ${box.h}`}
+                preserveAspectRatio="none"
+                aria-hidden="true"
               >
-                {isRight
-                  ? expanded
-                    ? <ChevronsRight size={16} />
-                    : <ChevronsLeft size={16} />
-                  : expanded
-                    ? <ChevronsLeft size={16} />
-                    : <ChevronsRight size={16} />}
-              </button>
-            ) : null}
-          </div>
-        </div>
+                <defs>
+                  <clipPath id={`mnClip-${uid}`} clipPathUnits="userSpaceOnUse">
+                    <path ref={clipRef} d="" />
+                  </clipPath>
+                </defs>
+                <path ref={fillRef} className="meniscus-fill" d="" />
+              </svg>
+              <span className="meniscus-bead" ref={beadRef} aria-hidden="true" />
+              <motion.div
+                layout
+                className="meniscus-tabs"
+                role="tablist"
+                aria-label="Navegação Meniscus"
+                onKeyDown={onKeyDown}
+                transition={gooey}
+              >
+                {actions.map((tab, i) => {
+                  const Icon = tab.Icon;
+                  return (
+                    <motion.button
+                      layout
+                      key={`${mode}-${tab.id}`}
+                      ref={(el) => {
+                        tabRefs.current[i] = el;
+                      }}
+                      type="button"
+                      role="tab"
+                      className="meniscus-tab"
+                      aria-label={tab.label}
+                      aria-selected={current === i}
+                      tabIndex={current === i ? 0 : -1}
+                      title={isCollapsed ? tab.label : undefined}
+                      onClick={onTabClick(i)}
+                      transition={gooey}
+                    >
+                      <span className="meniscus-icon-slot">
+                        <Icon className="meniscus-icon" strokeWidth={1.8} />
+                      </span>
+                      <AnimatePresence initial={false} mode="popLayout">
+                        {!isCollapsed ? (
+                          <motion.span
+                            key={`${tab.id}-label`}
+                            layout
+                            className="meniscus-label"
+                            initial={{ opacity: 0, maxWidth: 0, scale: 0.92 }}
+                            animate={{ opacity: 1, maxWidth: 160, scale: 1 }}
+                            exit={{ opacity: 0, maxWidth: 0, scale: 0.92 }}
+                            transition={gooey}
+                          >
+                            {tab.label}
+                          </motion.span>
+                        ) : null}
+                      </AnimatePresence>
+                    </motion.button>
+                  );
+                })}
+              </motion.div>
 
-        {isVertical ? (
-          <div className="meniscus-side-toggle menu-show-mode" role="group" aria-label="Lado do menu">
-            <button
-              type="button"
-              className={side === "left" ? "active" : undefined}
-              onClick={() => {
-                setSide("left");
-                setReady(false);
-              }}
-            >
-              Esquerda
-            </button>
-            <button
-              type="button"
-              className={side === "right" ? "active" : undefined}
-              onClick={() => {
-                setSide("right");
-                setReady(false);
-              }}
-            >
-              Direita
-            </button>
-          </div>
-        ) : null}
-      </div>
+              <AnimatePresence initial={false}>
+                {isVertical ? (
+                  <motion.button
+                    layout
+                    key="rail-toggle"
+                    type="button"
+                    className="meniscus-rail-toggle"
+                    aria-label={expanded ? "Retrair menu" : "Expandir menu"}
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.9 }}
+                    transition={gooey}
+                    onClick={() => {
+                      setExpanded((value) => !value);
+                      morphingRef.current = true;
+                    }}
+                  >
+                    {isRight
+                      ? expanded
+                        ? <ChevronsRight size={16} />
+                        : <ChevronsLeft size={16} />
+                      : expanded
+                        ? <ChevronsLeft size={16} />
+                        : <ChevronsRight size={16} />}
+                  </motion.button>
+                ) : null}
+              </AnimatePresence>
+            </motion.div>
+          </motion.div>
+
+          <AnimatePresence initial={false}>
+            {isVertical ? (
+              <motion.div
+                key="side-toggle"
+                className="meniscus-side-toggle menu-show-mode"
+                role="group"
+                aria-label="Lado do menu"
+                initial={{ opacity: 0, y: 6 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 6 }}
+                transition={gooey}
+              >
+                <button
+                  type="button"
+                  className={side === "left" ? "active" : undefined}
+                  onClick={() => {
+                    setSide("left");
+                    morphingRef.current = true;
+                  }}
+                >
+                  Esquerda
+                </button>
+                <button
+                  type="button"
+                  className={side === "right" ? "active" : undefined}
+                  onClick={() => {
+                    setSide("right");
+                    morphingRef.current = true;
+                  }}
+                >
+                  Direita
+                </button>
+              </motion.div>
+            ) : null}
+          </AnimatePresence>
+        </div>
+      </LayoutGroup>
     </MenuShowcase>
   );
 }
