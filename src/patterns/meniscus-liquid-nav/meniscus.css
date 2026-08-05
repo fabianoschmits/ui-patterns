@@ -7,9 +7,9 @@
   --icon-on: #fff;
   --glow: rgb(var(--glow-rgb));
   --dock-r: 22px;
-  --bead-d: 56px;
+  --bead-d: 68px;
   --bead-cy: 0px;
-  --rise: 42px;
+  --rise: 40px;
   position: relative;
   width: 100%;
   background: transparent;
@@ -26,7 +26,7 @@ html[data-theme="dark"] .meniscus-show .meniscus {
 .meniscus-dock {
   position: relative;
   width: 100%;
-  height: 4.25rem;
+  height: 5rem;
   flex: none;
   touch-action: pan-y;
   -webkit-tap-highlight-color: transparent;
@@ -139,15 +139,17 @@ html[data-theme="dark"] .meniscus-rim-hi { stop-opacity: 0.28; }
 .meniscus-icon {
   position: absolute;
   left: 50%;
-  top: 42%;
-  width: 1.25rem;
-  height: 1.25rem;
+  top: 50%;
+  width: 1.45rem;
+  height: 1.45rem;
   color: var(--icon-off);
+  /* Rest at dock center; rise lands the icon dead-center in the bead. */
   transform:
-    translate(-50%, calc(-50% - (var(--t) * var(--rise))))
-    scale(calc(1 + var(--t) * 0.12));
+    translate(-50%, -50%)
+    translateY(calc(var(--t) * var(--rise) * -1));
   transition: color 0.2s ease;
   pointer-events: none;
+  will-change: transform;
 }
 
 .meniscus-tab .meniscus-icon {
@@ -157,14 +159,14 @@ html[data-theme="dark"] .meniscus-rim-hi { stop-opacity: 0.28; }
 .meniscus-label {
   position: absolute;
   left: 50%;
-  bottom: 0.55rem;
+  bottom: 12%;
   color: var(--icon-off);
-  font-size: 0.58rem;
+  font-size: 0.62rem;
   font-weight: 550;
   letter-spacing: 0.01em;
   line-height: 1;
   opacity: calc(0.7 + var(--t) * 0.3);
-  transform: translateX(-50%) scale(calc(1 + var(--t) * 0.04));
+  transform: translateX(-50%);
   white-space: nowrap;
   pointer-events: none;
 }

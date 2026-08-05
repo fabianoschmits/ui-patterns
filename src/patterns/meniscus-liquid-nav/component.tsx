@@ -216,19 +216,20 @@ export default function MeniscusLiquidNav(_props: PatternPreviewProps) {
     G.span = G.slots.length > 1 ? G.slots[1] - G.slots[0] : W;
     G.W = W;
     G.H = H;
-    G.R = clamp(H * 0.2, 13, 20);
+    G.R = clamp(H * 0.22, 14, 22);
     G.CY = 0;
 
-    let D = Math.min(H * 0.68, G.span * 0.78);
-    const room = (G.slots[0] ?? W / 2) - G.R - 6;
+    // Larger bead so the active icon sits clearly inside the circle.
+    let D = Math.min(H * 0.92, G.span * 0.88);
+    const room = (G.slots[0] ?? W / 2) - G.R - 4;
     for (let i = 0; i < 3; i++) {
-      const hw = reach(D * 0.22, D / 2 + 6, G.CY);
+      const hw = reach(D * 0.22, D / 2 + 5, G.CY);
       if (hw <= room) break;
       D *= room / hw;
     }
-    G.D = Math.max(Math.round(D), 30);
+    G.D = Math.max(Math.round(D), 40);
     G.S = G.D * 0.22;
-    G.RB = G.D / 2 + 6;
+    G.RB = G.D / 2 + 5;
 
     dock.style.setProperty("--dock-r", `${G.R.toFixed(1)}px`);
     dock.style.setProperty("--bead-d", `${G.D}px`);
