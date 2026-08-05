@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from "react";
 import {
   Briefcase,
   ChevronsLeft,
@@ -150,6 +150,7 @@ export default function MeniscusLiquidNav(_props: PatternPreviewProps) {
   const uid = useId().replace(/:/g, "");
   const rootRef = useRef<HTMLDivElement>(null);
   const dockRef = useRef<HTMLDivElement>(null);
+  const skinRef = useRef<SVGSVGElement>(null);
   const fillRef = useRef<SVGPathElement>(null);
   const beadRef = useRef<HTMLSpanElement>(null);
   const tabRefs = useRef<(HTMLButtonElement | null)[]>([]);
@@ -162,7 +163,7 @@ export default function MeniscusLiquidNav(_props: PatternPreviewProps) {
   const [expanded, setExpanded] = useState(true);
   const [current, setCurrent] = useState(0);
   const [ready, setReady] = useState(false);
-  const [box, setBox] = useState({ w: 400, h: 80 });
+  const [box, setBox] = useState({ w: 400, h: 48 });
   const [accent, setAccent] = useState(MENU_ACCENTS[0].value);
 
   const actions = mode === "logged" ? loggedActions : publicActions;
@@ -262,7 +263,7 @@ export default function MeniscusLiquidNav(_props: PatternPreviewProps) {
     const r = dock.getBoundingClientRect();
     const W = Math.round(r.width);
     const H = Math.round(r.height);
-    if (W < 40 || H < 30) return false;
+    if (W < 40 || H < 24) return false;
 
     const G = physics.current;
     const vertical = orientationRef.current === "vertical";
@@ -325,7 +326,10 @@ export default function MeniscusLiquidNav(_props: PatternPreviewProps) {
     } else {
       dock.style.setProperty("--rise", `${(H / 2 - G.CY).toFixed(1)}px`);
     }
-    setBox({ w: W, h: H });
+
+    // Keep SVG viewBox in sync before paint — avoids a one-frame drop-shadow glitch.
+    skinRef.current?.setAttribute("viewBox", `0 0 ${W} ${H}`);
+    setBox((prev) => (prev.w === W && prev.h === H ? prev : { w: W, h: H }));
     return true;
   }, []);
 
@@ -351,7 +355,7 @@ export default function MeniscusLiquidNav(_props: PatternPreviewProps) {
     [paint, run],
   );
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const sync = (forceSnap: boolean) => {
       if (!measure()) return;
       const G = physics.current;
@@ -555,6 +559,7 @@ export default function MeniscusLiquidNav(_props: PatternPreviewProps) {
           >
             <svg
               className="meniscus-skin"
+              ref={skinRef}
               viewBox={`0 0 ${box.w} ${box.h}`}
               preserveAspectRatio="none"
               aria-hidden="true"
