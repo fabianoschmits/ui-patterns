@@ -3,6 +3,7 @@ import { Manrope, Syne } from "next/font/google";
 import Script from "next/script";
 import "./globals.css";
 import { AppProviders } from "@/providers/app-providers";
+import { ThemeFab } from "@/components/shared/theme-fab";
 
 const manrope = Manrope({
   subsets: ["latin"],
@@ -57,6 +58,7 @@ export default function RootLayout({
           <a className="skip-link" href="#main-content">
             Pular para o conteúdo
           </a>
+          <ThemeFab />
           <main id="main-content">{children}</main>
         </AppProviders>
       </body>

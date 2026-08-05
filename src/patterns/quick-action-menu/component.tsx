@@ -139,7 +139,12 @@ export default function QuickActionMenuDemo(_props: PatternPreviewProps) {
             aria-label="Menu rápido"
             transition={gooey}
           >
-            <motion.div layout className="qam-bar-bg" transition={gooey} />
+            <motion.div layout className="qam-bar-bg" transition={gooey}>
+              <span className="qam-glass-base" aria-hidden="true" />
+              <span className="qam-glass-tint" aria-hidden="true" />
+              <span className="qam-glass-sheen" aria-hidden="true" />
+              <span className="qam-glass-rim" aria-hidden="true" />
+            </motion.div>
 
             <motion.div layout className="qam-items" transition={gooey}>
               {actions.map((action) => {

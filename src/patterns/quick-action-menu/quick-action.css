@@ -2,16 +2,21 @@
   --qam-ink: var(--ink);
   --qam-muted: var(--muted);
   --qam-faint: color-mix(in srgb, var(--muted) 78%, transparent);
-  --qam-bar-bg: color-mix(in srgb, var(--menu-surface, var(--canvas)) 90%, transparent);
-  --qam-bar-border: color-mix(in srgb, var(--menu-surface, var(--ink)) 18%, var(--line));
-  --qam-bar-shadow: 0 18px 50px color-mix(in srgb, var(--ink) 12%, transparent);
+  --qam-glass-blur: 18px;
+  --qam-glass-sat: 1.4;
+  --qam-glass-tint: color-mix(in srgb, var(--menu-surface, var(--canvas)) 42%, transparent);
+  --qam-bar-shadow:
+    0 10px 28px color-mix(in srgb, var(--ink) 10%, transparent),
+    0 2px 8px color-mix(in srgb, var(--ink) 6%, transparent);
   --qam-label-on: var(--ink);
   --qam-accent: var(--menu-accent, #00b0b0);
 }
 
 html[data-theme="dark"] .qam-show {
-  --qam-bar-bg: color-mix(in srgb, var(--menu-surface, var(--canvas-deep)) 88%, transparent);
-  --qam-bar-shadow: 0 18px 50px rgb(0 0 0 / 0.35);
+  --qam-glass-tint: color-mix(in srgb, var(--menu-surface, var(--canvas-deep)) 38%, transparent);
+  --qam-bar-shadow:
+    0 14px 36px rgb(0 0 0 / 0.38),
+    0 2px 10px rgb(0 0 0 / 0.22);
 }
 
 .qam-show.is-vertical .menu-show-slot {
@@ -65,16 +70,88 @@ html[data-theme="dark"] .qam-show {
   position: absolute;
   inset: 0;
   z-index: 0;
-  border: 1px solid var(--qam-bar-border);
+  isolation: isolate;
   border-radius: 22px;
-  background: var(--qam-bar-bg);
   box-shadow: var(--qam-bar-shadow);
-  backdrop-filter: blur(12px);
-  transition: background 0.35s ease, border-color 0.35s ease, box-shadow 0.35s ease;
+  overflow: hidden;
+  pointer-events: none;
+  transition: box-shadow 0.35s ease;
 }
 
 .qam-bar.is-vertical .qam-bar-bg {
   border-radius: 26px;
+}
+
+.qam-glass-base,
+.qam-glass-tint,
+.qam-glass-sheen,
+.qam-glass-rim {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+}
+
+.qam-glass-base {
+  backdrop-filter: blur(var(--qam-glass-blur)) saturate(var(--qam-glass-sat)) brightness(1.04);
+  -webkit-backdrop-filter: blur(var(--qam-glass-blur)) saturate(var(--qam-glass-sat)) brightness(1.04);
+}
+
+.qam-glass-tint {
+  background:
+    linear-gradient(
+      165deg,
+      color-mix(in srgb, var(--qam-glass-tint) 100%, #fff 12%),
+      color-mix(in srgb, var(--qam-glass-tint) 55%, transparent) 58%,
+      color-mix(in srgb, var(--qam-glass-tint) 70%, transparent)
+    );
+  transition: background 0.35s ease;
+}
+
+.qam-glass-sheen {
+  background:
+    linear-gradient(
+      118deg,
+      rgb(255 255 255 / 0.62) 0%,
+      rgb(255 255 255 / 0.18) 18%,
+      transparent 40%,
+      transparent 62%,
+      rgb(255 255 255 / 0.14) 100%
+    );
+  opacity: 0.85;
+  mix-blend-mode: soft-light;
+}
+
+html[data-theme="dark"] .qam-glass-sheen {
+  background:
+    linear-gradient(
+      118deg,
+      rgb(255 255 255 / 0.28) 0%,
+      rgb(255 255 255 / 0.08) 20%,
+      transparent 42%,
+      transparent 64%,
+      rgb(255 255 255 / 0.06) 100%
+    );
+  opacity: 0.9;
+  mix-blend-mode: screen;
+}
+
+.qam-glass-rim {
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.72),
+    inset 0 -1px 0 rgb(255 255 255 / 0.12),
+    inset 1px 0 0 rgb(255 255 255 / 0.28),
+    inset -1px 0 0 rgb(255 255 255 / 0.18),
+    0 0 0 1px color-mix(in srgb, var(--ink) 8%, transparent);
+}
+
+html[data-theme="dark"] .qam-glass-rim {
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.28),
+    inset 0 -1px 0 rgb(0 0 0 / 0.35),
+    inset 1px 0 0 rgb(255 255 255 / 0.1),
+    inset -1px 0 0 rgb(255 255 255 / 0.06),
+    0 0 0 1px rgb(255 255 255 / 0.1);
 }
 
 .qam-items {
@@ -226,8 +303,9 @@ html[data-theme="dark"] .qam-active-pill {
 
 @media (min-width: 720px) {
   .qam-show.is-vertical .menu-show-body {
+    display: grid;
     grid-template-columns: auto minmax(0, 1fr);
-    grid-template-rows: auto auto minmax(0, 1fr) auto;
+    grid-template-rows: auto auto auto auto;
     column-gap: 1.5rem;
     align-items: start;
     justify-items: stretch;
@@ -255,15 +333,16 @@ html[data-theme="dark"] .qam-active-pill {
     grid-row: 1 / span 3;
     width: auto;
     max-width: none;
-    align-self: center;
+    align-self: start;
     justify-self: start;
     place-items: start;
-    padding: 0.5rem 0;
+    padding: 0.5rem 0 1rem;
   }
 
   .qam-show.is-vertical .menu-show-palette {
     grid-column: 1 / -1;
     grid-row: 4;
+    margin-top: 0.75rem;
     justify-self: center;
   }
 

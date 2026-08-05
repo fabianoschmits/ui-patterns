@@ -20,13 +20,13 @@ export const MENU_ACCENTS: AccentSwatch[] = [
 ];
 
 export const MENU_SURFACES: AccentSwatch[] = [
-  { name: "Gelo", value: "#f3f1ec" },
-  { name: "Névoa", value: "#e7edf2" },
-  { name: "Areia", value: "#e8dfd0" },
-  { name: "Sage", value: "#d7e4dc" },
-  { name: "Lavanda", value: "#e2dde8" },
-  { name: "Carvão", value: "#2b2e36" },
-  { name: "Noite", value: "#14161c" },
+  { name: "Branco", value: "#f5f4f2" },
+  { name: "Cinza claro", value: "#e4e3e0" },
+  { name: "Pedra", value: "#c8c6c1" },
+  { name: "Fumaça", value: "#8f8e8a" },
+  { name: "Grafite", value: "#565552" },
+  { name: "Carvão", value: "#2c2b29" },
+  { name: "Preto", value: "#151514" },
 ];
 
 export interface MenuModeOption {
