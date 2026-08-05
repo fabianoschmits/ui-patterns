@@ -315,10 +315,19 @@ html[data-theme="dark"] .qam-active-pill {
     text-align: center;
   }
 
+  .qam-show.is-vertical .menu-show-stage {
+    min-height: min(48vh, 24rem);
+  }
+
   .qam-show.is-vertical .menu-show-slot {
     width: 100%;
     max-width: min(40rem, 100%);
     place-items: center;
+  }
+
+  .qam-show.is-vertical .menu-show-palette {
+    margin-top: 2rem;
+    padding-bottom: 2rem;
   }
 
   .qam-stage.is-vertical {
@@ -330,6 +339,15 @@ html[data-theme="dark"] .qam-active-pill {
 @media (max-width: 719px) {
   .qam-show.is-vertical .menu-show-slot {
     place-items: center;
+  }
+
+  .qam-show.is-vertical .menu-show-stage {
+    min-height: min(46vh, 20rem);
+  }
+
+  .qam-show.is-vertical .menu-show-palette {
+    margin-top: 2.25rem;
+    padding-bottom: 3rem;
   }
 
   .qam-stage.is-vertical {
