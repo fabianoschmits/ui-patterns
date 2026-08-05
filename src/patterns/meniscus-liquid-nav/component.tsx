@@ -286,7 +286,12 @@ export default function MeniscusLiquidNav(_props: PatternPreviewProps) {
     G.CY = 0;
 
     const axis = vertical ? W : H;
-    let D = Math.min(axis * (vertical ? 0.7 : 0.88), G.span * (vertical ? 0.72 : 0.82));
+    // Keep the bead compact — do not scale it up just because the bar got wider.
+    let D = Math.min(
+      axis * (vertical ? 0.66 : 0.8),
+      G.span * (vertical ? 0.68 : 0.7),
+      vertical ? 50 : 46,
+    );
     // Extra corner clearance so the trough never eats into the rounded ends.
     const edgeRoom = (G.slots[0] ?? (vertical ? H : W) / 2) - G.R - (vertical ? 25 : 22);
     for (let i = 0; i < 5; i++) {
@@ -294,12 +299,12 @@ export default function MeniscusLiquidNav(_props: PatternPreviewProps) {
       if (hw <= edgeRoom) break;
       D *= edgeRoom / Math.max(hw, 1);
     }
-    const preferred = Math.max(Math.round(D), vertical ? 44 : 42);
+    const preferred = Math.max(Math.round(D), vertical ? 40 : 38);
     const preferredReach = reach(preferred * 0.22, preferred / 2 + 5, 0);
     G.D =
       preferredReach <= edgeRoom
         ? preferred
-        : Math.max(Math.round(D), vertical ? 34 : 32);
+        : Math.max(Math.round(D), vertical ? 32 : 30);
     G.S = G.D * 0.22;
     G.RB = G.D / 2 + 5;
 
