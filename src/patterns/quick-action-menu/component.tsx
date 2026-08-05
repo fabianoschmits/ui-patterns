@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type CSSProperties } from "react";
+import { useEffect, useRef, useState, type CSSProperties } from "react";
 import {
   Briefcase,
   ChevronsLeft,
@@ -65,11 +65,96 @@ export default function QuickActionMenuDemo(_props: PatternPreviewProps) {
   const [expanded, setExpanded] = useState(true);
   const [active, setActive] = useState("home");
   const [accent, setAccent] = useState(MENU_ACCENTS[0].value);
+  const barRef = useRef<HTMLElement>(null);
+  const itemRefs = useRef<(HTMLButtonElement | null)[]>([]);
+  const orientationRef = useRef(orientation);
+  const actionsRef = useRef(loggedActions);
+  const activeRef = useRef(active);
 
   const actions = mode === "logged" ? loggedActions : publicActions;
+  actionsRef.current = actions;
+  orientationRef.current = orientation;
+  activeRef.current = active;
   const activeLabel = actions.find((a) => a.id === active)?.label ?? "Home";
   const isVertical = orientation === "vertical";
   const isCollapsed = isVertical && !expanded;
+
+  useEffect(() => {
+    const bar = barRef.current;
+    if (!bar) return;
+
+    let pid: number | null = null;
+    let start = 0;
+    let capturing = false;
+    let moved = false;
+
+    const nearestId = (clientX: number, clientY: number) => {
+      const vertical = orientationRef.current === "vertical";
+      let best = actionsRef.current[0]?.id ?? "home";
+      let bestDist = Infinity;
+      itemRefs.current.forEach((el, index) => {
+        if (!el) return;
+        const rect = el.getBoundingClientRect();
+        const cx = rect.left + rect.width / 2;
+        const cy = rect.top + rect.height / 2;
+        const dist = vertical
+          ? Math.abs(clientY - cy)
+          : Math.abs(clientX - cx);
+        if (dist < bestDist) {
+          bestDist = dist;
+          best = actionsRef.current[index]?.id ?? best;
+        }
+      });
+      return best;
+    };
+
+    const onDown = (e: PointerEvent) => {
+      if (e.button !== 0 && e.pointerType === "mouse") return;
+      pid = e.pointerId;
+      start = orientationRef.current === "vertical" ? e.clientY : e.clientX;
+      capturing = false;
+      moved = false;
+    };
+
+    const onMove = (e: PointerEvent) => {
+      if (pid !== e.pointerId) return;
+      const pos = orientationRef.current === "vertical" ? e.clientY : e.clientX;
+      if (!capturing) {
+        if (Math.abs(pos - start) < 8) return;
+        capturing = true;
+        moved = true;
+        bar.setPointerCapture(e.pointerId);
+      }
+      const next = nearestId(e.clientX, e.clientY);
+      if (next !== activeRef.current) setActive(next);
+    };
+
+    const onUp = (e: PointerEvent) => {
+      if (pid !== e.pointerId) return;
+      pid = null;
+      if (!moved) return;
+      const next = nearestId(e.clientX, e.clientY);
+      setActive(next);
+
+      const block = (ev: Event) => {
+        ev.preventDefault();
+        ev.stopPropagation();
+        bar.removeEventListener("click", block, true);
+      };
+      bar.addEventListener("click", block, true);
+    };
+
+    bar.addEventListener("pointerdown", onDown);
+    bar.addEventListener("pointermove", onMove);
+    bar.addEventListener("pointerup", onUp);
+    bar.addEventListener("pointercancel", onUp);
+    return () => {
+      bar.removeEventListener("pointerdown", onDown);
+      bar.removeEventListener("pointermove", onMove);
+      bar.removeEventListener("pointerup", onUp);
+      bar.removeEventListener("pointercancel", onUp);
+    };
+  }, [mode, orientation, expanded]);
 
   return (
     <MenuShowcase
@@ -83,8 +168,8 @@ export default function QuickActionMenuDemo(_props: PatternPreviewProps) {
       title={activeLabel}
       description={
         isVertical
-          ? "Variante lateral — aberta com rótulos ou retraída só com ícones."
-          : "Toque uma aba — a pill sobe com o ícone."
+          ? "Variante lateral — toque ou deslize entre os itens."
+          : "Toque ou deslize — a pill segue o dedo."
       }
       accent={accent}
       onAccentChange={setAccent}
@@ -130,6 +215,7 @@ export default function QuickActionMenuDemo(_props: PatternPreviewProps) {
       <LayoutGroup id="qam-layout">
         <div className={cn("qam-stage", isVertical && "is-vertical")}>
           <motion.nav
+            ref={barRef}
             layout
             className={cn(
               "qam-bar",
@@ -147,7 +233,7 @@ export default function QuickActionMenuDemo(_props: PatternPreviewProps) {
             </motion.div>
 
             <motion.div layout className="qam-items" transition={gooey}>
-              {actions.map((action) => {
+              {actions.map((action, index) => {
                 const Icon = action.icon;
                 const isActive = active === action.id;
 
@@ -155,6 +241,9 @@ export default function QuickActionMenuDemo(_props: PatternPreviewProps) {
                   <motion.button
                     layout
                     key={action.id}
+                    ref={(el) => {
+                      itemRefs.current[index] = el;
+                    }}
                     type="button"
                     className={cn("qam-item", isActive && "is-active")}
                     aria-label={action.label}

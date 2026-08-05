@@ -2,16 +2,18 @@
   --bar: color-mix(in srgb, var(--menu-surface, var(--canvas)) 90%, transparent);
   --bar-hi: color-mix(in srgb, var(--menu-surface, var(--canvas)) 96%, #fff);
   --bar-lo: color-mix(in srgb, var(--menu-surface, var(--canvas)) 84%, transparent);
-  --bar-border: color-mix(in srgb, var(--menu-surface, var(--ink)) 18%, var(--line));
   --icon-off: color-mix(in srgb, var(--muted) 78%, transparent);
   --icon-on: #fff;
   --glow: rgb(var(--glow-rgb));
-  --dock-r: 22px;
+  --dock-r: 24px;
   --bead-d: 68px;
+  --bead-cx: 0px;
   --bead-cy: 0px;
   --rise: 40px;
   position: relative;
   width: 100%;
+  max-width: 420px;
+  margin-inline: auto;
   background: transparent;
   color: var(--ink);
   font-family: var(--font-ui);
@@ -23,44 +25,40 @@ html[data-theme="dark"] .meniscus-show .meniscus {
   --bar-lo: color-mix(in srgb, var(--menu-surface, var(--canvas-deep)) 82%, transparent);
 }
 
+.meniscus-show.is-vertical .meniscus {
+  width: auto;
+  max-width: none;
+}
+
 .meniscus-dock {
   position: relative;
   width: 100%;
   height: 5rem;
   flex: none;
-  touch-action: pan-y;
+  touch-action: none;
   -webkit-tap-highlight-color: transparent;
   background: var(--bar);
-  border: 1px solid var(--bar-border);
   border-radius: var(--dock-r);
-  box-shadow: 0 18px 50px color-mix(in srgb, var(--ink) 12%, transparent);
-  backdrop-filter: blur(12px);
-}
-
-html[data-theme="dark"] .meniscus-dock {
-  box-shadow: 0 18px 50px rgb(0 0 0 / 0.35);
 }
 
 .meniscus-dock.is-ready {
   background: none;
-  border-color: transparent;
-  box-shadow: none;
-  backdrop-filter: none;
 }
 
-.meniscus-cast {
-  position: absolute;
-  inset: 46% 7% 6% 7%;
-  border-radius: 999px;
-  background: var(--bar);
-  box-shadow:
-    0 10px 22px -8px color-mix(in srgb, var(--ink) 18%, transparent),
-    0 24px 40px -20px color-mix(in srgb, var(--ink) 14%, transparent);
-  opacity: 0;
+.meniscus-dock.is-vertical {
+  display: flex;
+  width: min(13rem, 100%);
+  height: auto;
+  min-height: 18rem;
+  margin-inline: auto;
+  flex-direction: column;
+  padding: 0.55rem 0.4rem 0.45rem;
+  gap: 0.25rem;
 }
 
-.meniscus-dock.is-ready .meniscus-cast {
-  opacity: 1;
+.meniscus-dock.is-vertical.is-collapsed {
+  width: 4.5rem;
+  padding-inline: 0.35rem;
 }
 
 .meniscus-skin {
@@ -69,7 +67,8 @@ html[data-theme="dark"] .meniscus-dock {
   width: 100%;
   height: 100%;
   overflow: visible;
-  filter: drop-shadow(0 10px 22px color-mix(in srgb, var(--ink) 12%, transparent));
+  filter: drop-shadow(0 12px 26px color-mix(in srgb, var(--ink) 14%, transparent));
+  pointer-events: none;
 }
 
 .meniscus-fill {
@@ -103,6 +102,11 @@ html[data-theme="dark"] .meniscus-rim-hi { stop-opacity: 0.28; }
   transition: background 0.35s ease, box-shadow 0.35s ease;
 }
 
+.meniscus-dock.is-vertical .meniscus-bead {
+  top: 0;
+  left: var(--bead-cx);
+}
+
 .meniscus-dock.is-ready .meniscus-bead { opacity: 1; }
 
 .meniscus-tabs {
@@ -110,7 +114,17 @@ html[data-theme="dark"] .meniscus-rim-hi { stop-opacity: 0.28; }
   inset: 0;
   z-index: 2;
   display: flex;
-  padding-inline: 0.35rem;
+  padding-inline: clamp(1.15rem, 5.5vw, 1.85rem);
+}
+
+.meniscus-dock.is-vertical .meniscus-tabs {
+  position: relative;
+  inset: auto;
+  flex: 1;
+  flex-direction: column;
+  justify-content: space-evenly;
+  padding: 0.35rem 0.15rem;
+  gap: 0.15rem;
 }
 
 .meniscus-tab {
@@ -124,6 +138,22 @@ html[data-theme="dark"] .meniscus-rim-hi { stop-opacity: 0.28; }
   color: inherit;
   cursor: pointer;
   --t: 0;
+}
+
+.meniscus-dock.is-vertical .meniscus-tab {
+  flex: 0 0 auto;
+  display: flex;
+  width: 100%;
+  height: auto;
+  min-height: 2.85rem;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 0.45rem;
+  padding: 0.15rem 0.3rem;
+}
+
+.meniscus-dock.is-vertical.is-collapsed .meniscus-tab {
+  justify-content: center;
 }
 
 .meniscus-tab:focus-visible {
@@ -143,13 +173,21 @@ html[data-theme="dark"] .meniscus-rim-hi { stop-opacity: 0.28; }
   width: 1.45rem;
   height: 1.45rem;
   color: var(--icon-off);
-  /* Rest at dock center; rise lands the icon dead-center in the bead. */
   transform:
     translate(-50%, -50%)
     translateY(calc(var(--t) * var(--rise) * -1));
   transition: color 0.2s ease;
   pointer-events: none;
   will-change: transform;
+}
+
+.meniscus-dock.is-vertical .meniscus-icon {
+  position: relative;
+  left: auto;
+  top: auto;
+  flex: none;
+  transform:
+    translateX(calc(var(--t) * var(--rise) * -1));
 }
 
 .meniscus-tab .meniscus-icon {
@@ -171,7 +209,43 @@ html[data-theme="dark"] .meniscus-rim-hi { stop-opacity: 0.28; }
   pointer-events: none;
 }
 
+.meniscus-dock.is-vertical .meniscus-label {
+  position: relative;
+  left: auto;
+  bottom: auto;
+  transform: none;
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
 .meniscus-tab[aria-selected="true"] .meniscus-label {
   color: var(--ink);
   font-weight: 700;
+}
+
+.meniscus-rail-toggle {
+  position: relative;
+  z-index: 2;
+  display: grid;
+  width: 100%;
+  height: 2.25rem;
+  place-items: center;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--ink) 6%, transparent);
+  color: var(--muted);
+}
+
+.meniscus-rail-toggle:hover {
+  background: color-mix(in srgb, var(--menu-accent) 16%, transparent);
+  color: var(--ink);
+}
+
+@media (max-width: 640px) {
+  .meniscus-dock:not(.is-vertical) {
+    height: 5.15rem;
+  }
+
+  .meniscus-tabs {
+    padding-inline: clamp(1.25rem, 7vw, 2rem);
+  }
 }

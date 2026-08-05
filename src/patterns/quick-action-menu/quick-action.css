@@ -50,6 +50,7 @@ html[data-theme="dark"] .qam-show {
   margin-inline: auto;
   overflow: visible;
   padding-bottom: 0.35rem;
+  touch-action: none;
 }
 
 .qam-bar.is-vertical {

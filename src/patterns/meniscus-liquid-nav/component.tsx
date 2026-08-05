@@ -3,6 +3,8 @@
 import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
 import {
   Briefcase,
+  ChevronsLeft,
+  ChevronsRight,
   HelpCircle,
   Home,
   Info,
@@ -14,9 +16,11 @@ import {
 } from "lucide-react";
 import type { PatternPreviewProps } from "@/types/pattern";
 import { MenuShowcase, MENU_ACCENTS } from "@/patterns/shared/menu-showcase";
+import { cn } from "@/lib/utils";
 import "./meniscus.css";
 
 type Mode = "public" | "logged";
+type Orientation = "horizontal" | "vertical";
 
 interface MeniscusItem {
   id: string;
@@ -55,7 +59,7 @@ const smooth = (t: number) => t * t * (3 - 2 * t);
 const reach = (s: number, rb: number, by: number) =>
   Math.sqrt(Math.max((s + rb) ** 2 - (s - by) ** 2, 1));
 
-function trough(
+function troughTop(
   W: number,
   H: number,
   R: number,
@@ -100,6 +104,52 @@ function trough(
   );
 }
 
+function troughLeft(
+  W: number,
+  H: number,
+  R: number,
+  by: number,
+  bx: number,
+  rb: number,
+  sT: number,
+  sB: number,
+) {
+  const wing = (s: number, side: number) => {
+    const L = s + rb;
+    const half = reach(s, rb, bx);
+    const sy = by + side * half;
+    return {
+      sy,
+      tx: s + ((bx - s) / L) * s,
+      ty: sy + ((by - sy) / L) * s,
+    };
+  };
+  const A = wing(sT, -1);
+  const B = wing(sB, +1);
+  const a0 = Math.atan2(A.ty - by, A.tx - bx);
+  const a1 = Math.atan2(B.ty - by, B.tx - bx);
+  let sweep = ((a1 - a0) * 180) / Math.PI;
+  while (sweep < 0) sweep += 360;
+  const large = sweep > 180 ? 1 : 0;
+  const n = (v: number) => v.toFixed(2);
+  return (
+    `M${n(R)} 0` +
+    `A${n(R)} ${n(R)} 0 0 1 ${n(W - R)} 0` +
+    `A${n(R)} ${n(R)} 0 0 1 ${n(W)} ${n(R)}` +
+    `L${n(W)} ${n(H - R)}` +
+    `A${n(R)} ${n(R)} 0 0 1 ${n(W - R)} ${n(H)}` +
+    `A${n(R)} ${n(R)} 0 0 1 ${n(R)} ${n(H)}` +
+    `L0 ${n(H - R)}` +
+    `A${n(R)} ${n(R)} 0 0 1 0 ${n(clamp(B.sy, R, H - R))}` +
+    `A${n(sB)} ${n(sB)} 0 0 1 ${n(B.tx)} ${n(B.ty)}` +
+    `A${n(rb)} ${n(rb)} 0 ${large} 0 ${n(A.tx)} ${n(A.ty)}` +
+    `A${n(sT)} ${n(sT)} 0 0 1 0 ${n(clamp(A.sy, R, H - R))}` +
+    `L0 ${n(R)}` +
+    `A${n(R)} ${n(R)} 0 0 1 ${n(R)} 0` +
+    `Z`
+  );
+}
+
 export default function MeniscusLiquidNav(_props: PatternPreviewProps) {
   const uid = useId().replace(/:/g, "");
   const rootRef = useRef<HTMLDivElement>(null);
@@ -109,8 +159,11 @@ export default function MeniscusLiquidNav(_props: PatternPreviewProps) {
   const tabRefs = useRef<(HTMLButtonElement | null)[]>([]);
   const currentRef = useRef(0);
   const actionsRef = useRef(loggedActions);
+  const orientationRef = useRef<Orientation>("horizontal");
 
   const [mode, setMode] = useState<Mode>("logged");
+  const [orientation, setOrientation] = useState<Orientation>("horizontal");
+  const [expanded, setExpanded] = useState(true);
   const [current, setCurrent] = useState(0);
   const [ready, setReady] = useState(false);
   const [box, setBox] = useState({ w: 400, h: 80 });
@@ -118,6 +171,9 @@ export default function MeniscusLiquidNav(_props: PatternPreviewProps) {
 
   const actions = mode === "logged" ? loggedActions : publicActions;
   actionsRef.current = actions;
+  orientationRef.current = orientation;
+  const isVertical = orientation === "vertical";
+  const isCollapsed = isVertical && !expanded;
   const accentRgb = useMemo(() => hexToRgb(accent), [accent]);
   const active = actions[current] ?? actions[0];
 
@@ -131,10 +187,11 @@ export default function MeniscusLiquidNav(_props: PatternPreviewProps) {
     span: 80,
     W: 0,
     H: 0,
-    R: 17,
+    R: 20,
     D: 56,
     RB: 35,
     S: 17,
+    CX: 0,
     CY: 0,
     raf: 0,
     last: 0,
@@ -149,15 +206,21 @@ export default function MeniscusLiquidNav(_props: PatternPreviewProps) {
     const root = rootRef.current;
     if (!fill || !bead || !root || G.W < 40) return;
 
+    const vertical = orientationRef.current === "vertical";
     const q = clamp(G.v / 1100, -1, 1) * (G.dragging ? 0.5 : 1);
     const mag = Math.abs(q);
-    const sL = clamp(G.S * (1 + 0.06 * mag + 0.4 * q), G.S * 0.55, G.S * 2.1);
-    const sR = clamp(G.S * (1 + 0.06 * mag - 0.4 * q), G.S * 0.55, G.S * 2.1);
+    const sA = clamp(G.S * (1 + 0.06 * mag + 0.4 * q), G.S * 0.55, G.S * 2.1);
+    const sB = clamp(G.S * (1 + 0.06 * mag - 0.4 * q), G.S * 0.55, G.S * 2.1);
 
-    fill.setAttribute("d", trough(G.W, G.H, G.R, G.x, G.CY, G.RB, sL, sR));
-
-    const sx = 1 + 0.07 * mag;
-    bead.style.transform = `translate3d(${G.x.toFixed(2)}px,0,0) scale(${sx.toFixed(3)},${(1 / sx).toFixed(3)})`;
+    if (vertical) {
+      fill.setAttribute("d", troughLeft(G.W, G.H, G.R, G.x, G.CX, G.RB, sA, sB));
+      const sy = 1 + 0.07 * mag;
+      bead.style.transform = `translate3d(0,${G.x.toFixed(2)}px,0) scale(${(1 / sy).toFixed(3)},${sy.toFixed(3)})`;
+    } else {
+      fill.setAttribute("d", troughTop(G.W, G.H, G.R, G.x, G.CY, G.RB, sA, sB));
+      const sx = 1 + 0.07 * mag;
+      bead.style.transform = `translate3d(${G.x.toFixed(2)}px,0,0) scale(${sx.toFixed(3)},${(1 / sx).toFixed(3)})`;
+    }
 
     tabRefs.current.forEach((tab, i) => {
       if (!tab) return;
@@ -206,35 +269,46 @@ export default function MeniscusLiquidNav(_props: PatternPreviewProps) {
     if (W < 40 || H < 30) return false;
 
     const G = physics.current;
+    const vertical = orientationRef.current === "vertical";
     const count = actionsRef.current.length;
     G.slots = Array.from({ length: count }, (_, i) => {
       const tab = tabRefs.current[i];
       if (!tab) return 0;
       const b = tab.getBoundingClientRect();
-      return b.left - r.left + b.width / 2;
+      return vertical
+        ? b.top - r.top + b.height / 2
+        : b.left - r.left + b.width / 2;
     });
-    G.span = G.slots.length > 1 ? G.slots[1] - G.slots[0] : W;
+    G.span = G.slots.length > 1 ? G.slots[1] - G.slots[0] : vertical ? H : W;
     G.W = W;
     G.H = H;
-    G.R = clamp(H * 0.22, 14, 22);
+    // Larger corners so mobile matches desktop and avoids short corner clipping.
+    G.R = clamp(Math.min(W, H) * 0.34, 20, 30);
+    G.CX = 0;
     G.CY = 0;
 
-    // Larger bead so the active icon sits clearly inside the circle.
-    let D = Math.min(H * 0.92, G.span * 0.88);
-    const room = (G.slots[0] ?? W / 2) - G.R - 4;
-    for (let i = 0; i < 3; i++) {
-      const hw = reach(D * 0.22, D / 2 + 5, G.CY);
-      if (hw <= room) break;
-      D *= room / hw;
+    const axis = vertical ? W : H;
+    let D = Math.min(axis * 0.88, G.span * 0.82);
+    const edgeRoom = (G.slots[0] ?? (vertical ? H : W) / 2) - G.R - 10;
+    for (let i = 0; i < 4; i++) {
+      const hw = reach(D * 0.22, D / 2 + 5, 0);
+      if (hw <= edgeRoom) break;
+      D *= edgeRoom / hw;
     }
-    G.D = Math.max(Math.round(D), 40);
+    G.D = Math.max(Math.round(D), 42);
     G.S = G.D * 0.22;
     G.RB = G.D / 2 + 5;
 
     dock.style.setProperty("--dock-r", `${G.R.toFixed(1)}px`);
     dock.style.setProperty("--bead-d", `${G.D}px`);
+    dock.style.setProperty("--bead-cx", `${G.CX}px`);
     dock.style.setProperty("--bead-cy", `${G.CY}px`);
-    dock.style.setProperty("--rise", `${(H / 2 - G.CY).toFixed(1)}px`);
+    dock.style.setProperty(
+      "--rise",
+      vertical
+        ? `${Math.max(G.D * 0.14, 8).toFixed(1)}px`
+        : `${(H / 2 - G.CY).toFixed(1)}px`,
+    );
     setBox({ w: W, h: H });
     return true;
   }, []);
@@ -261,7 +335,6 @@ export default function MeniscusLiquidNav(_props: PatternPreviewProps) {
     [paint, run],
   );
 
-  // Measure on mount / resize — never reset on tab change (that killed click animation).
   useEffect(() => {
     const sync = (forceSnap: boolean) => {
       if (!measure()) return;
@@ -287,25 +360,24 @@ export default function MeniscusLiquidNav(_props: PatternPreviewProps) {
       cancelAnimationFrame(physics.current.raf);
       physics.current.raf = 0;
     };
-  }, [measure, paint, run, mode]);
+  }, [measure, paint, run, mode, orientation, expanded]);
 
   useEffect(() => {
     paint();
   }, [accent, paint]);
 
-  // Drag only after a movement threshold so clicks reach the tab buttons.
   useEffect(() => {
     const dock = dockRef.current;
     if (!dock) return;
 
     let pid: number | null = null;
-    let startX = 0;
+    let start = 0;
     let capturing = false;
 
     const onDown = (e: PointerEvent) => {
       if (e.button !== 0 && e.pointerType === "mouse") return;
       pid = e.pointerId;
-      startX = e.clientX;
+      start = orientationRef.current === "vertical" ? e.clientY : e.clientX;
       capturing = false;
       physics.current.dragging = false;
       physics.current.moved = false;
@@ -313,8 +385,10 @@ export default function MeniscusLiquidNav(_props: PatternPreviewProps) {
 
     const onMove = (e: PointerEvent) => {
       if (pid !== e.pointerId) return;
+      const vertical = orientationRef.current === "vertical";
+      const pos = vertical ? e.clientY : e.clientX;
       if (!capturing) {
-        if (Math.abs(e.clientX - startX) < 8) return;
+        if (Math.abs(pos - start) < 8) return;
         capturing = true;
         physics.current.dragging = true;
         physics.current.moved = true;
@@ -323,7 +397,8 @@ export default function MeniscusLiquidNav(_props: PatternPreviewProps) {
       const r = dock.getBoundingClientRect();
       const G = physics.current;
       if (!G.slots.length) return;
-      G.target = clamp(e.clientX - r.left, G.slots[0], G.slots[G.slots.length - 1]);
+      const local = vertical ? pos - r.top : pos - r.left;
+      G.target = clamp(local, G.slots[0], G.slots[G.slots.length - 1]);
       run();
     };
 
@@ -334,7 +409,6 @@ export default function MeniscusLiquidNav(_props: PatternPreviewProps) {
       const wasDrag = G.moved;
       G.dragging = false;
       G.moved = false;
-
       if (!wasDrag) return;
 
       let near = 0;
@@ -366,7 +440,7 @@ export default function MeniscusLiquidNav(_props: PatternPreviewProps) {
       dock.removeEventListener("pointerup", onUp);
       dock.removeEventListener("pointercancel", onUp);
     };
-  }, [run, select, mode]);
+  }, [run, select, mode, orientation]);
 
   const onKeyDown = (e: React.KeyboardEvent) => {
     const step = ({ ArrowRight: 1, ArrowDown: 1, ArrowLeft: -1, ArrowUp: -1 } as Record<string, number>)[e.key];
@@ -386,10 +460,18 @@ export default function MeniscusLiquidNav(_props: PatternPreviewProps) {
 
   return (
     <MenuShowcase
-      className="meniscus-show"
+      className={cn(
+        "meniscus-show",
+        isVertical && "is-vertical",
+        isCollapsed && "is-collapsed",
+      )}
       eyebrow="Meniscus"
       title={active.label}
-      description="Toque uma aba — a gota arrasta o menisco atrás dela."
+      description={
+        isVertical
+          ? "Variante lateral — a gota desliza no menisco da lateral."
+          : "Toque ou deslize — a gota arrasta o menisco atrás dela."
+      }
       accent={accent}
       onAccentChange={setAccent}
       modes={[
@@ -403,14 +485,57 @@ export default function MeniscusLiquidNav(_props: PatternPreviewProps) {
         currentRef.current = 0;
         setReady(false);
       }}
+      variants={[
+        { id: "horizontal", label: "Inferior" },
+        { id: "vertical", label: "Lateral" },
+      ]}
+      variant={orientation}
+      onVariantChange={(id) => {
+        setOrientation(id as Orientation);
+        if (id === "horizontal") setExpanded(true);
+        setReady(false);
+      }}
+      extras={
+        isVertical ? (
+          <div className="menu-show-mode" role="group" aria-label="Estado da lateral">
+            <button
+              type="button"
+              className={expanded ? "active" : undefined}
+              onClick={() => {
+                setExpanded(true);
+                setReady(false);
+              }}
+            >
+              Aberto
+            </button>
+            <button
+              type="button"
+              className={!expanded ? "active" : undefined}
+              onClick={() => {
+                setExpanded(false);
+                setReady(false);
+              }}
+            >
+              Ícones
+            </button>
+          </div>
+        ) : null
+      }
     >
       <div
-        className="meniscus"
+        className={cn("meniscus", isVertical && "is-vertical", isCollapsed && "is-collapsed")}
         ref={rootRef}
         style={{ ["--glow-rgb" as string]: rgbString(accentRgb) }}
       >
-        <div className={`meniscus-dock${ready ? " is-ready" : ""}`} ref={dockRef}>
-          <span className="meniscus-cast" aria-hidden="true" />
+        <div
+          className={cn(
+            "meniscus-dock",
+            ready && "is-ready",
+            isVertical && "is-vertical",
+            isCollapsed && "is-collapsed",
+          )}
+          ref={dockRef}
+        >
           <svg
             className="meniscus-skin"
             viewBox={`0 0 ${box.w} ${box.h}`}
@@ -418,11 +543,23 @@ export default function MeniscusLiquidNav(_props: PatternPreviewProps) {
             aria-hidden="true"
           >
             <defs>
-              <linearGradient id={`mnPlate-${uid}`} x1="0" y1="0" x2="0" y2="1">
+              <linearGradient
+                id={`mnPlate-${uid}`}
+                x1={isVertical ? "1" : "0"}
+                y1="0"
+                x2={isVertical ? "0" : "0"}
+                y2={isVertical ? "0" : "1"}
+              >
                 <stop className="meniscus-plate-hi" offset="0" />
                 <stop className="meniscus-plate-lo" offset="1" />
               </linearGradient>
-              <linearGradient id={`mnRim-${uid}`} x1="0" y1="0" x2="0" y2="1">
+              <linearGradient
+                id={`mnRim-${uid}`}
+                x1={isVertical ? "1" : "0"}
+                y1="0"
+                x2={isVertical ? "0" : "0"}
+                y2={isVertical ? "0" : "1"}
+              >
                 <stop className="meniscus-rim-hi" offset="0" />
                 <stop className="meniscus-rim-lo" offset="1" />
               </linearGradient>
@@ -445,7 +582,7 @@ export default function MeniscusLiquidNav(_props: PatternPreviewProps) {
               const Icon = tab.Icon;
               return (
                 <button
-                  key={`${mode}-${tab.id}`}
+                  key={`${mode}-${orientation}-${expanded}-${tab.id}`}
                   ref={(el) => {
                     tabRefs.current[i] = el;
                   }}
@@ -455,14 +592,29 @@ export default function MeniscusLiquidNav(_props: PatternPreviewProps) {
                   aria-label={tab.label}
                   aria-selected={current === i}
                   tabIndex={current === i ? 0 : -1}
+                  title={isCollapsed ? tab.label : undefined}
                   onClick={onTabClick(i)}
                 >
                   <Icon className="meniscus-icon" strokeWidth={1.8} />
-                  <span className="meniscus-label">{tab.label}</span>
+                  {!isCollapsed ? <span className="meniscus-label">{tab.label}</span> : null}
                 </button>
               );
             })}
           </div>
+
+          {isVertical ? (
+            <button
+              type="button"
+              className="meniscus-rail-toggle"
+              aria-label={expanded ? "Retrair menu" : "Expandir menu"}
+              onClick={() => {
+                setExpanded((value) => !value);
+                setReady(false);
+              }}
+            >
+              {expanded ? <ChevronsLeft size={16} /> : <ChevronsRight size={16} />}
+            </button>
+          ) : null}
         </div>
       </div>
     </MenuShowcase>
