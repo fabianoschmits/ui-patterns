@@ -14,14 +14,10 @@ html[data-theme="dark"] .qam-show {
   --qam-bar-shadow: 0 18px 50px rgb(0 0 0 / 0.35);
 }
 
-.qam-show.is-vertical .menu-show-head {
-  max-width: min(640px, 100%);
-  width: 100%;
-}
-
 .qam-show.is-vertical .menu-show-slot {
   width: 100%;
-  max-width: none;
+  max-width: min(40rem, 100%);
+  place-items: stretch;
 }
 
 .qam-stage {
@@ -35,8 +31,9 @@ html[data-theme="dark"] .qam-show {
 
 .qam-stage.is-vertical {
   justify-content: flex-start;
-  min-height: 19rem;
-  padding: 0.85rem 0.15rem 0.85rem;
+  align-items: stretch;
+  min-height: 0;
+  padding: 0.35rem 0;
 }
 
 .qam-bar {
@@ -49,9 +46,9 @@ html[data-theme="dark"] .qam-show {
 
 .qam-bar.is-vertical {
   display: flex;
-  width: auto;
+  width: min(13rem, 100%);
   max-width: none;
-  min-height: 18rem;
+  min-height: 0;
   flex-direction: column;
   align-items: stretch;
   padding: 0.85rem 0.55rem 0.55rem;
@@ -60,6 +57,7 @@ html[data-theme="dark"] .qam-show {
 }
 
 .qam-bar.is-vertical.is-collapsed {
+  width: 4.35rem;
   padding-inline: 0.5rem;
 }
 
@@ -91,13 +89,13 @@ html[data-theme="dark"] .qam-show {
 
 .qam-bar.is-vertical .qam-items {
   height: auto;
-  min-height: 14.5rem;
-  flex: 1;
+  min-height: 0;
+  flex: 0 0 auto;
   flex-direction: column;
-  justify-content: space-evenly;
+  justify-content: flex-start;
   align-items: stretch;
-  gap: 0.35rem;
-  padding: 0.25rem 0;
+  gap: 0.2rem;
+  padding: 0.15rem 0;
   overflow: visible;
 }
 
@@ -118,11 +116,11 @@ html[data-theme="dark"] .qam-show {
   flex: 0 0 auto;
   width: 100%;
   height: auto;
-  min-height: 2.95rem;
+  min-height: 2.85rem;
   flex-direction: row;
   justify-content: flex-start;
   gap: 0.55rem;
-  padding: 0.25rem 0.4rem;
+  padding: 0.2rem 0.4rem;
   border-radius: 999px;
   overflow: visible;
 }
@@ -225,32 +223,72 @@ html[data-theme="dark"] .qam-active-pill {
   color: var(--qam-ink);
 }
 
-.qam-bar.is-vertical:not(.is-collapsed) {
-  width: min(12.5rem, calc(100vw - 2rem));
-}
+@media (min-width: 720px) {
+  .qam-show.is-vertical .menu-show-body {
+    grid-template-columns: auto minmax(0, 1fr);
+    grid-template-rows: auto auto minmax(0, 1fr) auto;
+    column-gap: 1.5rem;
+    align-items: start;
+    justify-items: stretch;
+  }
 
-.qam-bar.is-vertical.is-collapsed {
-  width: 4.35rem;
-}
+  .qam-show.is-vertical .menu-show-head {
+    grid-column: 2;
+    grid-row: 1;
+    max-width: 28rem;
+    justify-self: start;
+    align-items: flex-start;
+    text-align: left;
+  }
 
-@media (max-width: 640px) {
+  .qam-show.is-vertical .menu-show-controls {
+    grid-column: 2;
+    grid-row: 2;
+    max-width: 28rem;
+    justify-content: flex-start;
+    justify-self: start;
+  }
+
+  .qam-show.is-vertical .menu-show-slot {
+    grid-column: 1;
+    grid-row: 1 / span 3;
+    width: auto;
+    max-width: none;
+    align-self: center;
+    justify-self: start;
+    place-items: start;
+    padding: 0.5rem 0;
+  }
+
+  .qam-show.is-vertical .menu-show-swatches {
+    grid-column: 1 / -1;
+    grid-row: 4;
+    justify-self: center;
+  }
+
   .qam-stage.is-vertical {
-    min-height: 17rem;
+    width: auto;
+  }
+}
+
+@media (max-width: 719px) {
+  .qam-show.is-vertical .menu-show-slot {
+    place-items: center;
+  }
+
+  .qam-stage.is-vertical {
+    justify-content: center;
   }
 
   .qam-bar.is-vertical:not(.is-collapsed) {
-    width: min(10.5rem, calc(100vw - 1.5rem));
-  }
-
-  .qam-bar.is-vertical {
-    min-height: 16.5rem;
-  }
-
-  .qam-bar.is-vertical .qam-items {
-    min-height: 13rem;
+    width: min(12.5rem, calc(100vw - 2rem));
   }
 
   .qam-bar.is-vertical .qam-label {
     font-size: 0.72rem;
+  }
+
+  .qam-bar.is-vertical .qam-item {
+    min-height: 2.7rem;
   }
 }

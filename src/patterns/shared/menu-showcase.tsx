@@ -98,7 +98,9 @@ export function MenuShowcase({
           <span>{eyebrow}</span>
           <h2>{title}</h2>
           <p>{description}</p>
+        </header>
 
+        {(modes && onModeChange) || (variants && onVariantChange) || extras ? (
           <div className="menu-show-controls">
             {modes && onModeChange ? (
               <ChipGroup
@@ -120,9 +122,9 @@ export function MenuShowcase({
 
             {extras}
           </div>
+        ) : null}
 
-          <div className="menu-show-slot">{children}</div>
-        </header>
+        <div className="menu-show-slot">{children}</div>
 
         <div className="menu-show-swatches" role="group" aria-label="Cor de destaque">
           {accents.map((swatch) => (

@@ -528,6 +528,23 @@ html.theme-switching::view-transition-new(root) {
   color: var(--ink);
 }
 
+@media (max-width: 640px) {
+  .pattern-stage.is-immersive .stage-back {
+    top: 0.85rem;
+    font-size: 0.82rem;
+  }
+
+  .pattern-stage.is-immersive.is-canvas .stage-nav-immersive {
+    top: auto;
+    bottom: 0.85rem;
+    right: 50%;
+    transform: translateX(50%);
+    display: flex;
+    gap: 1rem;
+    font-size: 0.78rem;
+  }
+}
+
 .stage-footer {
   z-index: 2;
   display: flex;
