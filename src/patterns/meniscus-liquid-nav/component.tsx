@@ -244,6 +244,7 @@ export default function MeniscusLiquidNav(_props: PatternPreviewProps) {
   currentRef.current = current;
 
   const paint = useCallback(() => {
+    if (morphingRef.current) return;
     const G = physics.current;
     const fill = fillRef.current;
     const bead = beadRef.current;
@@ -345,7 +346,7 @@ export default function MeniscusLiquidNav(_props: PatternPreviewProps) {
     G.H = H;
     G.R = vertical
       ? clamp(W * 0.26, 18, 24)
-      : clamp(Math.min(W, H) * 0.42, 12, 18);
+      : clamp(Math.min(W, H) * 0.42, 14, 22);
     const onRight = vertical && sideRef.current === "right";
     G.CX = onRight ? W : 0;
     G.CY = 0;
@@ -355,7 +356,7 @@ export default function MeniscusLiquidNav(_props: PatternPreviewProps) {
     let D = Math.min(
       axis * (vertical ? 0.66 : 0.78),
       G.span * (vertical ? 0.68 : 0.7),
-      vertical ? 50 : 34,
+      vertical ? 50 : 41,
     );
     // Extra corner clearance so the trough never eats into the rounded ends.
     const edgeRoom = (G.slots[0] ?? (vertical ? H : W) / 2) - G.R - (vertical ? 25 : 22);
@@ -364,12 +365,12 @@ export default function MeniscusLiquidNav(_props: PatternPreviewProps) {
       if (hw <= edgeRoom) break;
       D *= edgeRoom / Math.max(hw, 1);
     }
-    const preferred = Math.max(Math.round(D), vertical ? 40 : 28);
+    const preferred = Math.max(Math.round(D), vertical ? 40 : 34);
     const preferredReach = reach(preferred * 0.22, preferred / 2 + 5, 0);
     G.D =
       preferredReach <= edgeRoom
         ? preferred
-        : Math.max(Math.round(D), vertical ? 32 : 24);
+        : Math.max(Math.round(D), vertical ? 32 : 28);
     G.S = G.D * 0.22;
     G.RB = G.D / 2 + 5;
 
@@ -399,6 +400,41 @@ export default function MeniscusLiquidNav(_props: PatternPreviewProps) {
     return true;
   }, []);
 
+  const beginMorph = useCallback(() => {
+    morphingRef.current = true;
+    setReady(false);
+    cancelAnimationFrame(physics.current.raf);
+    physics.current.raf = 0;
+    physics.current.v = 0;
+    fillRef.current?.setAttribute("d", "");
+    clipRef.current?.setAttribute("d", "");
+    const glass = glassRef.current;
+    if (glass) {
+      glass.style.clipPath = "";
+      glass.style.removeProperty("-webkit-clip-path");
+    }
+  }, []);
+
+  const settleAfterMorph = useCallback(() => {
+    morphingRef.current = false;
+    const finish = () => {
+      if (!measure()) return false;
+      const G = physics.current;
+      const slot = G.slots[currentRef.current] ?? G.slots[0] ?? 0;
+      G.x = G.target = slot;
+      G.v = 0;
+      paint();
+      setReady(true);
+      return true;
+    };
+    if (finish()) return;
+    // Layout may still be settling — retry once on the next frame.
+    requestAnimationFrame(() => {
+      morphingRef.current = false;
+      finish();
+    });
+  }, [measure, paint]);
+
   const select = useCallback(
     (i: number, { focus = false, animate = true } = {}) => {
       const len = actionsRef.current.length;
@@ -423,6 +459,7 @@ export default function MeniscusLiquidNav(_props: PatternPreviewProps) {
 
   useLayoutEffect(() => {
     const sync = (forceSnap: boolean) => {
+      if (morphingRef.current) return;
       if (!measure()) return;
       const G = physics.current;
       const slot = G.slots[currentRef.current] ?? G.slots[0] ?? 0;
@@ -438,29 +475,30 @@ export default function MeniscusLiquidNav(_props: PatternPreviewProps) {
       setReady(true);
     };
 
-    sync(true);
+    // Orientation / expand morphs settle in onLayoutAnimationComplete.
+    if (!morphingRef.current) {
+      sync(true);
+    }
+
     const ro = new ResizeObserver(() => {
       if (morphingRef.current) return;
       sync(false);
     });
     if (dockRef.current) ro.observe(dockRef.current);
+
+    // Safety net if layout animation never reports complete.
+    const fallback = window.setTimeout(() => {
+      if (!morphingRef.current) return;
+      settleAfterMorph();
+    }, 520);
+
     return () => {
+      window.clearTimeout(fallback);
       ro.disconnect();
       cancelAnimationFrame(physics.current.raf);
       physics.current.raf = 0;
     };
-  }, [measure, paint, run, mode, orientation, expanded, side]);
-
-  const onDockLayoutComplete = useCallback(() => {
-    morphingRef.current = false;
-    if (!measure()) return;
-    const G = physics.current;
-    const slot = G.slots[currentRef.current] ?? G.slots[0] ?? 0;
-    G.x = G.target = slot;
-    G.v = 0;
-    paint();
-    setReady(true);
-  }, [measure, paint]);
+  }, [measure, paint, run, settleAfterMorph, mode, orientation, expanded, side]);
 
   useEffect(() => {
     paint();
@@ -581,10 +619,10 @@ export default function MeniscusLiquidNav(_props: PatternPreviewProps) {
       ]}
       mode={mode}
       onModeChange={(id) => {
+        beginMorph();
         setMode(id as Mode);
         setCurrent(0);
         currentRef.current = 0;
-        setReady(false);
       }}
       variants={[
         { id: "horizontal", label: "Inferior" },
@@ -592,9 +630,9 @@ export default function MeniscusLiquidNav(_props: PatternPreviewProps) {
       ]}
       variant={orientation}
       onVariantChange={(id) => {
+        beginMorph();
         setOrientation(id as Orientation);
         if (id === "horizontal") setExpanded(true);
-        morphingRef.current = true;
       }}
       extras={
         isVertical ? (
@@ -603,8 +641,8 @@ export default function MeniscusLiquidNav(_props: PatternPreviewProps) {
               type="button"
               className={expanded ? "active" : undefined}
               onClick={() => {
+                beginMorph();
                 setExpanded(true);
-                morphingRef.current = true;
               }}
             >
               Aberto
@@ -613,8 +651,8 @@ export default function MeniscusLiquidNav(_props: PatternPreviewProps) {
               type="button"
               className={!expanded ? "active" : undefined}
               onClick={() => {
+                beginMorph();
                 setExpanded(false);
-                morphingRef.current = true;
               }}
             >
               Ícones
@@ -656,7 +694,7 @@ export default function MeniscusLiquidNav(_props: PatternPreviewProps) {
               onLayoutAnimationStart={() => {
                 morphingRef.current = true;
               }}
-              onLayoutAnimationComplete={onDockLayoutComplete}
+              onLayoutAnimationComplete={settleAfterMorph}
             >
               <div className="meniscus-glass" ref={glassRef} aria-hidden="true">
                 <span className="meniscus-glass-base" />
@@ -742,8 +780,8 @@ export default function MeniscusLiquidNav(_props: PatternPreviewProps) {
                     exit={{ opacity: 0, scale: 0.9 }}
                     transition={gooey}
                     onClick={() => {
+                      beginMorph();
                       setExpanded((value) => !value);
-                      morphingRef.current = true;
                     }}
                   >
                     {isRight
@@ -775,8 +813,8 @@ export default function MeniscusLiquidNav(_props: PatternPreviewProps) {
                   type="button"
                   className={side === "left" ? "active" : undefined}
                   onClick={() => {
+                    beginMorph();
                     setSide("left");
-                    morphingRef.current = true;
                   }}
                 >
                   Esquerda
@@ -785,8 +823,8 @@ export default function MeniscusLiquidNav(_props: PatternPreviewProps) {
                   type="button"
                   className={side === "right" ? "active" : undefined}
                   onClick={() => {
+                    beginMorph();
                     setSide("right");
-                    morphingRef.current = true;
                   }}
                 >
                   Direita
