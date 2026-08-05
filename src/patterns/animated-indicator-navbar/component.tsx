@@ -1,66 +1,60 @@
 "use client";
 
-import { useState } from "react";
-import { AnimatePresence, motion } from "motion/react";
+import { useState, type CSSProperties } from "react";
+import { motion } from "motion/react";
 import type { PatternPreviewProps } from "@/types/pattern";
+import { MenuShowcase, MENU_ACCENTS } from "@/patterns/shared/menu-showcase";
 import "./indicator.css";
 
-const items = ["Overview", "Projects", "Journal"] as const;
+const items = [
+  { id: "Overview", line: "Make room for good work." },
+  { id: "Projects", line: "Ship less noise. More craft." },
+  { id: "Journal", line: "Notes that stay quiet." },
+] as const;
 
 export default function AnimatedIndicatorNavbar(_props: PatternPreviewProps) {
-  const [active, setActive] = useState<(typeof items)[number]>("Overview");
+  const [active, setActive] = useState<(typeof items)[number]["id"]>("Overview");
+  const [accent, setAccent] = useState(MENU_ACCENTS[0].value);
+  const current = items.find((item) => item.id === active) ?? items[0];
 
   return (
-    <div className="ind-show">
-      <div className="ind-show-bloom" aria-hidden="true" />
-      <div className="ind-show-card">
-        <nav className="ind-show-nav" aria-label="Navbar com indicador">
-          <b>
-            atlas<span>·</span>
-          </b>
-          <div className="ind-show-tabs" role="tablist">
-            {items.map((item) => {
-              const isActive = active === item;
-              return (
-                <button
-                  key={item}
-                  type="button"
-                  role="tab"
-                  aria-selected={isActive}
-                  onClick={() => setActive(item)}
-                >
-                  {isActive && (
-                    <motion.span
-                      layoutId="ind-underline"
-                      className="ind-show-line"
-                      transition={{ type: "spring", stiffness: 420, damping: 32 }}
-                    />
-                  )}
-                  {item}
-                </button>
-              );
-            })}
-          </div>
-        </nav>
-
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={active}
-            className="ind-show-panel"
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -8 }}
-            transition={{ duration: 0.32, ease: [0.22, 0.61, 0.28, 1] }}
-          >
-            <small>/{active.toLowerCase()}</small>
-            <h2>
-              {active === "Overview" && <>Make room<br /><em>for good work.</em></>}
-              {active === "Projects" && <>Ship less<br /><em>noise. More craft.</em></>}
-              {active === "Journal" && <>Notes that<br /><em>stay quiet.</em></>}
-            </h2>
-          </motion.div>
-        </AnimatePresence>
-      </div>
-    </div>
+    <MenuShowcase
+      className="ind-show"
+      style={{ "--ind-accent": accent } as CSSProperties}
+      eyebrow="Navbar"
+      title={current.id}
+      description={current.line}
+      accent={accent}
+      onAccentChange={setAccent}
+    >
+      <nav className="ind-show-nav" aria-label="Navbar com indicador">
+        <b>
+          atlas<span>·</span>
+        </b>
+        <div className="ind-show-tabs" role="tablist">
+          {items.map((item) => {
+            const isActive = active === item.id;
+            return (
+              <button
+                key={item.id}
+                type="button"
+                role="tab"
+                aria-selected={isActive}
+                onClick={() => setActive(item.id)}
+              >
+                {isActive && (
+                  <motion.span
+                    layoutId="ind-underline"
+                    className="ind-show-line"
+                    transition={{ type: "spring", stiffness: 420, damping: 32 }}
+                  />
+                )}
+                {item.id}
+              </button>
+            );
+          })}
+        </div>
+      </nav>
+    </MenuShowcase>
   );
 }

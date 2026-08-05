@@ -1,14 +1,17 @@
 "use client";
 
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import type { PatternPreviewProps } from "@/types/pattern";
+import { MenuShowcase, MENU_ACCENTS } from "@/patterns/shared/menu-showcase";
 import "./lucid.css";
 
 const SEGS = [
   {
     id: "today",
     label: "Today",
+    title: "Today",
+    line: "O dia, em uma barra de vidro.",
     icon: (
       <svg viewBox="0 0 24 24" aria-hidden="true">
         <rect x="4.2" y="6" width="15.6" height="14" rx="2.6" />
@@ -19,6 +22,8 @@ const SEGS = [
   {
     id: "inbox",
     label: "Inbox",
+    title: "Inbox",
+    line: "Mensagens que cabem na mão.",
     icon: (
       <svg viewBox="0 0 24 24" aria-hidden="true">
         <path d="M4.2 13.6 6.5 6a2 2 0 0 1 1.9-1.4h7.2A2 2 0 0 1 17.5 6l2.3 7.6" />
@@ -29,6 +34,8 @@ const SEGS = [
   {
     id: "tasks",
     label: "Tasks",
+    title: "Tasks",
+    line: "Poucas tarefas. Melhor foco.",
     icon: (
       <svg viewBox="0 0 24 24" aria-hidden="true">
         <path d="m4.3 7.5 1.6 1.6 3-3.2M4.3 16.1l1.6 1.6 3-3.2" />
@@ -43,6 +50,7 @@ export default function LiquidGlassNav(_props: PatternPreviewProps) {
   const [active, setActive] = useState(0);
   const [pill, setPill] = useState({ x: 0, w: 0 });
   const [stretch, setStretch] = useState(1);
+  const [accent, setAccent] = useState(MENU_ACCENTS[0].value);
   const segRefs = useRef<(HTMLButtonElement | null)[]>([]);
   const prevX = useRef(0);
 
@@ -84,17 +92,22 @@ export default function LiquidGlassNav(_props: PatternPreviewProps) {
     segRefs.current[next]?.focus();
   };
 
-  return (
-    <div className="lucid-demo" data-theme={theme}>
-      <div className="lucid-mesh lucid-mesh-light" aria-hidden="true">
-        <i className="lucid-blob a" /><i className="lucid-blob b" /><i className="lucid-blob c" /><i className="lucid-blob d" />
-      </div>
-      <div className="lucid-mesh lucid-mesh-dark" aria-hidden="true">
-        <i className="lucid-blob a" /><i className="lucid-blob b" /><i className="lucid-blob c" /><i className="lucid-blob d" />
-      </div>
-      <div className="lucid-rule" aria-hidden="true" />
+  const current = SEGS[active];
 
-      <div className="lucid-stage">
+  return (
+    <MenuShowcase
+      className="lucid-show"
+      eyebrow="Liquid Glass"
+      title={current.title}
+      description={current.line}
+      accent={accent}
+      onAccentChange={setAccent}
+    >
+      <div
+        className="lucid-demo"
+        data-theme={theme}
+        style={{ "--lucid-accent": accent } as CSSProperties}
+      >
         <div className="lucid">
           <span className="lucid-base" aria-hidden="true" />
           <span className="lucid-tint" aria-hidden="true" />
@@ -159,11 +172,7 @@ export default function LiquidGlassNav(_props: PatternPreviewProps) {
             </AnimatePresence>
           </button>
         </div>
-
-        <p className="lucid-caption">
-          <strong>Lucid</strong> — barra de vidro líquido
-        </p>
       </div>
-    </div>
+    </MenuShowcase>
   );
 }

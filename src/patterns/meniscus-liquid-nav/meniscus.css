@@ -1,15 +1,9 @@
-.meniscus {
-  --page: #1c1526;
-  --page-hi: #2b2138;
-  --page-lo: #110c18;
-  --bar: #130f1e;
-  --bar-hi: #1b1529;
-  --bar-lo: #0c0814;
-  --icon-off: #a79eb8;
+.meniscus-show .meniscus {
+  --bar: color-mix(in srgb, var(--ink) 88%, #1a1420);
+  --bar-hi: color-mix(in srgb, var(--ink) 78%, #2a2438);
+  --bar-lo: color-mix(in srgb, var(--ink) 94%, #0c0814);
+  --icon-off: color-mix(in srgb, #fff 55%, transparent);
   --icon-on: #1a1420;
-  --text-hi: #f6f2f8;
-  --text-soft: #bcb3ca;
-  --text-faint: #a8a0b8;
   --glow: rgb(var(--glow-rgb));
   --dock-r: 18px;
   --bead-d: 56px;
@@ -17,89 +11,21 @@
   --rise: 42px;
   position: relative;
   width: 100%;
-  height: 100%;
-  min-height: 420px;
-  overflow: hidden;
-  background: var(--page);
-  color: var(--text-hi);
+  background: transparent;
+  color: var(--ink);
   font-family: var(--font-ui);
 }
 
-.meniscus-bloom {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  background:
-    radial-gradient(38% 27% at 50% 68%, rgb(var(--glow-rgb) / 0.22), transparent 74%),
-    radial-gradient(88% 52% at 50% 4%, #342846, transparent 76%),
-    linear-gradient(180deg, var(--page-hi), var(--page-lo));
-  transition: background 0.45s ease;
-}
-
-.meniscus-stage {
-  position: relative;
-  z-index: 2;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: clamp(28px, 6vh, 64px);
-  width: 100%;
-  height: 100%;
-  padding: clamp(20px, 5vh, 48px) 16px calc(clamp(20px, 5vh, 40px) + 8px);
-}
-
-.meniscus-head {
-  width: 100%;
-  max-width: 560px;
-  text-align: center;
-}
-
-.meniscus-brand {
-  display: inline-flex;
-  align-items: center;
-  gap: 9px;
-  margin-bottom: 1rem;
-  color: var(--text-faint);
-  font-size: 0.72rem;
-  font-weight: 650;
-  letter-spacing: 0.22em;
-  text-transform: uppercase;
-}
-
-.meniscus-brand i {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: var(--glow);
-  box-shadow: 0 0 0 4px rgb(var(--glow-rgb) / 0.24);
-}
-
-.meniscus-head h2 {
-  margin: 0;
-  font-family: var(--font-editorial);
-  font-size: clamp(2.6rem, 10vw, 5.5rem);
-  font-weight: 700;
-  letter-spacing: -0.04em;
-  line-height: 0.92;
-  animation: meniscus-in 0.48s cubic-bezier(0.16, 0.84, 0.28, 1) both;
-}
-
-.meniscus-head p {
-  margin: 0.75rem 0 0;
-  color: var(--text-soft);
-  font-size: clamp(0.9rem, 2vw, 1.05rem);
-  animation: meniscus-in 0.55s cubic-bezier(0.16, 0.84, 0.28, 1) 0.05s both;
-}
-
-@keyframes meniscus-in {
-  from { opacity: 0; transform: translateY(14px) scale(0.985); }
-  to { opacity: 1; transform: none; }
+html[data-theme="dark"] .meniscus-show .meniscus {
+  --bar: #130f1e;
+  --bar-hi: #1b1529;
+  --bar-lo: #0c0814;
+  --icon-on: #1a1420;
 }
 
 .meniscus-dock {
   position: relative;
-  width: min(460px, 100%);
+  width: 100%;
   height: clamp(72px, 10vh, 84px);
   flex: none;
   touch-action: none;
@@ -118,8 +44,8 @@
   border-radius: 999px;
   background: var(--bar);
   box-shadow:
-    0 10px 22px -8px rgba(0, 0, 0, 0.74),
-    0 32px 56px -20px rgba(0, 0, 0, 0.8);
+    0 10px 22px -8px color-mix(in srgb, var(--ink) 35%, transparent),
+    0 32px 56px -20px color-mix(in srgb, var(--ink) 28%, transparent);
 }
 
 .meniscus-skin {
@@ -128,7 +54,7 @@
   width: 100%;
   height: 100%;
   overflow: visible;
-  filter: drop-shadow(0 6px 14px rgba(0, 0, 0, 0.5));
+  filter: drop-shadow(0 6px 14px color-mix(in srgb, var(--ink) 22%, transparent));
 }
 
 .meniscus-fill {
@@ -152,11 +78,12 @@
   box-shadow:
     0 0 0 1px rgb(var(--glow-rgb) / 0.5),
     0 0 26px 2px rgb(var(--glow-rgb) / 0.32),
-    0 10px 18px -7px rgba(0, 0, 0, 0.68),
+    0 10px 18px -7px color-mix(in srgb, var(--ink) 40%, transparent),
     inset 0 0 0 1px rgba(255, 255, 255, 0.42);
   opacity: 0;
   pointer-events: none;
   will-change: transform;
+  transition: background 0.35s ease, box-shadow 0.35s ease;
 }
 
 .meniscus-dock.is-ready .meniscus-bead { opacity: 1; }
@@ -179,6 +106,7 @@
   color: inherit;
   cursor: pointer;
   --t: 0;
+  --acc: var(--menu-accent);
 }
 
 .meniscus-tab:focus-visible {
@@ -216,16 +144,5 @@
   opacity: calc(0.55 + var(--t) * 0.45);
   transform: translateX(-50%);
   white-space: nowrap;
-}
-
-.meniscus-hint {
-  margin: 0;
-  color: var(--text-faint);
-  font-size: 0.72rem;
-  letter-spacing: 0.02em;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .meniscus-head h2,
-  .meniscus-head p { animation: none; }
+  transition: color 0.35s ease;
 }

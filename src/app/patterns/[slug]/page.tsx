@@ -5,12 +5,17 @@ import { PatternPreview } from "@/components/preview/pattern-preview";
 import { TransitionLink } from "@/components/transitions/transition-link";
 
 const immersiveSlugs = new Set([
+  "quick-action-menu",
   "meniscus-liquid-nav",
   "liquid-glass-nav",
-  "quick-action-menu",
+  "expandable-sidebar",
+  "floating-top-menu",
+  "navigation-dock",
+  "animated-indicator-navbar",
+  "fullscreen-mobile-menu",
 ]);
 
-const canvasImmersiveSlugs = new Set(["quick-action-menu"]);
+const canvasImmersiveSlugs = immersiveSlugs;
 
 export function generateStaticParams() {
   return patterns.map((pattern) => ({ slug: pattern.slug }));
