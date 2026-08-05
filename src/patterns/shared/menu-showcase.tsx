@@ -34,9 +34,40 @@ interface MenuShowcaseProps {
   modes?: MenuModeOption[];
   mode?: string;
   onModeChange?: (id: string) => void;
+  variants?: MenuModeOption[];
+  variant?: string;
+  onVariantChange?: (id: string) => void;
+  extras?: ReactNode;
   children: ReactNode;
   className?: string;
   style?: CSSProperties;
+}
+
+function ChipGroup({
+  label,
+  options,
+  value,
+  onChange,
+}: {
+  label: string;
+  options: MenuModeOption[];
+  value?: string;
+  onChange: (id: string) => void;
+}) {
+  return (
+    <div className="menu-show-mode" role="group" aria-label={label}>
+      {options.map((option) => (
+        <button
+          key={option.id}
+          type="button"
+          className={value === option.id ? "active" : undefined}
+          onClick={() => onChange(option.id)}
+        >
+          {option.label}
+        </button>
+      ))}
+    </div>
+  );
 }
 
 export function MenuShowcase({
@@ -49,6 +80,10 @@ export function MenuShowcase({
   modes,
   mode,
   onModeChange,
+  variants,
+  variant,
+  onVariantChange,
+  extras,
   children,
   className,
   style,
@@ -64,20 +99,27 @@ export function MenuShowcase({
           <h2>{title}</h2>
           <p>{description}</p>
 
-          {modes && onModeChange ? (
-            <div className="menu-show-mode" role="group" aria-label="Modo do menu">
-              {modes.map((option) => (
-                <button
-                  key={option.id}
-                  type="button"
-                  className={mode === option.id ? "active" : undefined}
-                  onClick={() => onModeChange(option.id)}
-                >
-                  {option.label}
-                </button>
-              ))}
-            </div>
-          ) : null}
+          <div className="menu-show-controls">
+            {modes && onModeChange ? (
+              <ChipGroup
+                label="Modo do menu"
+                options={modes}
+                value={mode}
+                onChange={onModeChange}
+              />
+            ) : null}
+
+            {variants && onVariantChange ? (
+              <ChipGroup
+                label="Variação do menu"
+                options={variants}
+                value={variant}
+                onChange={onVariantChange}
+              />
+            ) : null}
+
+            {extras}
+          </div>
 
           <div className="menu-show-slot">{children}</div>
         </header>

@@ -25,6 +25,7 @@
   align-items: center;
   justify-content: center;
   padding: 2rem 1rem 5.5rem;
+  overflow: visible;
 }
 
 .menu-show-head {
@@ -63,12 +64,20 @@
 .menu-show-mode {
   display: inline-flex;
   gap: 0.2rem;
-  margin-top: 1.25rem;
   border: 1px solid var(--menu-chip-border);
   border-radius: 999px;
   padding: 0.2rem;
   background: var(--menu-chip-bg);
   backdrop-filter: blur(10px);
+}
+
+.menu-show-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0.55rem;
+  margin-top: 1.25rem;
 }
 
 .menu-show-mode button {
