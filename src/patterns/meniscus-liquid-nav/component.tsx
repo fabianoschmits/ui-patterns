@@ -288,7 +288,7 @@ export default function MeniscusLiquidNav(_props: PatternPreviewProps) {
     const axis = vertical ? W : H;
     let D = Math.min(axis * (vertical ? 0.7 : 0.88), G.span * (vertical ? 0.72 : 0.82));
     // Extra corner clearance so the trough never eats into the rounded ends.
-    const edgeRoom = (G.slots[0] ?? (vertical ? H : W) / 2) - G.R - (vertical ? 18 : 16);
+    const edgeRoom = (G.slots[0] ?? (vertical ? H : W) / 2) - G.R - (vertical ? 25 : 22);
     for (let i = 0; i < 5; i++) {
       const hw = reach(D * 0.22, D / 2 + 5, 0);
       if (hw <= edgeRoom) break;
