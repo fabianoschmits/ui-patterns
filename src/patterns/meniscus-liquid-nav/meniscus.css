@@ -1,3 +1,27 @@
+.meniscus-show.is-vertical .menu-show-slot {
+  width: 100%;
+  max-width: min(40rem, 100%);
+  place-items: center;
+  justify-items: center;
+}
+
+.meniscus-stage {
+  display: flex;
+  width: 100%;
+  justify-content: center;
+  align-items: center;
+  min-height: 5.25rem;
+  margin-inline: auto;
+  overflow: visible;
+}
+
+.meniscus-stage.is-vertical {
+  justify-content: center;
+  align-items: center;
+  min-height: 0;
+  padding: 0.35rem 0;
+}
+
 .meniscus-show .meniscus {
   --bar: color-mix(in srgb, var(--menu-surface, var(--canvas)) 90%, transparent);
   --bar-hi: color-mix(in srgb, var(--menu-surface, var(--canvas)) 96%, #fff);
@@ -16,6 +40,9 @@
   width: 100%;
   max-width: 420px;
   margin-inline: auto;
+  /* Optical balance for the bead that hangs off the top edge */
+  padding-top: calc(var(--bead-d, 68px) * 0.5);
+  box-sizing: content-box;
   background: transparent;
   color: var(--ink);
   font-family: var(--font-ui);
@@ -28,8 +55,20 @@ html[data-theme="dark"] .meniscus-show .meniscus {
 }
 
 .meniscus-show.is-vertical .meniscus {
-  width: auto;
+  display: flex;
+  width: min(13rem, 100%);
   max-width: none;
+  margin-inline: auto;
+  flex-direction: column;
+  align-items: center;
+  padding-top: 0;
+  /* Optical balance for the bead that hangs off the left edge */
+  padding-left: calc(var(--bead-d, 68px) * 0.5);
+  box-sizing: content-box;
+}
+
+.meniscus-show.is-vertical .meniscus.is-collapsed {
+  width: 4.85rem;
 }
 
 .meniscus-dock {
@@ -48,15 +87,17 @@ html[data-theme="dark"] .meniscus-show .meniscus {
 }
 
 .meniscus-dock.is-vertical {
-  width: min(12.75rem, calc(100vw - 2rem));
+  width: 100%;
+  max-width: min(12.75rem, calc(100vw - 2rem));
   height: 22.5rem;
   min-height: 22.5rem;
-  margin-inline: auto;
+  margin-inline: 0;
   overflow: visible;
 }
 
 .meniscus-dock.is-vertical.is-collapsed {
-  width: 4.85rem;
+  width: 100%;
+  max-width: 4.85rem;
 }
 
 .meniscus-skin {
@@ -265,6 +306,60 @@ html[data-theme="dark"] .meniscus-rim-hi { stop-opacity: 0.28; }
 .meniscus-rail-toggle:hover {
   background: color-mix(in srgb, var(--menu-accent) 16%, transparent);
   color: var(--ink);
+}
+
+@media (min-width: 720px) {
+  .meniscus-show.is-vertical .menu-show-top,
+  .meniscus-show.is-vertical .menu-show-head,
+  .meniscus-show.is-vertical .menu-show-controls,
+  .meniscus-show.is-vertical .menu-show-palette {
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+  }
+
+  .meniscus-show.is-vertical .menu-show-stage {
+    min-height: min(48vh, 24rem);
+  }
+
+  .meniscus-show.is-vertical .menu-show-slot {
+    width: 100%;
+    max-width: min(40rem, 100%);
+    place-items: center;
+  }
+
+  .meniscus-show.is-vertical .menu-show-palette {
+    margin-top: 2rem;
+    padding-bottom: 2rem;
+  }
+
+  .meniscus-stage.is-vertical {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+@media (max-width: 719px) {
+  .meniscus-show.is-vertical .menu-show-slot {
+    place-items: center;
+  }
+
+  .meniscus-show.is-vertical .menu-show-stage {
+    min-height: min(46vh, 20rem);
+  }
+
+  .meniscus-show.is-vertical .menu-show-palette {
+    margin-top: 2.25rem;
+    padding-bottom: 3rem;
+  }
+
+  .meniscus-stage.is-vertical {
+    justify-content: center;
+  }
+
+  .meniscus-show.is-vertical .meniscus:not(.is-collapsed) {
+    width: min(12.5rem, calc(100vw - 2rem));
+  }
 }
 
 @media (max-width: 640px) {

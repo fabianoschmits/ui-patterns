@@ -527,101 +527,103 @@ export default function MeniscusLiquidNav(_props: PatternPreviewProps) {
         ) : null
       }
     >
-      <div
-        className={cn("meniscus", isVertical && "is-vertical", isCollapsed && "is-collapsed")}
-        ref={rootRef}
-        style={{ ["--glow-rgb" as string]: rgbString(accentRgb) }}
-      >
+      <div className={cn("meniscus-stage", isVertical && "is-vertical")}>
         <div
-          className={cn(
-            "meniscus-dock",
-            ready && "is-ready",
-            isVertical && "is-vertical",
-            isCollapsed && "is-collapsed",
-          )}
-          ref={dockRef}
+          className={cn("meniscus", isVertical && "is-vertical", isCollapsed && "is-collapsed")}
+          ref={rootRef}
+          style={{ ["--glow-rgb" as string]: rgbString(accentRgb) }}
         >
-          <svg
-            className="meniscus-skin"
-            viewBox={`0 0 ${box.w} ${box.h}`}
-            preserveAspectRatio="none"
-            aria-hidden="true"
-          >
-            <defs>
-              <linearGradient
-                id={`mnPlate-${uid}`}
-                x1={isVertical ? "1" : "0"}
-                y1="0"
-                x2={isVertical ? "0" : "0"}
-                y2={isVertical ? "0" : "1"}
-              >
-                <stop className="meniscus-plate-hi" offset="0" />
-                <stop className="meniscus-plate-lo" offset="1" />
-              </linearGradient>
-              <linearGradient
-                id={`mnRim-${uid}`}
-                x1={isVertical ? "1" : "0"}
-                y1="0"
-                x2={isVertical ? "0" : "0"}
-                y2={isVertical ? "0" : "1"}
-              >
-                <stop className="meniscus-rim-hi" offset="0" />
-                <stop className="meniscus-rim-lo" offset="1" />
-              </linearGradient>
-            </defs>
-            <path
-              ref={fillRef}
-              className="meniscus-fill"
-              style={{ fill: `url(#mnPlate-${uid})`, stroke: `url(#mnRim-${uid})` }}
-              d=""
-            />
-          </svg>
-          <span className="meniscus-bead" ref={beadRef} aria-hidden="true" />
           <div
-            className="meniscus-tabs"
-            role="tablist"
-            aria-label="Navegação Meniscus"
-            onKeyDown={onKeyDown}
+            className={cn(
+              "meniscus-dock",
+              ready && "is-ready",
+              isVertical && "is-vertical",
+              isCollapsed && "is-collapsed",
+            )}
+            ref={dockRef}
           >
-            {actions.map((tab, i) => {
-              const Icon = tab.Icon;
-              return (
-                <button
-                  key={`${mode}-${orientation}-${expanded}-${tab.id}`}
-                  ref={(el) => {
-                    tabRefs.current[i] = el;
-                  }}
-                  type="button"
-                  role="tab"
-                  className="meniscus-tab"
-                  aria-label={tab.label}
-                  aria-selected={current === i}
-                  tabIndex={current === i ? 0 : -1}
-                  title={isCollapsed ? tab.label : undefined}
-                  onClick={onTabClick(i)}
-                >
-                  <span className="meniscus-icon-slot">
-                    <Icon className="meniscus-icon" strokeWidth={1.8} />
-                  </span>
-                  {!isCollapsed ? <span className="meniscus-label">{tab.label}</span> : null}
-                </button>
-              );
-            })}
-          </div>
-
-          {isVertical ? (
-            <button
-              type="button"
-              className="meniscus-rail-toggle"
-              aria-label={expanded ? "Retrair menu" : "Expandir menu"}
-              onClick={() => {
-                setExpanded((value) => !value);
-                setReady(false);
-              }}
+            <svg
+              className="meniscus-skin"
+              viewBox={`0 0 ${box.w} ${box.h}`}
+              preserveAspectRatio="none"
+              aria-hidden="true"
             >
-              {expanded ? <ChevronsLeft size={16} /> : <ChevronsRight size={16} />}
-            </button>
-          ) : null}
+              <defs>
+                <linearGradient
+                  id={`mnPlate-${uid}`}
+                  x1={isVertical ? "1" : "0"}
+                  y1="0"
+                  x2={isVertical ? "0" : "0"}
+                  y2={isVertical ? "0" : "1"}
+                >
+                  <stop className="meniscus-plate-hi" offset="0" />
+                  <stop className="meniscus-plate-lo" offset="1" />
+                </linearGradient>
+                <linearGradient
+                  id={`mnRim-${uid}`}
+                  x1={isVertical ? "1" : "0"}
+                  y1="0"
+                  x2={isVertical ? "0" : "0"}
+                  y2={isVertical ? "0" : "1"}
+                >
+                  <stop className="meniscus-rim-hi" offset="0" />
+                  <stop className="meniscus-rim-lo" offset="1" />
+                </linearGradient>
+              </defs>
+              <path
+                ref={fillRef}
+                className="meniscus-fill"
+                style={{ fill: `url(#mnPlate-${uid})`, stroke: `url(#mnRim-${uid})` }}
+                d=""
+              />
+            </svg>
+            <span className="meniscus-bead" ref={beadRef} aria-hidden="true" />
+            <div
+              className="meniscus-tabs"
+              role="tablist"
+              aria-label="Navegação Meniscus"
+              onKeyDown={onKeyDown}
+            >
+              {actions.map((tab, i) => {
+                const Icon = tab.Icon;
+                return (
+                  <button
+                    key={`${mode}-${orientation}-${expanded}-${tab.id}`}
+                    ref={(el) => {
+                      tabRefs.current[i] = el;
+                    }}
+                    type="button"
+                    role="tab"
+                    className="meniscus-tab"
+                    aria-label={tab.label}
+                    aria-selected={current === i}
+                    tabIndex={current === i ? 0 : -1}
+                    title={isCollapsed ? tab.label : undefined}
+                    onClick={onTabClick(i)}
+                  >
+                    <span className="meniscus-icon-slot">
+                      <Icon className="meniscus-icon" strokeWidth={1.8} />
+                    </span>
+                    {!isCollapsed ? <span className="meniscus-label">{tab.label}</span> : null}
+                  </button>
+                );
+              })}
+            </div>
+
+            {isVertical ? (
+              <button
+                type="button"
+                className="meniscus-rail-toggle"
+                aria-label={expanded ? "Retrair menu" : "Expandir menu"}
+                onClick={() => {
+                  setExpanded((value) => !value);
+                  setReady(false);
+                }}
+              >
+                {expanded ? <ChevronsLeft size={16} /> : <ChevronsRight size={16} />}
+              </button>
+            ) : null}
+          </div>
         </div>
       </div>
     </MenuShowcase>
