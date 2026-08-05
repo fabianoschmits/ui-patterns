@@ -287,13 +287,19 @@ export default function MeniscusLiquidNav(_props: PatternPreviewProps) {
 
     const axis = vertical ? W : H;
     let D = Math.min(axis * (vertical ? 0.7 : 0.88), G.span * (vertical ? 0.72 : 0.82));
-    const edgeRoom = (G.slots[0] ?? (vertical ? H : W) / 2) - G.R - (vertical ? 12 : 10);
-    for (let i = 0; i < 4; i++) {
+    // Extra corner clearance so the trough never eats into the rounded ends.
+    const edgeRoom = (G.slots[0] ?? (vertical ? H : W) / 2) - G.R - (vertical ? 18 : 16);
+    for (let i = 0; i < 5; i++) {
       const hw = reach(D * 0.22, D / 2 + 5, 0);
       if (hw <= edgeRoom) break;
-      D *= edgeRoom / hw;
+      D *= edgeRoom / Math.max(hw, 1);
     }
-    G.D = Math.max(Math.round(D), vertical ? 44 : 42);
+    const preferred = Math.max(Math.round(D), vertical ? 44 : 42);
+    const preferredReach = reach(preferred * 0.22, preferred / 2 + 5, 0);
+    G.D =
+      preferredReach <= edgeRoom
+        ? preferred
+        : Math.max(Math.round(D), vertical ? 34 : 32);
     G.S = G.D * 0.22;
     G.RB = G.D / 2 + 5;
 
