@@ -142,7 +142,7 @@
   z-index: 2;
   display: flex;
   width: 100%;
-  max-width: 28rem;
+  max-width: 34rem;
   flex: 0 0 auto;
   flex-direction: column;
   align-items: center;
@@ -171,12 +171,30 @@
 .menu-show-swatches {
   display: flex;
   width: 100%;
-  flex-wrap: wrap;
-  justify-content: center;
+  max-width: 100%;
+  flex-wrap: nowrap;
+  justify-content: flex-start;
   gap: 0.45rem;
+  padding: 0.35rem 0.15rem 0.55rem;
+  overflow-x: auto;
+  overflow-y: hidden;
+  overscroll-behavior-x: contain;
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-x;
+  scrollbar-width: none;
+  cursor: grab;
+}
+
+.menu-show-swatches::-webkit-scrollbar {
+  display: none;
+}
+
+.menu-show-swatches:active {
+  cursor: grabbing;
 }
 
 .menu-show-swatch {
+  flex: 0 0 auto;
   width: 1.35rem;
   height: 1.35rem;
   border-radius: 50%;
