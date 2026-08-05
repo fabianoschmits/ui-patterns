@@ -44,9 +44,6 @@ export default async function PatternPage({
   const pattern = getPatternBySlug(slug);
   if (!pattern) notFound();
 
-  const index = patterns.findIndex((item) => item.slug === slug);
-  const prev = patterns[(index - 1 + patterns.length) % patterns.length];
-  const next = patterns[(index + 1) % patterns.length];
   const immersive = immersiveSlugs.has(slug);
   const canvasImmersive = canvasImmersiveSlugs.has(slug);
 
@@ -68,18 +65,7 @@ export default async function PatternPage({
             <span>{pattern.category}</span>
             <h1>{pattern.name}</h1>
           </div>
-          <nav className="stage-nav" aria-label="Outros padrões">
-            <TransitionLink href={`/patterns/${prev.slug}`}>← {prev.name}</TransitionLink>
-            <TransitionLink href={`/patterns/${next.slug}`}>{next.name} →</TransitionLink>
-          </nav>
         </footer>
-      )}
-
-      {immersive && (
-        <nav className="stage-nav stage-nav-immersive" aria-label="Outros padrões">
-          <TransitionLink href={`/patterns/${prev.slug}`}>← {prev.name}</TransitionLink>
-          <TransitionLink href={`/patterns/${next.slug}`}>{next.name} →</TransitionLink>
-        </nav>
       )}
     </div>
   );
