@@ -183,6 +183,7 @@ html[data-theme="dark"] .meniscus-rim-hi { stop-opacity: 0.28; }
   left: auto;
   top: auto;
   transform: none;
+  overflow: visible;
 }
 
 .meniscus-icon {
@@ -204,6 +205,11 @@ html[data-theme="dark"] .meniscus-rim-hi { stop-opacity: 0.28; }
   transform:
     translate(-50%, -50%)
     translateX(calc(var(--t) * var(--rise) * -1));
+}
+
+.meniscus-dock.is-vertical .meniscus-tab,
+.meniscus-dock.is-vertical .meniscus-tabs {
+  overflow: visible;
 }
 
 .meniscus-tab .meniscus-icon {

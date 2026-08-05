@@ -270,7 +270,8 @@ export default function MeniscusLiquidNav(_props: PatternPreviewProps) {
     G.slots = Array.from({ length: count }, (_, i) => {
       const tab = tabRefs.current[i];
       if (!tab) return 0;
-      const b = tab.getBoundingClientRect();
+      const slotEl = tab.querySelector(".meniscus-icon-slot");
+      const b = (slotEl ?? tab).getBoundingClientRect();
       return vertical
         ? b.top - r.top + b.height / 2
         : b.left - r.left + b.width / 2;
@@ -300,12 +301,19 @@ export default function MeniscusLiquidNav(_props: PatternPreviewProps) {
     dock.style.setProperty("--bead-d", `${G.D}px`);
     dock.style.setProperty("--bead-cx", `${G.CX}px`);
     dock.style.setProperty("--bead-cy", `${G.CY}px`);
-    dock.style.setProperty(
-      "--rise",
-      vertical
-        ? `${Math.max(G.D * 0.18, 10).toFixed(1)}px`
-        : `${(H / 2 - G.CY).toFixed(1)}px`,
-    );
+
+    // Rise must land the icon dead-center in the bead.
+    if (vertical) {
+      const sample =
+        tabRefs.current[currentRef.current] ?? tabRefs.current[0] ?? null;
+      const slotEl = sample?.querySelector(".meniscus-icon-slot");
+      const sb = (slotEl ?? sample)?.getBoundingClientRect();
+      const iconCx = sb ? sb.left - r.left + sb.width / 2 : W * 0.35;
+      const rise = Math.max(iconCx - G.CX, G.D * 0.45);
+      dock.style.setProperty("--rise", `${rise.toFixed(1)}px`);
+    } else {
+      dock.style.setProperty("--rise", `${(H / 2 - G.CY).toFixed(1)}px`);
+    }
     setBox({ w: W, h: H });
     return true;
   }, []);
