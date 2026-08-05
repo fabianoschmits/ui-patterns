@@ -22,7 +22,7 @@ html[data-theme="dark"] .qam-show {
 .qam-show.is-vertical .menu-show-slot {
   width: 100%;
   max-width: min(40rem, 100%);
-  place-items: stretch;
+  place-items: center;
 }
 
 .qam-stage {
@@ -35,8 +35,8 @@ html[data-theme="dark"] .qam-show {
 }
 
 .qam-stage.is-vertical {
-  justify-content: flex-start;
-  align-items: stretch;
+  justify-content: center;
+  align-items: center;
   min-height: 0;
   padding: 0.35rem 0;
 }
@@ -303,51 +303,37 @@ html[data-theme="dark"] .qam-active-pill {
 
 @media (min-width: 720px) {
   .qam-show.is-vertical .menu-show-body {
-    display: grid;
-    grid-template-columns: auto minmax(0, 1fr);
-    grid-template-rows: auto auto auto auto;
-    column-gap: 1.5rem;
-    align-items: start;
-    justify-items: stretch;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
   }
 
   .qam-show.is-vertical .menu-show-head {
-    grid-column: 2;
-    grid-row: 1;
     max-width: 28rem;
-    justify-self: start;
-    align-items: flex-start;
-    text-align: left;
+    align-items: center;
+    text-align: center;
   }
 
   .qam-show.is-vertical .menu-show-controls {
-    grid-column: 2;
-    grid-row: 2;
-    max-width: 28rem;
-    justify-content: flex-start;
-    justify-self: start;
+    max-width: 34rem;
+    justify-content: center;
   }
 
   .qam-show.is-vertical .menu-show-slot {
-    grid-column: 1;
-    grid-row: 1 / span 3;
-    width: auto;
-    max-width: none;
-    align-self: start;
-    justify-self: start;
-    place-items: start;
+    width: 100%;
+    max-width: min(40rem, 100%);
+    place-items: center;
     padding: 0.5rem 0 1rem;
   }
 
   .qam-show.is-vertical .menu-show-palette {
-    grid-column: 1 / -1;
-    grid-row: 4;
-    margin-top: 0.75rem;
+    margin-top: auto;
     justify-self: center;
   }
 
   .qam-stage.is-vertical {
-    width: auto;
+    width: 100%;
+    justify-content: center;
   }
 }
 
