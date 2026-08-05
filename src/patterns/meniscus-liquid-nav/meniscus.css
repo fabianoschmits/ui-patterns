@@ -63,11 +63,11 @@ html[data-theme="dark"] .meniscus-show .meniscus {
 
 .meniscus-show.is-vertical .meniscus {
   display: flex;
-  width: min(13rem, 100%);
-  max-width: none;
+  width: fit-content;
+  max-width: min(100%, calc(100vw - 2rem));
   margin-inline: auto;
   flex-direction: column;
-  align-items: center;
+  align-items: stretch;
   padding-top: 0;
   /* Optical balance for the bead that hangs off the left edge */
   padding-left: calc(var(--bead-d, 68px) * 0.5);
@@ -81,7 +81,7 @@ html[data-theme="dark"] .meniscus-show .meniscus {
 }
 
 .meniscus-show.is-vertical .meniscus.is-collapsed {
-  width: 4.85rem;
+  width: 4.1rem;
 }
 
 .meniscus-dock {
@@ -103,17 +103,20 @@ html[data-theme="dark"] .meniscus-show .meniscus {
 }
 
 .meniscus-dock.is-vertical {
-  width: 100%;
-  max-width: min(12.75rem, calc(100vw - 2rem));
+  /* Width comes from the in-flow tab labels (longest word + icon) */
+  display: flex;
+  width: fit-content;
+  max-width: min(100%, calc(100vw - 2rem));
   height: 22.5rem;
   min-height: 22.5rem;
   margin-inline: 0;
+  flex-direction: column;
   overflow: visible;
 }
 
 .meniscus-dock.is-vertical.is-collapsed {
-  width: 100%;
-  max-width: 4.85rem;
+  width: 4.1rem;
+  max-width: 4.1rem;
 }
 
 .meniscus-skin {
@@ -183,18 +186,30 @@ html[data-theme="dark"] .meniscus-rim-hi { stop-opacity: 0.28; }
 }
 
 .meniscus-dock.is-vertical .meniscus-tabs {
+  /* In-flow so dock can shrink-wrap the longest label */
+  position: relative;
+  inset: auto;
+  z-index: 2;
+  display: flex;
+  width: max-content;
+  max-width: 100%;
+  height: 100%;
+  flex: 1 1 auto;
   flex-direction: column;
   justify-content: space-between;
-  padding: 2.15rem 0.55rem 3.25rem 0.7rem;
+  align-items: stretch;
+  box-sizing: border-box;
+  padding: 1.9rem 0.7rem 3.15rem;
   gap: 0.15rem;
 }
 
 .meniscus-dock.is-vertical.is-right .meniscus-tabs {
-  padding: 2.15rem 0.7rem 3.25rem 0.55rem;
+  padding: 1.9rem 0.7rem 3.15rem;
 }
 
 .meniscus-dock.is-vertical.is-collapsed .meniscus-tabs {
-  padding-inline: 0.35rem;
+  width: 100%;
+  padding-inline: 0.3rem;
   align-items: center;
 }
 
@@ -216,11 +231,13 @@ html[data-theme="dark"] .meniscus-rim-hi { stop-opacity: 0.28; }
   flex: 1 1 0;
   display: flex;
   width: 100%;
+  min-width: 0;
   min-height: 0;
   align-items: center;
   justify-content: flex-start;
-  gap: 0.55rem;
+  gap: 0.4rem;
   padding: 0.1rem 0.2rem;
+  box-sizing: border-box;
 }
 
 .meniscus-dock.is-vertical.is-right .meniscus-tab {
@@ -261,6 +278,8 @@ html[data-theme="dark"] .meniscus-rim-hi { stop-opacity: 0.28; }
   position: relative;
   left: auto;
   top: auto;
+  width: 1.55rem;
+  height: 1.55rem;
   transform: none;
   overflow: visible;
 }
@@ -281,6 +300,8 @@ html[data-theme="dark"] .meniscus-rim-hi { stop-opacity: 0.28; }
 }
 
 .meniscus-dock.is-vertical .meniscus-icon {
+  width: 1.05rem;
+  height: 1.05rem;
   transform:
     translate(-50%, -50%)
     translateX(calc(var(--t) * var(--rise) * -1));
@@ -330,14 +351,16 @@ html[data-theme="dark"] .meniscus-rim-hi { stop-opacity: 0.28; }
   bottom: auto;
   width: auto;
   max-width: none;
+  flex: 0 0 auto;
   padding-inline: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  overflow: visible;
+  text-overflow: clip;
   text-align: start;
-  font-size: 0.8rem;
+  font-size: 0.78rem;
   font-weight: 600;
   color: var(--label);
   opacity: 1;
+  white-space: nowrap;
 }
 
 .meniscus-dock.is-vertical.is-right .meniscus-label {
@@ -415,10 +438,6 @@ html[data-theme="dark"] .meniscus-rim-hi { stop-opacity: 0.28; }
 
   .meniscus-stage.is-vertical {
     justify-content: center;
-  }
-
-  .meniscus-show.is-vertical .meniscus:not(.is-collapsed) {
-    width: min(12.5rem, calc(100vw - 2rem));
   }
 }
 
