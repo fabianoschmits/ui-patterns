@@ -42,7 +42,10 @@ export const MENU_ACCENTS: AccentSwatch[] = [
   { name: "Wine", value: "#9f1239" },
 ];
 
+export const MENU_SURFACE_AUTO = "auto";
+
 export const MENU_SURFACES: AccentSwatch[] = [
+  { name: "Padrão", value: MENU_SURFACE_AUTO },
   { name: "Branco", value: "#f5f4f2" },
   { name: "Névoa", value: "#efece6" },
   { name: "Areia", value: "#e8e2d6" },
@@ -147,31 +150,27 @@ function SwatchRow({
   const dragRef = useRef<{
     pointerId: number;
     startX: number;
-    scrollLeft: number;
+    startIndex: number;
+    lastIndex: number;
     moved: boolean;
   } | null>(null);
 
-  const selectByOffset = (clientX: number) => {
-    const track = trackRef.current;
-    if (!track) return;
-    const buttons = Array.from(
-      track.querySelectorAll<HTMLButtonElement>(".menu-show-swatch"),
-    );
-    if (!buttons.length) return;
+  const clampIndex = (index: number) =>
+    Math.max(0, Math.min(options.length - 1, index));
 
-    let best = buttons[0];
-    let bestDist = Infinity;
-    for (const button of buttons) {
-      const rect = button.getBoundingClientRect();
-      const cx = rect.left + rect.width / 2;
-      const dist = Math.abs(clientX - cx);
-      if (dist < bestDist) {
-        bestDist = dist;
-        best = button;
-      }
-    }
-    const next = best.dataset.value;
-    if (next && next !== value) onChange(next);
+  const scrollSwatchIntoView = (index: number) => {
+    const track = trackRef.current;
+    const button = track?.querySelectorAll<HTMLButtonElement>(".menu-show-swatch")[
+      index
+    ];
+    button?.scrollIntoView({ inline: "center", block: "nearest", behavior: "smooth" });
+  };
+
+  const applyIndex = (index: number) => {
+    const next = options[clampIndex(index)];
+    if (!next) return;
+    if (next.value !== value) onChange(next.value);
+    scrollSwatchIntoView(clampIndex(index));
   };
 
   return (
@@ -186,23 +185,32 @@ function SwatchRow({
           if (e.button !== 0) return;
           const track = trackRef.current;
           if (!track) return;
+          const startIndex = Math.max(
+            0,
+            options.findIndex((option) => option.value === value),
+          );
           dragRef.current = {
             pointerId: e.pointerId,
             startX: e.clientX,
-            scrollLeft: track.scrollLeft,
+            startIndex,
+            lastIndex: startIndex,
             moved: false,
           };
           track.setPointerCapture(e.pointerId);
         }}
         onPointerMove={(e) => {
           const drag = dragRef.current;
-          const track = trackRef.current;
-          if (!drag || drag.pointerId !== e.pointerId || !track) return;
+          if (!drag || drag.pointerId !== e.pointerId) return;
           const dx = e.clientX - drag.startX;
-          if (Math.abs(dx) > 6) drag.moved = true;
-          if (!drag.moved) return;
-          track.scrollLeft = drag.scrollLeft - dx;
-          selectByOffset(e.clientX);
+          if (Math.abs(dx) < 10) return;
+          drag.moved = true;
+          // Drag left → next colors; drag right → previous colors
+          const step = 22;
+          const nextIndex = clampIndex(drag.startIndex - Math.round(dx / step));
+          if (nextIndex !== drag.lastIndex) {
+            drag.lastIndex = nextIndex;
+            applyIndex(nextIndex);
+          }
         }}
         onPointerUp={(e) => {
           const drag = dragRef.current;
@@ -211,31 +219,44 @@ function SwatchRow({
           if (track?.hasPointerCapture(e.pointerId)) {
             track.releasePointerCapture(e.pointerId);
           }
-          if (drag.moved) selectByOffset(e.clientX);
+          if (drag.moved) applyIndex(drag.lastIndex);
           dragRef.current = null;
         }}
         onPointerCancel={() => {
           dragRef.current = null;
         }}
       >
-        {options.map((swatch) => (
-          <button
-            key={swatch.value}
-            type="button"
-            data-value={swatch.value}
-            className={cn("menu-show-swatch", value === swatch.value && "is-selected")}
-            style={{
-              background: swatch.value,
-              ["--swatch-ring" as string]: selectedRing,
-            }}
-            aria-label={swatch.name}
-            aria-pressed={value === swatch.value}
-            onClick={() => {
-              if (dragRef.current?.moved) return;
-              onChange(swatch.value);
-            }}
-          />
-        ))}
+        {options.map((swatch) => {
+          const isAuto = swatch.value === MENU_SURFACE_AUTO;
+          return (
+            <button
+              key={swatch.value}
+              type="button"
+              data-value={swatch.value}
+              className={cn(
+                "menu-show-swatch",
+                isAuto && "is-auto",
+                value === swatch.value && "is-selected",
+              )}
+              style={
+                isAuto
+                  ? { ["--swatch-ring" as string]: selectedRing }
+                  : {
+                      background: swatch.value,
+                      ["--swatch-ring" as string]: selectedRing,
+                    }
+              }
+              aria-label={swatch.name}
+              aria-pressed={value === swatch.value}
+              onClick={() => {
+                if (dragRef.current?.moved) return;
+                onChange(swatch.value);
+                const index = options.findIndex((option) => option.value === swatch.value);
+                if (index >= 0) scrollSwatchIntoView(index);
+              }}
+            />
+          );
+        })}
       </div>
     </div>
   );
@@ -263,9 +284,11 @@ export function MenuShowcase({
   className,
   style,
 }: MenuShowcaseProps) {
-  const [internalSurface, setInternalSurface] = useState(MENU_SURFACES[0].value);
+  const [internalSurface, setInternalSurface] = useState(MENU_SURFACE_AUTO);
   const surfaceValue = surface ?? internalSurface;
   const handleSurfaceChange = onSurfaceChange ?? setInternalSurface;
+  const resolvedSurface =
+    surfaceValue === MENU_SURFACE_AUTO ? "var(--canvas)" : surfaceValue;
   const hasControls =
     Boolean(modes && onModeChange) ||
     Boolean(variants && onVariantChange) ||
@@ -277,7 +300,7 @@ export function MenuShowcase({
       style={
         {
           "--menu-accent": accent,
-          "--menu-surface": surfaceValue,
+          "--menu-surface": resolvedSurface,
           ...style,
         } as CSSProperties
       }

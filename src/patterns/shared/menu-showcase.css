@@ -203,6 +203,15 @@
   transition: transform 0.18s ease, box-shadow 0.18s ease;
 }
 
+.menu-show-swatch.is-auto {
+  background:
+    linear-gradient(
+      135deg,
+      var(--canvas) 0 50%,
+      var(--canvas-deep) 50% 100%
+    );
+}
+
 .menu-show-swatch:hover {
   transform: scale(1.08);
 }

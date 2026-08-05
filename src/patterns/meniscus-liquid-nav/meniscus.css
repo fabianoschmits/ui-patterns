@@ -30,12 +30,18 @@
 }
 
 .meniscus-show .meniscus {
-  --bar: color-mix(in srgb, var(--menu-surface, var(--canvas)) 90%, transparent);
-  --bar-hi: color-mix(in srgb, var(--menu-surface, var(--canvas)) 96%, #fff);
-  --bar-lo: color-mix(in srgb, var(--menu-surface, var(--canvas)) 84%, transparent);
-  --icon-off: color-mix(in srgb, var(--muted) 72%, transparent);
+  --bar: color-mix(in srgb, var(--menu-surface, var(--canvas)) 72%, transparent);
+  --bar-hi: color-mix(in srgb, var(--menu-surface, var(--canvas)) 88%, #fff);
+  --bar-lo: color-mix(in srgb, var(--menu-surface, var(--canvas)) 55%, transparent);
+  --glass-blur: 18px;
+  --glass-sat: 1.4;
+  --glass-tint: color-mix(in srgb, var(--menu-surface, var(--canvas)) 42%, transparent);
+  --bar-shadow:
+    0 10px 28px color-mix(in srgb, var(--ink) 10%, transparent),
+    0 2px 8px color-mix(in srgb, var(--ink) 6%, transparent);
+  --icon-off: color-mix(in srgb, var(--muted) 82%, transparent);
   --icon-on: #fff;
-  --label: color-mix(in srgb, var(--ink) 62%, transparent);
+  --label: color-mix(in srgb, var(--ink) 58%, transparent);
   --label-on: var(--ink);
   --glow: rgb(var(--glow-rgb));
   --dock-r: 24px;
@@ -56,9 +62,15 @@
 }
 
 html[data-theme="dark"] .meniscus-show .meniscus {
-  --bar: color-mix(in srgb, var(--menu-surface, var(--canvas-deep)) 88%, transparent);
-  --bar-hi: color-mix(in srgb, var(--menu-surface, var(--canvas-deep)) 92%, #fff);
-  --bar-lo: color-mix(in srgb, var(--menu-surface, var(--canvas-deep)) 82%, transparent);
+  --bar: color-mix(in srgb, var(--menu-surface, var(--canvas-deep)) 62%, transparent);
+  --bar-hi: color-mix(in srgb, var(--menu-surface, var(--canvas-deep)) 78%, #fff);
+  --bar-lo: color-mix(in srgb, var(--menu-surface, var(--canvas-deep)) 42%, transparent);
+  --glass-tint: color-mix(in srgb, var(--menu-surface, var(--canvas-deep)) 34%, transparent);
+  --bar-shadow:
+    0 14px 36px rgb(0 0 0 / 0.38),
+    0 2px 10px rgb(0 0 0 / 0.22);
+  --icon-off: color-mix(in srgb, var(--muted) 78%, transparent);
+  --label: color-mix(in srgb, var(--ink) 55%, transparent);
 }
 
 .meniscus-show.is-vertical .meniscus {
@@ -94,7 +106,7 @@ html[data-theme="dark"] .meniscus-show .meniscus {
   background: var(--bar);
   border-radius: var(--dock-r);
   /* Placeholder shadow while the SVG path is not ready yet */
-  box-shadow: 0 10px 22px color-mix(in srgb, var(--ink) 12%, transparent);
+  box-shadow: var(--bar-shadow);
 }
 
 .meniscus-dock.is-ready {
@@ -119,36 +131,124 @@ html[data-theme="dark"] .meniscus-show .meniscus {
   max-width: 4.1rem;
 }
 
+.meniscus-glass {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  isolation: isolate;
+  overflow: hidden;
+  pointer-events: none;
+  opacity: 0;
+  filter: drop-shadow(0 10px 22px color-mix(in srgb, var(--ink) 12%, transparent));
+}
+
+.meniscus-dock.is-ready .meniscus-glass {
+  opacity: 1;
+}
+
+html[data-theme="dark"] .meniscus-glass {
+  filter: drop-shadow(0 14px 28px rgb(0 0 0 / 0.42));
+}
+
+.meniscus-glass-base,
+.meniscus-glass-tint,
+.meniscus-glass-sheen,
+.meniscus-glass-rim {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.meniscus-glass-base {
+  backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-sat)) brightness(1.04);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-sat)) brightness(1.04);
+}
+
+.meniscus-glass-tint {
+  background:
+    linear-gradient(
+      165deg,
+      color-mix(in srgb, var(--glass-tint) 100%, #fff 12%),
+      color-mix(in srgb, var(--glass-tint) 55%, transparent) 58%,
+      color-mix(in srgb, var(--glass-tint) 70%, transparent)
+    );
+  transition: background 0.35s ease;
+}
+
+.meniscus-glass-sheen {
+  background:
+    linear-gradient(
+      118deg,
+      rgb(255 255 255 / 0.62) 0%,
+      rgb(255 255 255 / 0.18) 18%,
+      transparent 40%,
+      transparent 62%,
+      rgb(255 255 255 / 0.14) 100%
+    );
+  opacity: 0.85;
+  mix-blend-mode: soft-light;
+}
+
+html[data-theme="dark"] .meniscus-glass-sheen {
+  background:
+    linear-gradient(
+      118deg,
+      rgb(255 255 255 / 0.28) 0%,
+      rgb(255 255 255 / 0.08) 20%,
+      transparent 42%,
+      transparent 64%,
+      rgb(255 255 255 / 0.06) 100%
+    );
+  opacity: 0.9;
+  mix-blend-mode: screen;
+}
+
+.meniscus-glass-rim {
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.72),
+    inset 0 -1px 0 rgb(255 255 255 / 0.12),
+    inset 1px 0 0 rgb(255 255 255 / 0.28),
+    inset -1px 0 0 rgb(255 255 255 / 0.18),
+    0 0 0 1px color-mix(in srgb, var(--ink) 8%, transparent);
+}
+
+html[data-theme="dark"] .meniscus-glass-rim {
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.28),
+    inset 0 -1px 0 rgb(0 0 0 / 0.35),
+    inset 1px 0 0 rgb(255 255 255 / 0.1),
+    inset -1px 0 0 rgb(255 255 255 / 0.06),
+    0 0 0 1px rgb(255 255 255 / 0.1);
+}
+
 .meniscus-skin {
   position: absolute;
   inset: 0;
+  z-index: 1;
   width: 100%;
   height: 100%;
   overflow: visible;
   opacity: 0;
   pointer-events: none;
-  /* Avoid filtering an empty/mismatched path on the first frame */
-  filter: none;
 }
 
 .meniscus-dock.is-ready .meniscus-skin {
   opacity: 1;
-  filter: drop-shadow(0 10px 22px color-mix(in srgb, var(--ink) 12%, transparent));
 }
 
 .meniscus-fill {
+  fill: transparent;
+  stroke: color-mix(in srgb, #fff 55%, transparent);
   stroke-width: 1;
 }
 
-.meniscus-plate-hi { stop-color: var(--bar-hi); }
-.meniscus-plate-lo { stop-color: var(--bar-lo); }
-.meniscus-rim-hi { stop-color: #fff; stop-opacity: 0.55; }
-.meniscus-rim-lo { stop-color: #fff; stop-opacity: 0.08; }
-
-html[data-theme="dark"] .meniscus-rim-hi { stop-opacity: 0.28; }
+html[data-theme="dark"] .meniscus-fill {
+  stroke: color-mix(in srgb, #fff 22%, transparent);
+}
 
 .meniscus-bead {
   position: absolute;
+  z-index: 3;
   top: var(--bead-cy);
   left: 0;
   width: var(--bead-d);
