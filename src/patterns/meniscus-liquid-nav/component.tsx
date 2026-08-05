@@ -2,23 +2,43 @@
 
 import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
 import {
-  Camera,
+  Briefcase,
+  HelpCircle,
   Home,
-  MessageCircle,
-  Settings,
+  Info,
+  LogIn,
+  Mail,
+  Search,
   User,
+  Users,
 } from "lucide-react";
 import type { PatternPreviewProps } from "@/types/pattern";
 import { MenuShowcase, MENU_ACCENTS } from "@/patterns/shared/menu-showcase";
 import "./meniscus.css";
 
-const TABS = [
-  { id: "home", label: "Home", title: "Início", line: "Tudo, em uma superfície só.", Icon: Home },
-  { id: "profile", label: "Perfil", title: "Perfil", line: "Você, como o app te vê.", Icon: User },
-  { id: "messages", label: "Msgs", title: "Mensagens", line: "Três não lidas. Todas gentis.", Icon: MessageCircle },
-  { id: "camera", label: "Câmera", title: "Câmera", line: "Aponte. Já focou.", Icon: Camera },
-  { id: "settings", label: "Ajustes", title: "Ajustes", line: "Menos interruptores. Melhores padrões.", Icon: Settings },
-] as const;
+type Mode = "public" | "logged";
+
+interface MeniscusItem {
+  id: string;
+  label: string;
+  Icon: React.ComponentType<{ className?: string; strokeWidth?: number }>;
+}
+
+const publicActions: MeniscusItem[] = [
+  { id: "home", label: "Home", Icon: Home },
+  { id: "login", label: "Login", Icon: LogIn },
+  { id: "about", label: "Sobre", Icon: Info },
+  { id: "help", label: "Ajuda", Icon: HelpCircle },
+  { id: "contact", label: "Contato", Icon: Mail },
+];
+
+const loggedActions: MeniscusItem[] = [
+  { id: "home", label: "Home", Icon: Home },
+  { id: "feed", label: "Feed", Icon: Users },
+  { id: "search", label: "Buscar", Icon: Search },
+  { id: "classifieds", label: "Classificados", Icon: Briefcase },
+  { id: "profile", label: "Perfil", Icon: User },
+];
 
 function hexToRgb(hex: string): [number, number, number] {
   const h = hex.replace("#", "");
@@ -26,8 +46,8 @@ function hexToRgb(hex: string): [number, number, number] {
   return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
 }
 
-function mixRgb(a: [number, number, number], b: [number, number, number], t: number) {
-  return `${Math.round(a[0] + (b[0] - a[0]) * t)} ${Math.round(a[1] + (b[1] - a[1]) * t)} ${Math.round(a[2] + (b[2] - a[2]) * t)}`;
+function rgbString(rgb: [number, number, number]) {
+  return `${rgb[0]} ${rgb[1]} ${rgb[2]}`;
 }
 
 const clamp = (v: number, a: number, b: number) => (v < a ? a : v > b ? b : v);
@@ -51,7 +71,6 @@ function trough(
     const sx = bx + side * half;
     return {
       sx,
-      s,
       tx: sx + ((bx - sx) / L) * s,
       ty: s + ((by - s) / L) * s,
     };
@@ -89,11 +108,18 @@ export default function MeniscusLiquidNav(_props: PatternPreviewProps) {
   const beadRef = useRef<HTMLSpanElement>(null);
   const tabRefs = useRef<(HTMLButtonElement | null)[]>([]);
   const currentRef = useRef(0);
+  const actionsRef = useRef(loggedActions);
+
+  const [mode, setMode] = useState<Mode>("logged");
   const [current, setCurrent] = useState(0);
   const [ready, setReady] = useState(false);
   const [box, setBox] = useState({ w: 400, h: 80 });
   const [accent, setAccent] = useState(MENU_ACCENTS[0].value);
+
+  const actions = mode === "logged" ? loggedActions : publicActions;
+  actionsRef.current = actions;
   const accentRgb = useMemo(() => hexToRgb(accent), [accent]);
+  const active = actions[current] ?? actions[0];
 
   const physics = useRef({
     x: 0,
@@ -133,24 +159,14 @@ export default function MeniscusLiquidNav(_props: PatternPreviewProps) {
     const sx = 1 + 0.07 * mag;
     bead.style.transform = `translate3d(${G.x.toFixed(2)}px,0,0) scale(${sx.toFixed(3)},${(1 / sx).toFixed(3)})`;
 
-    let near = 0;
-    let nd = Infinity;
     tabRefs.current.forEach((tab, i) => {
       if (!tab) return;
-      const dx = Math.abs(G.x - G.slots[i]);
-      if (dx < nd) {
-        nd = dx;
-        near = i;
-      }
+      const dx = Math.abs(G.x - (G.slots[i] ?? 0));
       tab.style.setProperty("--t", smooth(clamp(1 - dx / (G.span * 0.55), 0, 1)).toFixed(3));
-      tab.style.setProperty("--acc", accent);
     });
 
-    const side = G.x >= G.slots[near] ? 1 : -1;
-    const other = clamp(near + side, 0, TABS.length - 1);
-    const t = other === near ? 0 : clamp(Math.abs(G.x - G.slots[near]) / G.span, 0, 1);
-    root.style.setProperty("--glow-rgb", mixRgb(accentRgb, accentRgb, t));
-  }, [accent, accentRgb]);
+    root.style.setProperty("--glow-rgb", rgbString(accentRgb));
+  }, [accentRgb]);
 
   const run = useCallback(() => {
     const G = physics.current;
@@ -190,7 +206,9 @@ export default function MeniscusLiquidNav(_props: PatternPreviewProps) {
     if (W < 40 || H < 30) return false;
 
     const G = physics.current;
-    G.slots = tabRefs.current.map((tab) => {
+    const count = actionsRef.current.length;
+    G.slots = Array.from({ length: count }, (_, i) => {
+      const tab = tabRefs.current[i];
       if (!tab) return 0;
       const b = tab.getBoundingClientRect();
       return b.left - r.left + b.width / 2;
@@ -202,7 +220,7 @@ export default function MeniscusLiquidNav(_props: PatternPreviewProps) {
     G.CY = 0;
 
     let D = Math.min(H * 0.68, G.span * 0.78);
-    const room = G.slots[0] - G.R - 6;
+    const room = (G.slots[0] ?? W / 2) - G.R - 6;
     for (let i = 0; i < 3; i++) {
       const hw = reach(D * 0.22, D / 2 + 6, G.CY);
       if (hw <= room) break;
@@ -222,11 +240,12 @@ export default function MeniscusLiquidNav(_props: PatternPreviewProps) {
 
   const select = useCallback(
     (i: number, { focus = false, animate = true } = {}) => {
-      const next = ((i % TABS.length) + TABS.length) % TABS.length;
+      const len = actionsRef.current.length;
+      const next = ((i % len) + len) % len;
       currentRef.current = next;
       setCurrent(next);
       const G = physics.current;
-      if (!G.slots.length) return;
+      if (!G.slots.length || G.slots[next] == null) return;
       const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
       if (!animate || reduced) {
         G.x = G.target = G.slots[next];
@@ -241,12 +260,12 @@ export default function MeniscusLiquidNav(_props: PatternPreviewProps) {
     [paint, run],
   );
 
+  // Measure on mount / resize — never reset on tab change (that killed click animation).
   useEffect(() => {
     const sync = (forceSnap: boolean) => {
       if (!measure()) return;
       const G = physics.current;
-      const idx = currentRef.current;
-      const slot = G.slots[idx] ?? G.slots[0] ?? 0;
+      const slot = G.slots[currentRef.current] ?? G.slots[0] ?? 0;
       if (forceSnap) {
         G.x = G.target = slot;
         G.v = 0;
@@ -267,32 +286,46 @@ export default function MeniscusLiquidNav(_props: PatternPreviewProps) {
       cancelAnimationFrame(physics.current.raf);
       physics.current.raf = 0;
     };
-  }, [measure, paint, run]);
+  }, [measure, paint, run, mode]);
 
   useEffect(() => {
     paint();
   }, [accent, paint]);
 
+  // Drag only after a movement threshold so clicks reach the tab buttons.
   useEffect(() => {
     const dock = dockRef.current;
     if (!dock) return;
+
     let pid: number | null = null;
+    let startX = 0;
+    let capturing = false;
 
     const onDown = (e: PointerEvent) => {
       if (e.button !== 0 && e.pointerType === "mouse") return;
       pid = e.pointerId;
-      dock.setPointerCapture(e.pointerId);
-      physics.current.dragging = true;
+      startX = e.clientX;
+      capturing = false;
+      physics.current.dragging = false;
       physics.current.moved = false;
     };
+
     const onMove = (e: PointerEvent) => {
-      if (pid !== e.pointerId || !physics.current.dragging) return;
+      if (pid !== e.pointerId) return;
+      if (!capturing) {
+        if (Math.abs(e.clientX - startX) < 8) return;
+        capturing = true;
+        physics.current.dragging = true;
+        physics.current.moved = true;
+        dock.setPointerCapture(e.pointerId);
+      }
       const r = dock.getBoundingClientRect();
       const G = physics.current;
+      if (!G.slots.length) return;
       G.target = clamp(e.clientX - r.left, G.slots[0], G.slots[G.slots.length - 1]);
-      G.moved = true;
       run();
     };
+
     const onUp = (e: PointerEvent) => {
       if (pid !== e.pointerId) return;
       pid = null;
@@ -301,7 +334,6 @@ export default function MeniscusLiquidNav(_props: PatternPreviewProps) {
       G.dragging = false;
       G.moved = false;
 
-      // Clicks are handled by each tab's onClick. Drag-release snaps to nearest.
       if (!wasDrag) return;
 
       let near = 0;
@@ -333,38 +365,57 @@ export default function MeniscusLiquidNav(_props: PatternPreviewProps) {
       dock.removeEventListener("pointerup", onUp);
       dock.removeEventListener("pointercancel", onUp);
     };
-  }, [run, select]);
+  }, [run, select, mode]);
 
   const onKeyDown = (e: React.KeyboardEvent) => {
     const step = ({ ArrowRight: 1, ArrowDown: 1, ArrowLeft: -1, ArrowUp: -1 } as Record<string, number>)[e.key];
     let next: number | null = null;
     if (step) next = current + step;
     else if (e.key === "Home") next = 0;
-    else if (e.key === "End") next = TABS.length - 1;
+    else if (e.key === "End") next = actions.length - 1;
     if (next === null) return;
     e.preventDefault();
     select(next, { focus: true });
   };
 
-  const active = TABS[current];
+  const onTabClick = (index: number) => (e: React.MouseEvent) => {
+    e.preventDefault();
+    select(index, { animate: true });
+  };
 
   return (
     <MenuShowcase
       className="meniscus-show"
       eyebrow="Meniscus"
-      title={active.title}
-      description={active.line}
+      title={active.label}
+      description="Toque uma aba — a gota arrasta o menisco atrás dela."
       accent={accent}
       onAccentChange={setAccent}
+      modes={[
+        { id: "public", label: "Público" },
+        { id: "logged", label: "Logado" },
+      ]}
+      mode={mode}
+      onModeChange={(id) => {
+        setMode(id as Mode);
+        setCurrent(0);
+        currentRef.current = 0;
+        setReady(false);
+      }}
     >
       <div
         className="meniscus"
         ref={rootRef}
-        style={{ ["--glow-rgb" as string]: mixRgb(accentRgb, accentRgb, 0) }}
+        style={{ ["--glow-rgb" as string]: rgbString(accentRgb) }}
       >
         <div className={`meniscus-dock${ready ? " is-ready" : ""}`} ref={dockRef}>
           <span className="meniscus-cast" aria-hidden="true" />
-          <svg className="meniscus-skin" viewBox={`0 0 ${box.w} ${box.h}`} preserveAspectRatio="none" aria-hidden="true">
+          <svg
+            className="meniscus-skin"
+            viewBox={`0 0 ${box.w} ${box.h}`}
+            preserveAspectRatio="none"
+            aria-hidden="true"
+          >
             <defs>
               <linearGradient id={`mnPlate-${uid}`} x1="0" y1="0" x2="0" y2="1">
                 <stop className="meniscus-plate-hi" offset="0" />
@@ -383,22 +434,27 @@ export default function MeniscusLiquidNav(_props: PatternPreviewProps) {
             />
           </svg>
           <span className="meniscus-bead" ref={beadRef} aria-hidden="true" />
-          <div className="meniscus-tabs" role="tablist" aria-label="Navegação Meniscus" onKeyDown={onKeyDown}>
-            {TABS.map((tab, i) => {
+          <div
+            className="meniscus-tabs"
+            role="tablist"
+            aria-label="Navegação Meniscus"
+            onKeyDown={onKeyDown}
+          >
+            {actions.map((tab, i) => {
               const Icon = tab.Icon;
               return (
                 <button
-                  key={tab.id}
+                  key={`${mode}-${tab.id}`}
                   ref={(el) => {
                     tabRefs.current[i] = el;
                   }}
                   type="button"
                   role="tab"
                   className="meniscus-tab"
+                  aria-label={tab.label}
                   aria-selected={current === i}
                   tabIndex={current === i ? 0 : -1}
-                  style={{ ["--acc" as string]: accent }}
-                  onClick={() => select(i)}
+                  onClick={onTabClick(i)}
                 >
                   <Icon className="meniscus-icon" strokeWidth={1.8} />
                   <span className="meniscus-label">{tab.label}</span>
