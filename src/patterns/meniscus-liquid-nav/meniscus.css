@@ -153,6 +153,8 @@ html[data-theme="dark"] .meniscus-rim-hi { stop-opacity: 0.28; }
   inset: 0;
   z-index: 2;
   display: flex;
+  width: 100%;
+  box-sizing: border-box;
   padding-inline: clamp(1.15rem, 5.5vw, 1.85rem);
 }
 
@@ -170,7 +172,8 @@ html[data-theme="dark"] .meniscus-rim-hi { stop-opacity: 0.28; }
 
 .meniscus-tab {
   position: relative;
-  flex: 1;
+  flex: 1 1 0;
+  min-width: 0;
   display: block;
   height: 100%;
   padding: 0;
@@ -363,17 +366,35 @@ html[data-theme="dark"] .meniscus-rim-hi { stop-opacity: 0.28; }
 }
 
 .meniscus-show .menu-show-body {
-  padding-left: max(5.75rem, calc(env(safe-area-inset-left) + 4.75rem));
-  padding-right: max(5.75rem, calc(env(safe-area-inset-right) + 4.75rem));
+  /* Extra outer side room so the bead/corners never clip the frame */
+  padding-left: max(4.75rem, calc(env(safe-area-inset-left) + 4rem));
+  padding-right: max(4.75rem, calc(env(safe-area-inset-right) + 4rem));
 }
 
 @media (max-width: 640px) {
+  /* Wider bar on mobile so icons keep even spacing while ends stay clear */
+  .meniscus-show:not(.is-vertical) .menu-show-slot {
+    max-width: 100%;
+    width: 100%;
+  }
+
+  .meniscus-show:not(.is-vertical) .meniscus {
+    max-width: none;
+    width: 100%;
+  }
+
   .meniscus-dock:not(.is-vertical) {
     height: 5.15rem;
   }
 
   .meniscus-tabs {
-    padding-inline: clamp(1.25rem, 7vw, 2rem);
+    /* Larger end caps only — equal flex keeps icon-to-icon distance */
+    padding-inline: clamp(1.55rem, 6.5vw, 2.15rem);
+  }
+
+  .meniscus-label {
+    font-size: 0.58rem;
+    letter-spacing: -0.01em;
   }
 
   .meniscus-dock.is-vertical {
@@ -382,7 +403,7 @@ html[data-theme="dark"] .meniscus-rim-hi { stop-opacity: 0.28; }
   }
 
   .meniscus-show .menu-show-body {
-    padding-left: max(5.25rem, calc(env(safe-area-inset-left) + 4.25rem));
-    padding-right: max(5.25rem, calc(env(safe-area-inset-right) + 4.25rem));
+    padding-left: max(3.5rem, calc(env(safe-area-inset-left) + 2.75rem));
+    padding-right: max(3.5rem, calc(env(safe-area-inset-right) + 2.75rem));
   }
 }
