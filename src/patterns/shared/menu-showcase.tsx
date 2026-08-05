@@ -145,6 +145,10 @@ export function MenuShowcase({
   const [internalSurface, setInternalSurface] = useState(MENU_SURFACES[0].value);
   const surfaceValue = surface ?? internalSurface;
   const handleSurfaceChange = onSurfaceChange ?? setInternalSurface;
+  const hasControls =
+    Boolean(modes && onModeChange) ||
+    Boolean(variants && onVariantChange) ||
+    Boolean(extras);
 
   return (
     <div
@@ -158,37 +162,41 @@ export function MenuShowcase({
       }
     >
       <div className="menu-show-body">
-        <header className="menu-show-head">
-          <span>{eyebrow}</span>
-          <h2>{title}</h2>
-          <p>{description}</p>
-        </header>
+        <div className="menu-show-top">
+          <header className="menu-show-head">
+            <span>{eyebrow}</span>
+            <h2>{title}</h2>
+            <p>{description}</p>
+          </header>
 
-        {(modes && onModeChange) || (variants && onVariantChange) || extras ? (
-          <div className="menu-show-controls">
-            {modes && onModeChange ? (
-              <ChipGroup
-                label="Modo do menu"
-                options={modes}
-                value={mode}
-                onChange={onModeChange}
-              />
-            ) : null}
+          {hasControls ? (
+            <div className="menu-show-controls">
+              {modes && onModeChange ? (
+                <ChipGroup
+                  label="Modo do menu"
+                  options={modes}
+                  value={mode}
+                  onChange={onModeChange}
+                />
+              ) : null}
 
-            {variants && onVariantChange ? (
-              <ChipGroup
-                label="Variação do menu"
-                options={variants}
-                value={variant}
-                onChange={onVariantChange}
-              />
-            ) : null}
+              {variants && onVariantChange ? (
+                <ChipGroup
+                  label="Variação do menu"
+                  options={variants}
+                  value={variant}
+                  onChange={onVariantChange}
+                />
+              ) : null}
 
-            {extras}
-          </div>
-        ) : null}
+              {extras}
+            </div>
+          ) : null}
+        </div>
 
-        <div className="menu-show-slot">{children}</div>
+        <div className="menu-show-stage">
+          <div className="menu-show-slot">{children}</div>
+        </div>
 
         <div className="menu-show-palette">
           <SwatchRow
