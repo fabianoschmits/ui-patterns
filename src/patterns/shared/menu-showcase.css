@@ -205,7 +205,9 @@
 }
 
 .menu-show-roulette-track.is-draggable {
-  touch-action: pan-y;
+  touch-action: none;
+  overscroll-behavior: contain;
+  -webkit-user-drag: none;
 }
 
 .menu-show-roulette-track.is-dragging,
