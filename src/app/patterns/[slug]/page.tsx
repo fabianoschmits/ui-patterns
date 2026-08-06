@@ -4,11 +4,7 @@ import { getPatternBySlug, patterns } from "@/data/patterns";
 import { PatternPreview } from "@/components/preview/pattern-preview";
 import { TransitionLink } from "@/components/transitions/transition-link";
 
-const immersiveSlugs = new Set([
-  "quick-action-menu",
-  "meniscus-liquid-nav",
-  "liquid-glass-nav",
-]);
+const immersiveSlugs = new Set(patterns.map((pattern) => pattern.slug));
 
 const canvasImmersiveSlugs = immersiveSlugs;
 

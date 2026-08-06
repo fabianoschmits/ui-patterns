@@ -7,7 +7,11 @@ export type PatternCategory =
   | "Mobile"
   | "Produtividade"
   | "E-commerce"
-  | "Overlays";
+  | "Overlays"
+  | "Autenticação"
+  | "Comunicação"
+  | "Dados"
+  | "Formulários";
 
 export type PatternAccent = "lavender" | "blue" | "mint" | "peach" | "cream";
 export type PatternDevice = "desktop" | "tablet" | "mobile";
