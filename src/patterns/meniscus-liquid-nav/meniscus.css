@@ -107,6 +107,11 @@ html[data-theme="dark"] .meniscus-show .meniscus {
   box-shadow: none;
 }
 
+.meniscus-dock.is-morphing .meniscus-skin,
+.meniscus-dock.is-morphing .meniscus-bead {
+  opacity: 1;
+}
+
 .meniscus-dock.is-vertical {
   display: flex;
   width: fit-content;
