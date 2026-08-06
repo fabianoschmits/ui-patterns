@@ -21,10 +21,16 @@
 .auth-complete p { margin: 0 0 0.4rem; color: var(--utility-muted); font-size: 0.65rem; line-height: 1.55; }
 .utility-card.is-vertical .auth-aside { min-height: 9rem; }
 .utility-card.is-vertical .auth-aside-copy { margin-top: 1.2rem; }
-.utility-card.is-small .auth-main { align-content: start; }
-.utility-card.is-small .auth-form-head { margin-bottom: 0.55rem; }
-.utility-card.is-small .auth-form { gap: 0.45rem; }
+.utility-card.is-small .auth-main { align-content: start; padding: 0.58rem; }
+.utility-card.is-small .auth-tabs { margin-bottom: 0.38rem; }
+.utility-card.is-small .auth-form-head { margin-bottom: 0.32rem; }
+.utility-card.is-small .auth-form-head h3 { margin-top: 0.22rem; font-size: 0.84rem; }
+.utility-card.is-small .auth-form { gap: 0.28rem; }
 .utility-card.is-small .auth-form .u-field { gap: 0.12rem; font-size: 0; }
+.utility-card.is-small .auth-main .u-input-wrap { height: 1.82rem; }
+.utility-card.is-small .auth-main .u-primary { min-height: 1.82rem; }
+.utility-card.is-small .auth-options,
+.utility-card.is-small .auth-check { font-size: 0.43rem; }
 .utility-card.is-small .auth-aside { min-height: 5.5rem; }
 .utility-card.is-small.is-horizontal .auth-aside { padding-right: 0.55rem; }
 .utility-card.is-small .auth-aside-copy { margin: 0; }

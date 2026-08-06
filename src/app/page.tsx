@@ -1,10 +1,11 @@
 import { patterns } from "@/data/patterns";
-import { TransitionLink } from "@/components/transitions/transition-link";
+import { CatalogScrollRestorer, TransitionLink } from "@/components/transitions/transition-link";
 import { StudioAtmosphere } from "@/components/home/studio-atmosphere";
 
 export default function HomePage() {
   return (
     <div className="studio">
+      <CatalogScrollRestorer />
       <StudioAtmosphere />
 
       <div className="studio-content">

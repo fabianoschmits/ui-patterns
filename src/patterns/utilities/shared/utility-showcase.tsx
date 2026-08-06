@@ -2,14 +2,17 @@
 
 import {
   useId,
+  useEffect,
+  useRef,
   useState,
   type CSSProperties,
   type ReactNode,
 } from "react";
-import { Columns2, Rows2 } from "lucide-react";
+import { Check, Columns2, PencilLine, Rows2 } from "lucide-react";
 import { LayoutGroup, motion } from "motion/react";
 import type { PatternPreviewProps } from "@/types/pattern";
 import { cn } from "@/lib/utils";
+import { ColorRoulette, MENU_ACCENTS } from "@/patterns/shared/menu-showcase";
 import "./utility-showcase.css";
 import "./utility-components.css";
 
@@ -53,7 +56,6 @@ export function UtilityShowcase({
   eyebrow,
   title,
   description,
-  accent = "#11b6ae",
   compact = false,
   children,
 }: UtilityShowcaseProps) {
@@ -61,20 +63,53 @@ export function UtilityShowcase({
   const [orientation, setOrientation] =
     useState<UtilityOrientation>("horizontal");
   const [size, setSize] = useState<UtilitySize>(compact ? "small" : "medium");
+  const [activeAccent, setActiveAccent] = useState(MENU_ACCENTS[0].value);
+  const [editing, setEditing] = useState(false);
+  const contentRef = useRef<HTMLDivElement>(null);
   const variant = { orientation, size };
   const content = typeof children === "function" ? children(variant) : children;
+
+  useEffect(() => {
+    const root = contentRef.current;
+    if (!root || !editing) return;
+
+    const enableEditableData = () => {
+      const candidates = root.querySelectorAll<HTMLElement>(
+        "h2, h3, p, .u-main b, .u-main strong, .u-main small, .u-main .data-status",
+      );
+      candidates.forEach((element) => {
+        if (element.closest("button, .utility-controls, .utility-palette")) return;
+        if (!element.textContent?.trim()) return;
+        element.setAttribute("contenteditable", "plaintext-only");
+        element.setAttribute("spellcheck", "false");
+        element.setAttribute("title", "Clique para editar este dado");
+        element.classList.add("utility-live-edit");
+      });
+    };
+
+    enableEditableData();
+    const observer = new MutationObserver(enableEditableData);
+    observer.observe(root, { childList: true, subtree: true });
+
+    return () => {
+      observer.disconnect();
+      root.querySelectorAll<HTMLElement>(".utility-live-edit").forEach((element) => {
+        element.removeAttribute("contenteditable");
+        element.removeAttribute("spellcheck");
+        element.removeAttribute("title");
+        element.classList.remove("utility-live-edit");
+      });
+    };
+  }, [editing, orientation, size]);
 
   return (
     <div
       className={cn("utility-show", compact && "is-compact")}
-      style={{ "--utility-accent": accent } as CSSProperties}
+      style={{
+        "--utility-accent": activeAccent,
+        "--menu-accent": activeAccent,
+      } as CSSProperties}
     >
-      <div className="utility-aurora" aria-hidden="true">
-        <i />
-        <i />
-        <i />
-      </div>
-
       {!compact ? (
         <header className="utility-show-head">
           <div className="utility-heading">
@@ -141,6 +176,16 @@ export function UtilityShowcase({
                   );
                 })}
               </div>
+
+              <button
+                type="button"
+                className={cn("utility-edit-toggle", editing && "is-active")}
+                aria-pressed={editing}
+                onClick={() => setEditing((value) => !value)}
+              >
+                {editing ? <Check size={14} /> : <PencilLine size={14} />}
+                <span>{editing ? "Concluir" : "Editar dados"}</span>
+              </button>
             </div>
           </LayoutGroup>
         </header>
@@ -166,12 +211,29 @@ export function UtilityShowcase({
               <span className="utility-glass-shine" />
               <span className="utility-glass-rim" />
             </div>
-            <motion.div layout className="utility-card-content" transition={utilitySpring}>
+            <motion.div
+              ref={contentRef}
+              layout
+              className={cn("utility-card-content", editing && "is-editing")}
+              transition={utilitySpring}
+            >
               {content}
             </motion.div>
           </motion.section>
         </LayoutGroup>
       </main>
+
+      {!compact ? (
+        <div className="utility-palette">
+          <ColorRoulette
+            label="Cor do componente"
+            options={MENU_ACCENTS}
+            value={activeAccent}
+            onChange={setActiveAccent}
+            draggable
+          />
+        </div>
+      ) : null}
     </div>
   );
 }

@@ -386,8 +386,13 @@
 .utility-card.is-small .cart-product { width: 2rem; height: 2rem; }
 .utility-card.is-small .cart-item strong,
 .utility-card.is-small .cart-remove { display: none; }
-.utility-card.is-small .checkout-options { grid-template-columns: 1fr; }
-.utility-card.is-small .checkout-options > button { min-height: 3.25rem; }
+.utility-card.is-small .checkout-title { margin: 0.2rem 0 0.45rem; font-size: 0.82rem; }
+.utility-card.is-small .checkout-address { gap: 0.36rem; border-radius: 0.62rem; padding: 0.42rem; }
+.utility-card.is-small .checkout-options { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.3rem; margin-top: 0.38rem; }
+.utility-card.is-small .checkout-options > button { min-height: 2.72rem; gap: 0.28rem; border-radius: 0.62rem; padding: 0.38rem; }
+.utility-card.is-small .checkout-options b { font-size: 0.45rem; }
+.utility-card.is-small .checkout-options small { font-size: 0.36rem; }
+.utility-card.is-small .checkout-actions { margin-top: 0.35rem; padding-top: 0.38rem; }
 .utility-card.is-small .checkout-actions button { min-width: 0; }
 .utility-card.is-small .filter-rule { grid-template-columns: auto 1fr 1fr auto; }
 .utility-card.is-small .filter-rule > button:nth-of-type(2) { display: none; }

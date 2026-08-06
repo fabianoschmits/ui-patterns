@@ -134,7 +134,7 @@ function ChipGroup({
   );
 }
 
-function ColorRoulette({
+export function ColorRoulette({
   label,
   options,
   value,
