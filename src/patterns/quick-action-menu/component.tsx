@@ -3,14 +3,19 @@
 import { useEffect, useRef, useState, type CSSProperties } from "react";
 import {
   Briefcase,
+  Clock3,
   ChevronsLeft,
   ChevronsRight,
+  Download,
+  Heart,
   HelpCircle,
   Home,
   Info,
   LogIn,
   Mail,
+  MessageCircle,
   Search,
+  Settings,
   User,
   Users,
 } from "lucide-react";
@@ -22,6 +27,7 @@ import "./quick-action.css";
 
 type Mode = "public" | "logged";
 type Orientation = "horizontal" | "vertical";
+type LayerVariant = "classic" | "collection";
 
 interface QuickActionItem {
   id: string;
@@ -45,6 +51,14 @@ const loggedActions: QuickActionItem[] = [
   { id: "profile", label: "Perfil", icon: User },
 ];
 
+const collectionActions: QuickActionItem[] = [
+  { id: "favorites", label: "Favoritos", icon: Heart },
+  { id: "recent", label: "Recentes", icon: Clock3 },
+  { id: "downloads", label: "Downloads", icon: Download },
+  { id: "messages", label: "Mensagens", icon: MessageCircle },
+  { id: "settings", label: "Ajustes", icon: Settings },
+];
+
 const gooey = {
   type: "spring" as const,
   stiffness: 240,
@@ -64,6 +78,9 @@ export default function QuickActionMenuDemo(_props: PatternPreviewProps) {
   const [orientation, setOrientation] = useState<Orientation>("horizontal");
   const [expanded, setExpanded] = useState(true);
   const [active, setActive] = useState("home");
+  const [layerVariant, setLayerVariant] = useState<LayerVariant>("classic");
+  const [collectionOpen, setCollectionOpen] = useState(false);
+  const [collectionActive, setCollectionActive] = useState("favorites");
   const [accent, setAccent] = useState(MENU_ACCENTS[0].value);
   const barRef = useRef<HTMLElement>(null);
   const itemRefs = useRef<(HTMLButtonElement | null)[]>([]);
@@ -78,6 +95,7 @@ export default function QuickActionMenuDemo(_props: PatternPreviewProps) {
   const activeLabel = actions.find((a) => a.id === active)?.label ?? "Home";
   const isVertical = orientation === "vertical";
   const isCollapsed = isVertical && !expanded;
+  const hasCollection = layerVariant === "collection";
 
   useEffect(() => {
     const bar = barRef.current;
@@ -162,6 +180,8 @@ export default function QuickActionMenuDemo(_props: PatternPreviewProps) {
         "qam-show",
         isVertical && "is-vertical",
         isCollapsed && "is-collapsed",
+        hasCollection && "has-collection",
+        collectionOpen && "is-collection-open",
       )}
       style={{ "--qam-accent": accent } as CSSProperties}
       eyebrow="Menu rápido"
@@ -193,125 +213,236 @@ export default function QuickActionMenuDemo(_props: PatternPreviewProps) {
         if (id === "horizontal") setExpanded(true);
       }}
       extras={
-        isVertical ? (
-          <div className="menu-show-mode" role="group" aria-label="Estado da lateral">
+        <>
+          <div className="menu-show-mode" role="group" aria-label="Camadas do menu">
             <button
               type="button"
-              className={expanded ? "active" : undefined}
-              onClick={() => setExpanded(true)}
+              className={!hasCollection ? "active" : undefined}
+              onClick={() => {
+                setLayerVariant("classic");
+                setCollectionOpen(false);
+              }}
             >
-              Aberto
+              Clássico
             </button>
             <button
               type="button"
-              className={!expanded ? "active" : undefined}
-              onClick={() => setExpanded(false)}
+              className={hasCollection ? "active" : undefined}
+              onClick={() => setLayerVariant("collection")}
             >
-              Ícones
+              Coleção
             </button>
           </div>
-        ) : null
+
+          {isVertical ? (
+            <div className="menu-show-mode" role="group" aria-label="Estado da lateral">
+              <button
+                type="button"
+                className={expanded ? "active" : undefined}
+                onClick={() => setExpanded(true)}
+              >
+                Aberto
+              </button>
+              <button
+                type="button"
+                className={!expanded ? "active" : undefined}
+                onClick={() => setExpanded(false)}
+              >
+                Ícones
+              </button>
+            </div>
+          ) : null}
+        </>
       }
     >
       <LayoutGroup id="qam-layout">
         <div className={cn("qam-stage", isVertical && "is-vertical")}>
-          <motion.nav
-            ref={barRef}
+          <motion.div
             layout
             className={cn(
-              "qam-bar",
+              "qam-stack",
               isVertical && "is-vertical",
               isCollapsed && "is-collapsed",
+              collectionOpen && "is-collection-open",
             )}
-            aria-label="Menu rápido"
             transition={gooey}
           >
-            <motion.div layout className="qam-bar-bg" transition={gooey}>
-              <span className="qam-glass-base" aria-hidden="true" />
-              <span className="qam-glass-tint" aria-hidden="true" />
-              <span className="qam-glass-sheen" aria-hidden="true" />
-              <span className="qam-glass-rim" aria-hidden="true" />
-            </motion.div>
-
-            <motion.div layout className="qam-items" transition={gooey}>
-              {actions.map((action, index) => {
-                const Icon = action.icon;
-                const isActive = active === action.id;
-
-                return (
-                  <motion.button
-                    layout
-                    key={action.id}
-                    ref={(el) => {
-                      itemRefs.current[index] = el;
-                    }}
-                    type="button"
-                    className={cn("qam-item", isActive && "is-active")}
-                    aria-label={action.label}
-                    aria-current={isActive ? "page" : undefined}
-                    title={isCollapsed ? action.label : undefined}
-                    onClick={() => setActive(action.id)}
-                    transition={gooey}
-                  >
-                    <div className="qam-icon-slot">
-                      <motion.div
-                        className="qam-icon-wrap"
-                        animate={isVertical ? { y: 0 } : { y: isActive ? -16 : 0 }}
-                        transition={gooey}
-                      >
-                        <AnimatePresence>
-                          {isActive && (
-                            <motion.span
-                              layoutId="qam-active-pill"
-                              className="qam-active-pill"
-                              initial={{ opacity: 0, scaleX: 1.45, scaleY: 0.55 }}
-                              animate={{ opacity: 1, scaleX: 1, scaleY: 1 }}
-                              exit={{ opacity: 0, scaleX: 0.55, scaleY: 1.4 }}
-                              transition={pillSpring}
-                            />
-                          )}
-                        </AnimatePresence>
-                        <Icon className={cn("qam-icon", isActive && "is-active")} />
-                      </motion.div>
-                    </div>
-
-                    <AnimatePresence initial={false} mode="popLayout">
-                      {!isCollapsed && (
-                        <motion.span
-                          key={`${action.id}-label`}
+            <AnimatePresence initial={false}>
+              {hasCollection && collectionOpen ? (
+                <motion.div
+                  key="qam-collection"
+                  layout
+                  className={cn(
+                    "qam-collection",
+                    isVertical && "is-vertical",
+                    isCollapsed && "is-collapsed",
+                  )}
+                  initial={
+                    isVertical
+                      ? { opacity: 0, x: -28, scaleX: 0.82 }
+                      : { opacity: 0, y: 28, scaleY: 0.78 }
+                  }
+                  animate={{ opacity: 1, x: 0, y: 0, scaleX: 1, scaleY: 1 }}
+                  exit={
+                    isVertical
+                      ? { opacity: 0, x: -24, scaleX: 0.86 }
+                      : { opacity: 0, y: 24, scaleY: 0.82 }
+                  }
+                  transition={gooey}
+                  aria-label="Atalhos da coleção"
+                >
+                  <span className="qam-collection-glass" aria-hidden="true" />
+                  <div className="qam-collection-items">
+                    {collectionActions.map((action) => {
+                      const Icon = action.icon;
+                      const selected = collectionActive === action.id;
+                      return (
+                        <motion.button
                           layout
-                          className={cn("qam-label", isActive && "is-active")}
-                          initial={{ opacity: 0, maxWidth: 0, scale: 0.92 }}
-                          animate={{
-                            opacity: 1,
-                            maxWidth: 140,
-                            scale: isActive && !isVertical ? 1.04 : 1,
-                          }}
-                          exit={{ opacity: 0, maxWidth: 0, scale: 0.92 }}
+                          key={action.id}
+                          type="button"
+                          className={cn("qam-collection-item", selected && "is-active")}
+                          aria-label={action.label}
+                          aria-current={selected ? "page" : undefined}
+                          title={isCollapsed ? action.label : undefined}
+                          onClick={() => setCollectionActive(action.id)}
+                          whileTap={{ scale: 0.9 }}
                           transition={gooey}
                         >
-                          {action.label}
-                        </motion.span>
-                      )}
-                    </AnimatePresence>
-                  </motion.button>
-                );
-              })}
-            </motion.div>
+                          {selected ? (
+                            <motion.span
+                              layoutId="qam-collection-pill"
+                              className="qam-collection-pill"
+                              transition={pillSpring}
+                              aria-hidden="true"
+                            />
+                          ) : null}
+                          <Icon className="qam-collection-icon" />
+                          {!isCollapsed ? (
+                            <span className="qam-collection-label">{action.label}</span>
+                          ) : null}
+                        </motion.button>
+                      );
+                    })}
+                  </div>
+                </motion.div>
+              ) : null}
+            </AnimatePresence>
 
-            {isVertical ? (
-              <motion.button
-                layout
-                type="button"
-                className="qam-rail-toggle"
-                aria-label={expanded ? "Retrair menu" : "Expandir menu"}
-                onClick={() => setExpanded((value) => !value)}
-                transition={gooey}
-              >
-                {expanded ? <ChevronsLeft size={16} /> : <ChevronsRight size={16} />}
-              </motion.button>
-            ) : null}
-          </motion.nav>
+            <motion.nav
+              ref={barRef}
+              layout
+              className={cn(
+                "qam-bar",
+                isVertical && "is-vertical",
+                isCollapsed && "is-collapsed",
+                hasCollection && "has-collection",
+                collectionOpen && "is-collection-open",
+              )}
+              aria-label="Menu rápido"
+              transition={gooey}
+            >
+              <motion.div layout className="qam-bar-bg" transition={gooey}>
+                <span className="qam-glass-base" aria-hidden="true" />
+                <span className="qam-glass-tint" aria-hidden="true" />
+                <span className="qam-glass-sheen" aria-hidden="true" />
+                <span className="qam-glass-rim" aria-hidden="true" />
+              </motion.div>
+
+              {hasCollection ? (
+                <motion.button
+                  type="button"
+                  className="qam-collection-toggle"
+                  aria-label={collectionOpen ? "Fechar coleção" : "Abrir coleção"}
+                  aria-expanded={collectionOpen}
+                  onClick={() => setCollectionOpen((value) => !value)}
+                  animate={{ opacity: 1 }}
+                  transition={gooey}
+                >
+                  <span />
+                </motion.button>
+              ) : null}
+
+              <motion.div layout className="qam-items" transition={gooey}>
+                {actions.map((action, index) => {
+                  const Icon = action.icon;
+                  const isActive = active === action.id;
+
+                  return (
+                    <motion.button
+                      layout
+                      key={action.id}
+                      ref={(el) => {
+                        itemRefs.current[index] = el;
+                      }}
+                      type="button"
+                      className={cn("qam-item", isActive && "is-active")}
+                      aria-label={action.label}
+                      aria-current={isActive ? "page" : undefined}
+                      title={isCollapsed ? action.label : undefined}
+                      onClick={() => setActive(action.id)}
+                      transition={gooey}
+                    >
+                      <div className="qam-icon-slot">
+                        <motion.div
+                          className="qam-icon-wrap"
+                          animate={isVertical ? { y: 0 } : { y: isActive ? -16 : 0 }}
+                          transition={gooey}
+                        >
+                          <AnimatePresence>
+                            {isActive && (
+                              <motion.span
+                                layoutId="qam-active-pill"
+                                className="qam-active-pill"
+                                initial={{ opacity: 0, scaleX: 1.45, scaleY: 0.55 }}
+                                animate={{ opacity: 1, scaleX: 1, scaleY: 1 }}
+                                exit={{ opacity: 0, scaleX: 0.55, scaleY: 1.4 }}
+                                transition={pillSpring}
+                              />
+                            )}
+                          </AnimatePresence>
+                          <Icon className={cn("qam-icon", isActive && "is-active")} />
+                        </motion.div>
+                      </div>
+
+                      <AnimatePresence initial={false} mode="popLayout">
+                        {!isCollapsed && (
+                          <motion.span
+                            key={`${action.id}-label`}
+                            layout
+                            className={cn("qam-label", isActive && "is-active")}
+                            initial={{ opacity: 0, maxWidth: 0, scale: 0.92 }}
+                            animate={{
+                              opacity: 1,
+                              maxWidth: 140,
+                              scale: isActive && !isVertical ? 1.04 : 1,
+                            }}
+                            exit={{ opacity: 0, maxWidth: 0, scale: 0.92 }}
+                            transition={gooey}
+                          >
+                            {action.label}
+                          </motion.span>
+                        )}
+                      </AnimatePresence>
+                    </motion.button>
+                  );
+                })}
+              </motion.div>
+
+              {isVertical ? (
+                <motion.button
+                  layout
+                  type="button"
+                  className="qam-rail-toggle"
+                  aria-label={expanded ? "Retrair menu" : "Expandir menu"}
+                  onClick={() => setExpanded((value) => !value)}
+                  transition={gooey}
+                >
+                  {expanded ? <ChevronsLeft size={16} /> : <ChevronsRight size={16} />}
+                </motion.button>
+              ) : null}
+            </motion.nav>
+          </motion.div>
         </div>
       </LayoutGroup>
     </MenuShowcase>

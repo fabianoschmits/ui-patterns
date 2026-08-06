@@ -26,6 +26,11 @@ html[data-theme="dark"] .qam-show {
   justify-items: center;
 }
 
+.qam-show.has-collection.is-vertical .menu-show-body {
+  padding-left: max(1.25rem, calc(env(safe-area-inset-left) + 0.75rem));
+  padding-right: max(1.25rem, calc(env(safe-area-inset-right) + 0.75rem));
+}
+
 .qam-stage {
   display: flex;
   width: 100%;
@@ -43,14 +48,36 @@ html[data-theme="dark"] .qam-show {
   padding: 0.35rem 0;
 }
 
+.qam-stack {
+  position: relative;
+  isolation: isolate;
+  width: 100%;
+  max-width: 420px;
+  margin-inline: auto;
+}
+
+.qam-stack.is-vertical {
+  width: min(13rem, 100%);
+  max-width: none;
+}
+
+.qam-stack.is-vertical.is-collapsed {
+  width: 4.35rem;
+}
+
 .qam-bar {
   position: relative;
+  z-index: 2;
   width: 100%;
   max-width: 420px;
   margin-inline: auto;
   overflow: visible;
   padding-bottom: 0.35rem;
   touch-action: none;
+}
+
+.qam-stack > .qam-bar {
+  max-width: none;
 }
 
 .qam-bar.is-vertical {
@@ -69,6 +96,218 @@ html[data-theme="dark"] .qam-show {
 .qam-bar.is-vertical.is-collapsed {
   width: 4.35rem;
   padding-inline: 0.5rem;
+}
+
+.qam-collection {
+  position: absolute;
+  z-index: 1;
+  right: 0.55rem;
+  bottom: calc(100% - 0.48rem);
+  left: 0.55rem;
+  height: 3.95rem;
+  padding: 0.35rem 0.45rem 0.7rem;
+  transform-origin: 50% 100%;
+  color: var(--qam-ink);
+}
+
+.qam-collection.is-vertical {
+  top: 0.6rem;
+  right: auto;
+  bottom: 0.6rem;
+  left: calc(100% - 0.48rem);
+  width: 9.4rem;
+  height: auto;
+  padding: 0.45rem 0.45rem 0.45rem 0.8rem;
+  transform-origin: 0 50%;
+}
+
+.qam-collection.is-vertical.is-collapsed {
+  width: 4.15rem;
+}
+
+.qam-collection-glass {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  border-radius: 18px 18px 12px 12px;
+  background:
+    linear-gradient(160deg, rgb(255 255 255 / 0.12), transparent 42%),
+    color-mix(in srgb, var(--menu-surface, var(--canvas)) 55%, transparent);
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.32),
+    0 8px 24px color-mix(in srgb, var(--ink) 9%, transparent);
+  backdrop-filter: blur(17px) saturate(1.35);
+  -webkit-backdrop-filter: blur(17px) saturate(1.35);
+}
+
+html[data-theme="dark"] .qam-collection-glass {
+  background:
+    linear-gradient(160deg, rgb(255 255 255 / 0.09), transparent 44%),
+    color-mix(in srgb, var(--menu-surface, var(--canvas-deep)) 52%, transparent);
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.18),
+    0 12px 28px rgb(0 0 0 / 0.28);
+}
+
+.qam-collection.is-vertical .qam-collection-glass {
+  border-radius: 12px 20px 20px 12px;
+}
+
+.qam-collection-items {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  width: 100%;
+  height: 100%;
+  align-items: stretch;
+}
+
+.qam-collection.is-vertical .qam-collection-items {
+  flex-direction: column;
+}
+
+.qam-collection-item {
+  position: relative;
+  isolation: isolate;
+  display: flex;
+  min-width: 0;
+  flex: 1 1 0;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.18rem;
+  border-radius: 12px;
+  background: transparent;
+  color: var(--qam-faint);
+  cursor: pointer;
+}
+
+.qam-collection.is-vertical .qam-collection-item {
+  flex-direction: row;
+  justify-content: flex-start;
+  gap: 0.42rem;
+  padding-inline: 0.45rem;
+  border-radius: 999px;
+}
+
+.qam-collection.is-collapsed .qam-collection-item {
+  justify-content: center;
+  padding-inline: 0;
+}
+
+.qam-collection-item:focus-visible {
+  outline: 1.5px solid var(--qam-accent);
+  outline-offset: -2px;
+}
+
+.qam-collection-item.is-active {
+  color: #fff;
+}
+
+.qam-collection-pill {
+  position: absolute;
+  inset: 0.15rem;
+  z-index: -1;
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--qam-accent) 76%, transparent);
+  box-shadow:
+    0 5px 13px color-mix(in srgb, var(--qam-accent) 22%, transparent),
+    inset 0 1px 0 rgb(255 255 255 / 0.28);
+}
+
+.qam-collection.is-vertical .qam-collection-pill {
+  inset: 0.12rem;
+  border-radius: 999px;
+}
+
+.qam-collection-icon {
+  position: relative;
+  z-index: 1;
+  width: 1rem;
+  height: 1rem;
+  stroke-width: 1.8;
+}
+
+.qam-collection-label {
+  position: relative;
+  z-index: 1;
+  max-width: 100%;
+  overflow: hidden;
+  font-size: 0.46rem;
+  font-weight: 580;
+  line-height: 1;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.qam-collection.is-vertical .qam-collection-label {
+  font-size: 0.66rem;
+}
+
+.qam-collection-toggle {
+  position: absolute;
+  top: -0.86rem;
+  left: 50%;
+  z-index: 5;
+  display: grid;
+  width: 4.4rem;
+  height: 1.5rem;
+  place-items: center;
+  border-radius: 999px;
+  background: transparent;
+  transform: translateX(-50%);
+  cursor: pointer;
+}
+
+.qam-collection-toggle span {
+  display: block;
+  width: 2.6rem;
+  height: 1.5px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--qam-muted) 64%, transparent);
+  box-shadow: 0 0 0 transparent;
+  transition:
+    width 320ms ease,
+    background 320ms ease,
+    box-shadow 320ms ease;
+}
+
+.qam-bar.is-collection-open .qam-collection-toggle span,
+.qam-collection-toggle:hover span,
+.qam-collection-toggle:focus-visible span {
+  width: 3.15rem;
+  background: var(--qam-accent);
+  box-shadow: 0 0 9px color-mix(in srgb, var(--qam-accent) 38%, transparent);
+}
+
+.qam-collection-toggle:focus-visible {
+  outline: 1px solid color-mix(in srgb, var(--qam-accent) 58%, transparent);
+  outline-offset: -3px;
+}
+
+.qam-bar.is-vertical .qam-collection-toggle {
+  top: 50%;
+  right: -0.86rem;
+  left: auto;
+  width: 1.5rem;
+  height: 4.4rem;
+  transform: translateY(-50%);
+}
+
+.qam-bar.is-vertical .qam-collection-toggle span {
+  width: 1.5px;
+  height: 2.6rem;
+  transition:
+    height 320ms ease,
+    background 320ms ease,
+    box-shadow 320ms ease;
+}
+
+.qam-bar.is-vertical.is-collection-open .qam-collection-toggle span,
+.qam-bar.is-vertical .qam-collection-toggle:hover span,
+.qam-bar.is-vertical .qam-collection-toggle:focus-visible span {
+  width: 1.5px;
+  height: 3.15rem;
 }
 
 .qam-bar-bg {
@@ -365,5 +604,18 @@ html[data-theme="dark"] .qam-active-pill {
 
   .qam-bar.is-vertical .qam-item {
     min-height: 2.7rem;
+  }
+
+  .qam-show.has-collection.is-vertical.is-collection-open .qam-stage {
+    justify-content: flex-start;
+  }
+
+  .qam-show.has-collection.is-vertical.is-collection-open .qam-stack {
+    margin-right: auto;
+    margin-left: 0;
+  }
+
+  .qam-collection.is-vertical {
+    width: 8.35rem;
   }
 }

@@ -29,6 +29,254 @@
   margin-inline: auto;
 }
 
+.meniscus-stack {
+  position: relative;
+  isolation: isolate;
+  width: 100%;
+}
+
+.meniscus-stack.is-vertical {
+  width: fit-content;
+  max-width: 100%;
+}
+
+.meniscus-stack.is-vertical.is-collapsed {
+  width: 4.1rem;
+}
+
+.meniscus-collection {
+  position: absolute;
+  z-index: 1;
+  right: 0.62rem;
+  bottom: calc(100% - 0.5rem);
+  left: 0.62rem;
+  height: 3.9rem;
+  padding: 0.35rem 0.45rem 0.72rem;
+  color: var(--ink);
+  transform-origin: 50% 100%;
+}
+
+.meniscus-collection.is-vertical {
+  top: 0.65rem;
+  right: auto;
+  bottom: 0.65rem;
+  left: calc(100% - 0.5rem);
+  width: 9.35rem;
+  height: auto;
+  padding: 0.45rem 0.45rem 0.45rem 0.82rem;
+  transform-origin: 0 50%;
+}
+
+.meniscus-collection.is-vertical.is-right {
+  right: calc(100% - 0.5rem);
+  left: auto;
+  padding: 0.45rem 0.82rem 0.45rem 0.45rem;
+  transform-origin: 100% 50%;
+}
+
+.meniscus-collection.is-vertical.is-collapsed {
+  width: 4.15rem;
+}
+
+.meniscus-collection-glass {
+  position: absolute;
+  inset: 0;
+  border-radius: 20px 20px 13px 13px;
+  background:
+    radial-gradient(circle at 50% 100%, color-mix(in srgb, var(--glow) 10%, transparent), transparent 42%),
+    linear-gradient(160deg, rgb(255 255 255 / 0.13), transparent 43%),
+    color-mix(in srgb, var(--menu-surface, var(--canvas)) 58%, transparent);
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.34),
+    0 8px 24px color-mix(in srgb, var(--ink) 9%, transparent);
+  backdrop-filter: blur(18px) saturate(1.38);
+  -webkit-backdrop-filter: blur(18px) saturate(1.38);
+  pointer-events: none;
+}
+
+html[data-theme="dark"] .meniscus-collection-glass {
+  background:
+    radial-gradient(circle at 50% 100%, color-mix(in srgb, var(--glow) 13%, transparent), transparent 46%),
+    linear-gradient(160deg, rgb(255 255 255 / 0.1), transparent 44%),
+    color-mix(in srgb, var(--menu-surface, var(--canvas-deep)) 54%, transparent);
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.2),
+    0 12px 28px rgb(0 0 0 / 0.3);
+}
+
+.meniscus-collection.is-vertical .meniscus-collection-glass {
+  border-radius: 13px 21px 21px 13px;
+}
+
+.meniscus-collection.is-vertical.is-right .meniscus-collection-glass {
+  border-radius: 21px 13px 13px 21px;
+}
+
+.meniscus-collection-items {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  width: 100%;
+  height: 100%;
+  align-items: stretch;
+}
+
+.meniscus-collection.is-vertical .meniscus-collection-items {
+  flex-direction: column;
+}
+
+.meniscus-collection-item {
+  position: relative;
+  isolation: isolate;
+  display: flex;
+  min-width: 0;
+  flex: 1 1 0;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.17rem;
+  border-radius: 12px;
+  background: transparent;
+  color: var(--icon-off);
+  cursor: pointer;
+}
+
+.meniscus-collection.is-vertical .meniscus-collection-item {
+  flex-direction: row;
+  justify-content: flex-start;
+  gap: 0.42rem;
+  padding-inline: 0.45rem;
+  border-radius: 999px;
+}
+
+.meniscus-collection.is-vertical.is-right .meniscus-collection-item {
+  flex-direction: row-reverse;
+  text-align: right;
+}
+
+.meniscus-collection.is-collapsed .meniscus-collection-item {
+  justify-content: center;
+  padding-inline: 0;
+}
+
+.meniscus-collection-item:focus-visible {
+  outline: 1.5px solid var(--glow);
+  outline-offset: -2px;
+}
+
+.meniscus-collection-item.is-active {
+  color: #fff;
+}
+
+.meniscus-collection-pill {
+  position: absolute;
+  inset: 0.15rem;
+  z-index: -1;
+  border-radius: 10px;
+  background: linear-gradient(
+    155deg,
+    color-mix(in srgb, var(--glow) 68%, #fff),
+    color-mix(in srgb, var(--glow) 82%, transparent)
+  );
+  box-shadow:
+    0 5px 14px color-mix(in srgb, var(--glow) 24%, transparent),
+    inset 0 1px 0 rgb(255 255 255 / 0.34);
+}
+
+.meniscus-collection.is-vertical .meniscus-collection-pill {
+  inset: 0.12rem;
+  border-radius: 999px;
+}
+
+.meniscus-collection-icon {
+  position: relative;
+  z-index: 1;
+  width: 1rem;
+  height: 1rem;
+}
+
+.meniscus-collection-label {
+  position: relative;
+  z-index: 1;
+  max-width: 100%;
+  overflow: hidden;
+  font-size: 0.46rem;
+  font-weight: 580;
+  line-height: 1;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.meniscus-collection.is-vertical .meniscus-collection-label {
+  font-size: 0.66rem;
+}
+
+.meniscus-collection-toggle {
+  position: absolute;
+  top: -0.86rem;
+  right: 1rem;
+  z-index: 5;
+  display: grid;
+  width: 4.2rem;
+  height: 1.5rem;
+  place-items: center;
+  border-radius: 999px;
+  background: transparent;
+  cursor: pointer;
+}
+
+.meniscus-collection-toggle span {
+  display: block;
+  width: 2.5rem;
+  height: 1.5px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--muted) 62%, transparent);
+  transition:
+    width 320ms ease,
+    height 320ms ease,
+    background 320ms ease,
+    box-shadow 320ms ease;
+}
+
+.meniscus-dock.is-collection-open .meniscus-collection-toggle span,
+.meniscus-collection-toggle:hover span,
+.meniscus-collection-toggle:focus-visible span {
+  width: 3rem;
+  background: var(--glow);
+  box-shadow: 0 0 9px color-mix(in srgb, var(--glow) 38%, transparent);
+}
+
+.meniscus-collection-toggle:focus-visible {
+  outline: 1px solid color-mix(in srgb, var(--glow) 58%, transparent);
+  outline-offset: -3px;
+}
+
+.meniscus-dock.is-vertical .meniscus-collection-toggle {
+  top: 50%;
+  right: -0.86rem;
+  left: auto;
+  width: 1.5rem;
+  height: 4.2rem;
+  transform: translateY(-50%);
+}
+
+.meniscus-dock.is-vertical.is-right .meniscus-collection-toggle {
+  right: auto;
+  left: -0.86rem;
+}
+
+.meniscus-dock.is-vertical .meniscus-collection-toggle span {
+  width: 1.5px;
+  height: 2.5rem;
+}
+
+.meniscus-dock.is-vertical.is-collection-open .meniscus-collection-toggle span,
+.meniscus-dock.is-vertical .meniscus-collection-toggle:hover span,
+.meniscus-dock.is-vertical .meniscus-collection-toggle:focus-visible span {
+  width: 1.5px;
+  height: 3rem;
+}
+
 .meniscus-show .meniscus {
   --glass-blur: 18px;
   --glass-sat: 1.4;
@@ -92,6 +340,7 @@ html[data-theme="dark"] .meniscus-show .meniscus {
 
 .meniscus-dock {
   position: relative;
+  z-index: 2;
   width: 100%;
   height: 3.6rem;
   flex: none;
@@ -364,6 +613,11 @@ html[data-theme="dark"] .meniscus-fill {
   transform: scale(0.92);
 }
 
+.meniscus-show.has-collection.is-vertical .menu-show-body {
+  padding-left: max(1.25rem, calc(env(safe-area-inset-left) + 0.75rem));
+  padding-right: max(1.25rem, calc(env(safe-area-inset-right) + 0.75rem));
+}
+
 .meniscus-icon-slot {
   position: absolute;
   left: 50%;
@@ -546,6 +800,28 @@ html[data-theme="dark"] .meniscus-fill {
 
   .meniscus-stage.is-vertical {
     justify-content: center;
+  }
+
+  .meniscus-show.has-collection.is-vertical.is-collection-open:not(.is-right) .meniscus-stage {
+    align-items: flex-start;
+  }
+
+  .meniscus-show.has-collection.is-vertical.is-collection-open.is-right .meniscus-stage {
+    align-items: flex-end;
+  }
+
+  .meniscus-show.has-collection.is-vertical.is-collection-open:not(.is-right) .meniscus {
+    margin-right: auto;
+    margin-left: 0;
+  }
+
+  .meniscus-show.has-collection.is-vertical.is-collection-open.is-right .meniscus {
+    margin-right: 0;
+    margin-left: auto;
+  }
+
+  .meniscus-collection.is-vertical {
+    width: 8.35rem;
   }
 }
 

@@ -3,14 +3,19 @@
 import { useCallback, useEffect, useId, useLayoutEffect, useRef, useState, type CSSProperties } from "react";
 import {
   Briefcase,
+  Clock3,
   ChevronsLeft,
   ChevronsRight,
+  Download,
+  Heart,
   HelpCircle,
   Home,
   Info,
   LogIn,
   Mail,
+  MessageCircle,
   Search,
+  Settings,
   User,
   Users,
 } from "lucide-react";
@@ -23,6 +28,7 @@ import "./meniscus.css";
 type Mode = "public" | "logged";
 type Orientation = "horizontal" | "vertical";
 type Side = "left" | "right";
+type LayerVariant = "classic" | "collection";
 
 const gooey = {
   type: "spring" as const,
@@ -58,6 +64,14 @@ const loggedActions: MeniscusItem[] = [
   { id: "search", label: "Buscar", Icon: Search },
   { id: "classifieds", label: "Classificados", Icon: Briefcase },
   { id: "profile", label: "Perfil", Icon: User },
+];
+
+const collectionActions: MeniscusItem[] = [
+  { id: "favorites", label: "Favoritos", Icon: Heart },
+  { id: "recent", label: "Recentes", Icon: Clock3 },
+  { id: "downloads", label: "Downloads", Icon: Download },
+  { id: "messages", label: "Mensagens", Icon: MessageCircle },
+  { id: "settings", label: "Ajustes", Icon: Settings },
 ];
 
 const clamp = (v: number, a: number, b: number) => (v < a ? a : v > b ? b : v);
@@ -230,6 +244,9 @@ export default function MeniscusLiquidNav(_props: PatternPreviewProps) {
   const [side, setSide] = useState<Side>("left");
   const [expanded, setExpanded] = useState(true);
   const [current, setCurrent] = useState(0);
+  const [layerVariant, setLayerVariant] = useState<LayerVariant>("classic");
+  const [collectionOpen, setCollectionOpen] = useState(false);
+  const [collectionActive, setCollectionActive] = useState("favorites");
   const [ready, setReady] = useState(false);
   const [box, setBox] = useState({ w: 400, h: 48 });
   const [accent, setAccent] = useState(MENU_ACCENTS[0].value);
@@ -241,6 +258,7 @@ export default function MeniscusLiquidNav(_props: PatternPreviewProps) {
   const isVertical = orientation === "vertical";
   const isCollapsed = isVertical && !expanded;
   const isRight = isVertical && side === "right";
+  const hasCollection = layerVariant === "collection";
   const active = actions[current] ?? actions[0];
 
   const physics = useRef({
@@ -570,6 +588,8 @@ export default function MeniscusLiquidNav(_props: PatternPreviewProps) {
         isVertical && "is-vertical",
         isCollapsed && "is-collapsed",
         isRight && "is-right",
+        hasCollection && "has-collection",
+        collectionOpen && "is-collection-open",
       )}
       eyebrow="Meniscus"
       title={active.label}
@@ -601,28 +621,50 @@ export default function MeniscusLiquidNav(_props: PatternPreviewProps) {
         if (id === "horizontal") setExpanded(true);
       }}
       extras={
-        isVertical ? (
-          <div className="menu-show-mode" role="group" aria-label="Estado da lateral">
+        <>
+          <div className="menu-show-mode" role="group" aria-label="Camadas do menu">
             <button
               type="button"
-              className={expanded ? "active" : undefined}
+              className={!hasCollection ? "active" : undefined}
               onClick={() => {
-                setExpanded(true);
+                setLayerVariant("classic");
+                setCollectionOpen(false);
               }}
             >
-              Aberto
+              Clássico
             </button>
             <button
               type="button"
-              className={!expanded ? "active" : undefined}
-              onClick={() => {
-                setExpanded(false);
-              }}
+              className={hasCollection ? "active" : undefined}
+              onClick={() => setLayerVariant("collection")}
             >
-              Ícones
+              Coleção
             </button>
           </div>
-        ) : null
+
+          {isVertical ? (
+            <div className="menu-show-mode" role="group" aria-label="Estado da lateral">
+              <button
+                type="button"
+                className={expanded ? "active" : undefined}
+                onClick={() => {
+                  setExpanded(true);
+                }}
+              >
+                Aberto
+              </button>
+              <button
+                type="button"
+                className={!expanded ? "active" : undefined}
+                onClick={() => {
+                  setExpanded(false);
+                }}
+              >
+                Ícones
+              </button>
+            </div>
+          ) : null}
+        </>
       }
     >
       <LayoutGroup id="meniscus-layout">
@@ -647,16 +689,92 @@ export default function MeniscusLiquidNav(_props: PatternPreviewProps) {
             <motion.div
               layout
               className={cn(
-                "meniscus-dock",
-                ready && "is-ready",
+                "meniscus-stack",
                 isVertical && "is-vertical",
                 isCollapsed && "is-collapsed",
                 isRight && "is-right",
+                collectionOpen && "is-collection-open",
               )}
-              ref={dockRef}
               transition={gooey}
-              onLayoutAnimationComplete={syncToActive}
             >
+              <AnimatePresence initial={false}>
+                {hasCollection && collectionOpen ? (
+                  <motion.div
+                    key="meniscus-collection"
+                    layout
+                    className={cn(
+                      "meniscus-collection",
+                      isVertical && "is-vertical",
+                      isCollapsed && "is-collapsed",
+                      isRight && "is-right",
+                    )}
+                    initial={
+                      isVertical
+                        ? { opacity: 0, x: isRight ? 28 : -28, scaleX: 0.82 }
+                        : { opacity: 0, y: 28, scaleY: 0.78 }
+                    }
+                    animate={{ opacity: 1, x: 0, y: 0, scaleX: 1, scaleY: 1 }}
+                    exit={
+                      isVertical
+                        ? { opacity: 0, x: isRight ? 24 : -24, scaleX: 0.86 }
+                        : { opacity: 0, y: 24, scaleY: 0.82 }
+                    }
+                    transition={gooey}
+                    aria-label="Atalhos da coleção Meniscus"
+                  >
+                    <span className="meniscus-collection-glass" aria-hidden="true" />
+                    <div className="meniscus-collection-items">
+                      {collectionActions.map((action) => {
+                        const Icon = action.Icon;
+                        const selected = collectionActive === action.id;
+                        return (
+                          <motion.button
+                            layout
+                            key={action.id}
+                            type="button"
+                            className={cn("meniscus-collection-item", selected && "is-active")}
+                            aria-label={action.label}
+                            aria-current={selected ? "page" : undefined}
+                            title={isCollapsed ? action.label : undefined}
+                            onClick={() => setCollectionActive(action.id)}
+                            whileTap={{ scale: 0.9 }}
+                            transition={gooey}
+                          >
+                            {selected ? (
+                              <motion.span
+                                layoutId="meniscus-collection-pill"
+                                className="meniscus-collection-pill"
+                                transition={pillSpring}
+                                aria-hidden="true"
+                              />
+                            ) : null}
+                            <Icon className="meniscus-collection-icon" strokeWidth={1.8} />
+                            {!isCollapsed ? (
+                              <span className="meniscus-collection-label">{action.label}</span>
+                            ) : null}
+                          </motion.button>
+                        );
+                      })}
+                    </div>
+                  </motion.div>
+                ) : null}
+              </AnimatePresence>
+
+              <motion.div
+                layout
+                className={cn(
+                  "meniscus-dock",
+                  ready && "is-ready",
+                  isVertical && "is-vertical",
+                  isCollapsed && "is-collapsed",
+                  isRight && "is-right",
+                  hasCollection && "has-collection",
+                  collectionOpen && "is-collection-open",
+                )}
+                ref={dockRef}
+                transition={gooey}
+                onLayoutAnimationComplete={syncToActive}
+              >
               <motion.div
                 layout
                 className="meniscus-glass"
@@ -684,6 +802,21 @@ export default function MeniscusLiquidNav(_props: PatternPreviewProps) {
                 <path ref={fillRef} className="meniscus-fill" d="" />
               </svg>
               <span className="meniscus-bead" ref={beadRef} aria-hidden="true" />
+
+              {hasCollection ? (
+                <motion.button
+                  type="button"
+                  className="meniscus-collection-toggle"
+                  aria-label={collectionOpen ? "Fechar coleção" : "Abrir coleção"}
+                  aria-expanded={collectionOpen}
+                  onClick={() => setCollectionOpen((value) => !value)}
+                  animate={{ opacity: 1 }}
+                  transition={gooey}
+                >
+                  <span />
+                </motion.button>
+              ) : null}
+
               <motion.div
                 layout
                 className="meniscus-tabs"
@@ -754,6 +887,7 @@ export default function MeniscusLiquidNav(_props: PatternPreviewProps) {
                       : <ChevronsRight size={16} />}
                 </motion.button>
               ) : null}
+            </motion.div>
             </motion.div>
           </motion.div>
 
