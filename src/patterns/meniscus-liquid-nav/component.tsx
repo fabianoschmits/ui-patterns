@@ -31,6 +31,13 @@ const gooey = {
   mass: 1.15,
 };
 
+const pillSpring = {
+  type: "spring" as const,
+  stiffness: 380,
+  damping: 24,
+  mass: 0.9,
+};
+
 interface MeniscusItem {
   id: string;
   label: string;
@@ -57,6 +64,22 @@ const clamp = (v: number, a: number, b: number) => (v < a ? a : v > b ? b : v);
 const smooth = (t: number) => t * t * (3 - 2 * t);
 const reach = (s: number, rb: number, by: number) =>
   Math.sqrt(Math.max((s + rb) ** 2 - (s - by) ** 2, 1));
+
+function centerWithin(
+  element: HTMLElement,
+  ancestor: HTMLElement,
+  axis: "x" | "y",
+) {
+  let value = axis === "x" ? element.offsetWidth / 2 : element.offsetHeight / 2;
+  let node: HTMLElement | null = element;
+
+  while (node && node !== ancestor) {
+    value += axis === "x" ? node.offsetLeft : node.offsetTop;
+    node = node.offsetParent as HTMLElement | null;
+  }
+
+  return value;
+}
 
 function troughTop(
   W: number,
@@ -201,7 +224,6 @@ export default function MeniscusLiquidNav(_props: PatternPreviewProps) {
   const actionsRef = useRef(loggedActions);
   const orientationRef = useRef<Orientation>("horizontal");
   const sideRef = useRef<Side>("left");
-  const morphingRef = useRef(false);
 
   const [mode, setMode] = useState<Mode>("logged");
   const [orientation, setOrientation] = useState<Orientation>("horizontal");
@@ -209,7 +231,6 @@ export default function MeniscusLiquidNav(_props: PatternPreviewProps) {
   const [expanded, setExpanded] = useState(true);
   const [current, setCurrent] = useState(0);
   const [ready, setReady] = useState(false);
-  const [morphing, setMorphing] = useState(false);
   const [box, setBox] = useState({ w: 400, h: 48 });
   const [accent, setAccent] = useState(MENU_ACCENTS[0].value);
 
@@ -300,8 +321,8 @@ export default function MeniscusLiquidNav(_props: PatternPreviewProps) {
       G.raf = 0;
       const dt = Math.min((now - G.last) / 1000, 1 / 30);
       G.last = now;
-      const K = G.dragging ? 900 : 142;
-      const C = G.dragging ? 52 : 19.3;
+      const K = G.dragging ? 900 : pillSpring.stiffness / pillSpring.mass;
+      const C = G.dragging ? 52 : pillSpring.damping / pillSpring.mass;
       let step = dt;
       while (step > 0) {
         const h = Math.min(step, 1 / 240);
@@ -324,9 +345,8 @@ export default function MeniscusLiquidNav(_props: PatternPreviewProps) {
   const measure = useCallback(() => {
     const dock = dockRef.current;
     if (!dock) return false;
-    const r = dock.getBoundingClientRect();
-    const W = Math.round(r.width);
-    const H = Math.round(r.height);
+    const W = Math.round(dock.offsetWidth);
+    const H = Math.round(dock.offsetHeight);
     if (W < 40 || H < 24) return false;
 
     const G = physics.current;
@@ -335,11 +355,8 @@ export default function MeniscusLiquidNav(_props: PatternPreviewProps) {
     G.slots = Array.from({ length: count }, (_, i) => {
       const tab = tabRefs.current[i];
       if (!tab) return 0;
-      const slotEl = tab.querySelector(".meniscus-icon-slot");
-      const b = (slotEl ?? tab).getBoundingClientRect();
-      return vertical
-        ? b.top - r.top + b.height / 2
-        : b.left - r.left + b.width / 2;
+      const slotEl = tab.querySelector<HTMLElement>(".meniscus-icon-slot");
+      return centerWithin(vertical ? (slotEl ?? tab) : tab, dock, vertical ? "y" : "x");
     });
     G.span = G.slots.length > 1 ? G.slots[1] - G.slots[0] : vertical ? H : W;
     G.W = W;
@@ -383,9 +400,10 @@ export default function MeniscusLiquidNav(_props: PatternPreviewProps) {
     if (vertical) {
       const sample =
         tabRefs.current[currentRef.current] ?? tabRefs.current[0] ?? null;
-      const slotEl = sample?.querySelector(".meniscus-icon-slot");
-      const sb = (slotEl ?? sample)?.getBoundingClientRect();
-      const iconCx = sb ? sb.left - r.left + sb.width / 2 : W * 0.35;
+      const slotEl = sample?.querySelector<HTMLElement>(".meniscus-icon-slot");
+      const iconCx = slotEl
+        ? centerWithin(slotEl, dock, "x")
+        : W * 0.35;
       const rise = onRight
         ? Math.max(G.CX - iconCx, G.D * 0.45)
         : Math.max(iconCx - G.CX, G.D * 0.45);
@@ -422,61 +440,32 @@ export default function MeniscusLiquidNav(_props: PatternPreviewProps) {
     [paint, run],
   );
 
+  const syncToActive = useCallback(() => {
+    if (!measure()) return;
+    const G = physics.current;
+    const slot = G.slots[currentRef.current] ?? G.slots[0] ?? 0;
+    cancelAnimationFrame(G.raf);
+    G.raf = 0;
+    G.x = G.target = slot;
+    G.v = 0;
+    paint();
+    setReady(true);
+  }, [measure, paint]);
+
   useLayoutEffect(() => {
-    let animId: number;
-    let startTime = performance.now();
-    const duration = 650;
-    morphingRef.current = true;
-    setMorphing(true);
-
-    const morphStep = (now: number) => {
-      const elapsed = now - startTime;
-      if (measure()) {
-        const G = physics.current;
-        const slot = G.slots[currentRef.current] ?? G.slots[0] ?? 0;
-        G.target = slot;
-        G.x = G.x + (G.target - G.x) * 0.35;
-        if (Math.abs(G.target - G.x) < 0.1) G.x = G.target;
-        G.v = 0;
-        paint();
-        setReady(true);
-      }
-      if (elapsed < duration) {
-        animId = requestAnimationFrame(morphStep);
-      } else {
-        morphingRef.current = false;
-        setMorphing(false);
-        if (measure()) {
-          const G = physics.current;
-          const slot = G.slots[currentRef.current] ?? G.slots[0] ?? 0;
-          G.x = G.target = slot;
-          G.v = 0;
-          paint();
-        }
-      }
-    };
-
-    animId = requestAnimationFrame(morphStep);
+    syncToActive();
 
     const ro = new ResizeObserver(() => {
-      if (measure()) {
-        const G = physics.current;
-        const slot = G.slots[currentRef.current] ?? G.slots[0] ?? 0;
-        G.target = slot;
-        if (!G.dragging && !G.raf) run();
-        else paint();
-        setReady(true);
-      }
+      syncToActive();
     });
     if (dockRef.current) ro.observe(dockRef.current);
 
     return () => {
-      cancelAnimationFrame(animId);
       ro.disconnect();
       cancelAnimationFrame(physics.current.raf);
       physics.current.raf = 0;
     };
-  }, [measure, paint, run, mode, orientation, expanded, side]);
+  }, [syncToActive, mode, orientation, expanded, side]);
 
   useEffect(() => {
     paint();
@@ -659,20 +648,26 @@ export default function MeniscusLiquidNav(_props: PatternPreviewProps) {
               className={cn(
                 "meniscus-dock",
                 ready && "is-ready",
-                morphing && "is-morphing",
                 isVertical && "is-vertical",
                 isCollapsed && "is-collapsed",
                 isRight && "is-right",
               )}
               ref={dockRef}
               transition={gooey}
+              onLayoutAnimationComplete={syncToActive}
             >
-              <div className="meniscus-glass" ref={glassRef} aria-hidden="true">
+              <motion.div
+                layout
+                className="meniscus-glass"
+                ref={glassRef}
+                aria-hidden="true"
+                transition={gooey}
+              >
                 <span className="meniscus-glass-base" />
                 <span className="meniscus-glass-tint" />
                 <span className="meniscus-glass-sheen" />
                 <span className="meniscus-glass-rim" />
-              </div>
+              </motion.div>
               <svg
                 className="meniscus-skin"
                 ref={skinRef}
@@ -738,32 +733,26 @@ export default function MeniscusLiquidNav(_props: PatternPreviewProps) {
                 })}
               </motion.div>
 
-              <AnimatePresence initial={false}>
-                {isVertical ? (
-                  <motion.button
-                    layout
-                    key="rail-toggle"
-                    type="button"
-                    className="meniscus-rail-toggle"
-                    aria-label={expanded ? "Retrair menu" : "Expandir menu"}
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.9 }}
-                    transition={gooey}
-                    onClick={() => {
-                      setExpanded((value) => !value);
-                    }}
-                  >
-                    {isRight
-                      ? expanded
-                        ? <ChevronsRight size={16} />
-                        : <ChevronsLeft size={16} />
-                      : expanded
-                        ? <ChevronsLeft size={16} />
-                        : <ChevronsRight size={16} />}
-                  </motion.button>
-                ) : null}
-              </AnimatePresence>
+              {isVertical ? (
+                <motion.button
+                  layout
+                  type="button"
+                  className="meniscus-rail-toggle"
+                  aria-label={expanded ? "Retrair menu" : "Expandir menu"}
+                  transition={gooey}
+                  onClick={() => {
+                    setExpanded((value) => !value);
+                  }}
+                >
+                  {isRight
+                    ? expanded
+                      ? <ChevronsRight size={16} />
+                      : <ChevronsLeft size={16} />
+                    : expanded
+                      ? <ChevronsLeft size={16} />
+                      : <ChevronsRight size={16} />}
+                </motion.button>
+              ) : null}
             </motion.div>
           </motion.div>
 

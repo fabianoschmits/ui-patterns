@@ -6,7 +6,7 @@ Galeria interativa, documentação e laboratório de componentes para React, Typ
 
 - Página inicial editorial e responsiva.
 - Catálogo com busca, filtros e ordenação em tempo real.
-- Doze padrões funcionais com prévias interativas.
+- Três padrões autorais com prévias interativas.
 - Rotas individuais geradas estaticamente.
 - Laboratório com dispositivo, tema e personalização visual.
 - Visualizador de código com cópia para a área de transferência.

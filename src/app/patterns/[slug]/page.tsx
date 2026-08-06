@@ -8,11 +8,6 @@ const immersiveSlugs = new Set([
   "quick-action-menu",
   "meniscus-liquid-nav",
   "liquid-glass-nav",
-  "expandable-sidebar",
-  "floating-top-menu",
-  "navigation-dock",
-  "animated-indicator-navbar",
-  "fullscreen-mobile-menu",
 ]);
 
 const canvasImmersiveSlugs = immersiveSlugs;

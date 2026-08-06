@@ -19,9 +19,9 @@ export function HomeHero() {
   return (
     <section className="home-hero">
       <div className="hero-grid-lines" aria-hidden="true" />
-      <div className="hero-floating hero-floating-sidebar" aria-hidden="true"><PatternPreview slug="expandable-sidebar" compact /></div>
-      <div className="hero-floating hero-floating-command" aria-hidden="true"><PatternPreview slug="command-palette" compact /></div>
-      <div className="hero-floating hero-floating-product" aria-hidden="true"><PatternPreview slug="modern-product-card" compact /></div>
+      <div className="hero-floating hero-floating-sidebar" aria-hidden="true"><PatternPreview slug="quick-action-menu" compact /></div>
+      <div className="hero-floating hero-floating-command" aria-hidden="true"><PatternPreview slug="meniscus-liquid-nav" compact /></div>
+      <div className="hero-floating hero-floating-product" aria-hidden="true"><PatternPreview slug="liquid-glass-nav" compact /></div>
       <div className="hero-copy">
         <span className="hero-kicker"><i /> Biblioteca de interfaces · v0.1</span>
         <h1>Interfaces que transformam ideias em <em>experiências.</em></h1>
