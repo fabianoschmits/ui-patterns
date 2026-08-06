@@ -102,6 +102,7 @@ export default function LiquidGlassNav(_props: PatternPreviewProps) {
       description={current.line}
       accent={accent}
       onAccentChange={setAccent}
+      draggableRoulette
     >
       <div
         className="lucid-demo"
