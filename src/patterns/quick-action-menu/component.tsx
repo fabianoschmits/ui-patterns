@@ -442,19 +442,14 @@ export default function QuickActionMenuDemo(_props: PatternPreviewProps) {
                           transition={gooey}
                         >
                           <span className="qam-collection-icon-slot">
-                            <AnimatePresence>
-                              {selected ? (
-                                <motion.span
-                                  layoutId="qam-active-pill"
-                                  className="qam-active-pill qam-collection-active-pill"
-                                  initial={{ opacity: 0, scaleX: 1.35, scaleY: 0.65 }}
-                                  animate={{ opacity: 1, scaleX: 1, scaleY: 1 }}
-                                  exit={{ opacity: 0, scaleX: 0.65, scaleY: 1.35 }}
-                                  transition={pillSpring}
-                                  aria-hidden="true"
-                                />
-                              ) : null}
-                            </AnimatePresence>
+                            {selected ? (
+                              <motion.span
+                                layoutId="qam-active-pill"
+                                className="qam-active-pill qam-collection-active-pill"
+                                transition={pillSpring}
+                                aria-hidden="true"
+                              />
+                            ) : null}
                             <Icon className="qam-collection-icon" />
                           </span>
                           {!isCollapsed ? (

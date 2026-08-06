@@ -519,6 +519,7 @@ export default function MeniscusLiquidNav(_props: PatternPreviewProps) {
 
     let pid: number | null = null;
     let start = 0;
+    let lastPosition = 0;
     let capturing = false;
 
     const onDown = (e: PointerEvent) => {
@@ -529,21 +530,23 @@ export default function MeniscusLiquidNav(_props: PatternPreviewProps) {
       }
       pid = e.pointerId;
       start = orientationRef.current === "vertical" ? e.clientY : e.clientX;
+      lastPosition = start;
       capturing = false;
       physics.current.dragging = false;
       physics.current.moved = false;
+      dock.setPointerCapture(e.pointerId);
     };
 
     const onMove = (e: PointerEvent) => {
       if (pid !== e.pointerId) return;
       const vertical = orientationRef.current === "vertical";
       const pos = vertical ? e.clientY : e.clientX;
+      lastPosition = pos;
       if (!capturing) {
         if (Math.abs(pos - start) < 8) return;
         capturing = true;
         physics.current.dragging = true;
         physics.current.moved = true;
-        dock.setPointerCapture(e.pointerId);
       }
       const r = dock.getBoundingClientRect();
       const G = physics.current;
@@ -562,10 +565,20 @@ export default function MeniscusLiquidNav(_props: PatternPreviewProps) {
       G.moved = false;
       if (!wasDrag) return;
 
+      const vertical = orientationRef.current === "vertical";
+      const rect = dock.getBoundingClientRect();
+      const pointer = e.type === "pointercancel"
+        ? lastPosition
+        : vertical
+          ? e.clientY
+          : e.clientX;
+      const release = pointer - (vertical ? rect.top : rect.left);
+      G.target = clamp(release, G.slots[0], G.slots[G.slots.length - 1]);
+
       let near = 0;
       let nd = Infinity;
       G.slots.forEach((s, i) => {
-        const d = Math.abs(G.x - s);
+        const d = Math.abs(G.target - s);
         if (d < nd) {
           nd = d;
           near = i;
@@ -599,6 +612,8 @@ export default function MeniscusLiquidNav(_props: PatternPreviewProps) {
 
     let pointerId: number | null = null;
     let start = 0;
+    let lastClientX = 0;
+    let lastClientY = 0;
     let capturing = false;
     let moved = false;
 
@@ -626,18 +641,22 @@ export default function MeniscusLiquidNav(_props: PatternPreviewProps) {
       if (event.pointerType === "mouse" && event.button !== 0) return;
       pointerId = event.pointerId;
       start = orientationRef.current === "vertical" ? event.clientY : event.clientX;
+      lastClientX = event.clientX;
+      lastClientY = event.clientY;
       capturing = false;
       moved = false;
+      tray.setPointerCapture(event.pointerId);
     };
 
     const onMove = (event: PointerEvent) => {
       if (pointerId !== event.pointerId) return;
+      lastClientX = event.clientX;
+      lastClientY = event.clientY;
       const position = orientationRef.current === "vertical" ? event.clientY : event.clientX;
       if (!capturing) {
         if (Math.abs(position - start) < 8) return;
         capturing = true;
         moved = true;
-        tray.setPointerCapture(event.pointerId);
       }
 
       const next = nearestId(event.clientX, event.clientY);
@@ -653,7 +672,12 @@ export default function MeniscusLiquidNav(_props: PatternPreviewProps) {
       if (pointerId !== event.pointerId) return;
       pointerId = null;
       if (!moved) return;
-      const next = nearestId(event.clientX, event.clientY);
+      const next = nearestId(
+        event.type === "pointercancel" ? lastClientX : event.clientX,
+        event.type === "pointercancel" ? lastClientY : event.clientY,
+      );
+      collectionActiveRef.current = next;
+      selectionLayerRef.current = "collection";
       setCollectionActive(next);
       setSelectionLayer("collection");
 
@@ -879,23 +903,27 @@ export default function MeniscusLiquidNav(_props: PatternPreviewProps) {
                               setCollectionActive(action.id);
                               setSelectionLayer("collection");
                             }}
-                            whileTap={{ scale: 0.9 }}
                             transition={gooey}
                           >
                             <span className="meniscus-collection-icon-slot">
-                              <AnimatePresence>
-                                {selected ? (
+                              {selected ? (
+                                <>
                                   <motion.span
-                                    layoutId="meniscus-active-bead"
-                                    className="meniscus-bead meniscus-collection-bead"
-                                    initial={{ opacity: 0, scale: 0.7 }}
-                                    animate={{ opacity: 1, scale: 1 }}
-                                    exit={{ opacity: 0, scale: 0.7 }}
+                                    layoutId="meniscus-collection-curve"
+                                    className="meniscus-collection-curve"
+                                    initial={false}
                                     transition={pillSpring}
                                     aria-hidden="true"
                                   />
-                                ) : null}
-                              </AnimatePresence>
+                                  <motion.span
+                                    layoutId="meniscus-active-bead"
+                                    className="meniscus-bead meniscus-collection-bead"
+                                    initial={false}
+                                    transition={pillSpring}
+                                    aria-hidden="true"
+                                  />
+                                </>
+                              ) : null}
                               <Icon className="meniscus-collection-icon" strokeWidth={1.8} />
                             </span>
                             {!isCollapsed ? (
@@ -919,48 +947,55 @@ export default function MeniscusLiquidNav(_props: PatternPreviewProps) {
                   isRight && "is-right",
                   hasCollection && "has-collection",
                   collectionOpen && "is-collection-open",
+                  selectionLayer === "collection" && "is-collection-selected",
                 )}
                 ref={dockRef}
                 transition={gooey}
                 onLayoutAnimationComplete={syncToActive}
               >
-              <motion.div
-                layout
-                className="meniscus-glass"
-                ref={glassRef}
-                aria-hidden="true"
-                transition={gooey}
-              >
-                <span className="meniscus-glass-base" />
-                <span className="meniscus-glass-tint" />
-                <span className="meniscus-glass-sheen" />
-                <span className="meniscus-glass-rim" />
-              </motion.div>
-              <svg
-                className="meniscus-skin"
-                ref={skinRef}
-                viewBox={`0 0 ${box.w} ${box.h}`}
-                preserveAspectRatio="none"
-                aria-hidden="true"
-              >
-                <defs>
-                  <clipPath id={`mnClip-${uid}`} clipPathUnits="userSpaceOnUse">
-                    <path ref={clipRef} d="" />
-                  </clipPath>
-                </defs>
-                <path ref={fillRef} className="meniscus-fill" d="" />
-              </svg>
-              <AnimatePresence>
-                {selectionLayer === "main" ? (
-                  <motion.span
-                    layoutId="meniscus-active-bead"
-                    className="meniscus-bead"
-                    ref={beadRef}
-                    transition={pillSpring}
-                    aria-hidden="true"
-                  />
-                ) : null}
-              </AnimatePresence>
+                <div className="meniscus-flat-glass" aria-hidden="true">
+                  <span className="meniscus-glass-base" />
+                  <span className="meniscus-glass-tint" />
+                  <span className="meniscus-glass-sheen" />
+                  <span className="meniscus-glass-rim" />
+                </div>
+                <motion.div
+                  layout
+                  className="meniscus-glass"
+                  ref={glassRef}
+                  aria-hidden="true"
+                  transition={gooey}
+                >
+                  <span className="meniscus-glass-base" />
+                  <span className="meniscus-glass-tint" />
+                  <span className="meniscus-glass-sheen" />
+                  <span className="meniscus-glass-rim" />
+                </motion.div>
+                <svg
+                  className="meniscus-skin"
+                  ref={skinRef}
+                  viewBox={`0 0 ${box.w} ${box.h}`}
+                  preserveAspectRatio="none"
+                  aria-hidden="true"
+                >
+                  <defs>
+                    <clipPath id={`mnClip-${uid}`} clipPathUnits="userSpaceOnUse">
+                      <path ref={clipRef} d="" />
+                    </clipPath>
+                  </defs>
+                  <path ref={fillRef} className="meniscus-fill" d="" />
+                </svg>
+                <AnimatePresence>
+                  {selectionLayer === "main" ? (
+                    <motion.span
+                      layoutId="meniscus-active-bead"
+                      className="meniscus-bead"
+                      ref={beadRef}
+                      transition={pillSpring}
+                      aria-hidden="true"
+                    />
+                  ) : null}
+                </AnimatePresence>
 
               {hasCollection ? (
                 <motion.button
