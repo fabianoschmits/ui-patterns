@@ -128,25 +128,10 @@ html[data-theme="dark"] .qam-show {
 .qam-collection-glass {
   position: absolute;
   inset: 0;
+  isolation: isolate;
   overflow: hidden;
   border-radius: 18px 18px 12px 12px;
-  background:
-    linear-gradient(160deg, rgb(255 255 255 / 0.12), transparent 42%),
-    color-mix(in srgb, var(--menu-surface, var(--canvas)) 55%, transparent);
-  box-shadow:
-    inset 0 1px 0 rgb(255 255 255 / 0.32),
-    0 8px 24px color-mix(in srgb, var(--ink) 9%, transparent);
-  backdrop-filter: blur(17px) saturate(1.35);
-  -webkit-backdrop-filter: blur(17px) saturate(1.35);
-}
-
-html[data-theme="dark"] .qam-collection-glass {
-  background:
-    linear-gradient(160deg, rgb(255 255 255 / 0.09), transparent 44%),
-    color-mix(in srgb, var(--menu-surface, var(--canvas-deep)) 52%, transparent);
-  box-shadow:
-    inset 0 1px 0 rgb(255 255 255 / 0.18),
-    0 12px 28px rgb(0 0 0 / 0.28);
+  box-shadow: var(--qam-bar-shadow);
 }
 
 .qam-collection.is-vertical .qam-collection-glass {
@@ -204,20 +189,21 @@ html[data-theme="dark"] .qam-collection-glass {
   color: #fff;
 }
 
-.qam-collection-pill {
-  position: absolute;
-  inset: 0.15rem;
-  z-index: -1;
-  border-radius: 10px;
-  background: color-mix(in srgb, var(--qam-accent) 76%, transparent);
-  box-shadow:
-    0 5px 13px color-mix(in srgb, var(--qam-accent) 22%, transparent),
-    inset 0 1px 0 rgb(255 255 255 / 0.28);
+.qam-collection-icon-slot {
+  position: relative;
+  display: grid;
+  width: 2rem;
+  height: 2rem;
+  flex: none;
+  place-items: center;
 }
 
-.qam-collection.is-vertical .qam-collection-pill {
-  inset: 0.12rem;
-  border-radius: 999px;
+.qam-collection-active-pill {
+  inset: 0;
+  border-radius: 50%;
+  box-shadow:
+    0 7px 17px color-mix(in srgb, var(--qam-accent) 32%, transparent),
+    inset 0 1px 0 rgb(255 255 255 / 0.3);
 }
 
 .qam-collection-icon {
@@ -226,6 +212,12 @@ html[data-theme="dark"] .qam-collection-glass {
   width: 1rem;
   height: 1rem;
   stroke-width: 1.8;
+  transition: color 220ms ease, transform 300ms ease;
+}
+
+.qam-collection-item.is-active .qam-collection-icon {
+  color: #fff;
+  transform: scale(1.06);
 }
 
 .qam-collection-label {

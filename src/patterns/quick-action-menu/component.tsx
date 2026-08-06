@@ -28,6 +28,7 @@ import "./quick-action.css";
 type Mode = "public" | "logged";
 type Orientation = "horizontal" | "vertical";
 type LayerVariant = "classic" | "collection";
+type SelectionLayer = "main" | "collection";
 
 interface QuickActionItem {
   id: string;
@@ -81,18 +82,29 @@ export default function QuickActionMenuDemo(_props: PatternPreviewProps) {
   const [layerVariant, setLayerVariant] = useState<LayerVariant>("classic");
   const [collectionOpen, setCollectionOpen] = useState(false);
   const [collectionActive, setCollectionActive] = useState("favorites");
+  const [selectionLayer, setSelectionLayer] = useState<SelectionLayer>("main");
   const [accent, setAccent] = useState(MENU_ACCENTS[0].value);
   const barRef = useRef<HTMLElement>(null);
+  const stackRef = useRef<HTMLDivElement>(null);
   const itemRefs = useRef<(HTMLButtonElement | null)[]>([]);
+  const collectionRef = useRef<HTMLDivElement>(null);
+  const collectionItemRefs = useRef<(HTMLButtonElement | null)[]>([]);
   const orientationRef = useRef(orientation);
   const actionsRef = useRef(loggedActions);
   const activeRef = useRef(active);
+  const collectionActiveRef = useRef(collectionActive);
+  const selectionLayerRef = useRef<SelectionLayer>(selectionLayer);
 
   const actions = mode === "logged" ? loggedActions : publicActions;
   actionsRef.current = actions;
   orientationRef.current = orientation;
   activeRef.current = active;
-  const activeLabel = actions.find((a) => a.id === active)?.label ?? "Home";
+  collectionActiveRef.current = collectionActive;
+  selectionLayerRef.current = selectionLayer;
+  const activeLabel =
+    selectionLayer === "collection"
+      ? collectionActions.find((action) => action.id === collectionActive)?.label ?? "Favoritos"
+      : actions.find((action) => action.id === active)?.label ?? "Home";
   const isVertical = orientation === "vertical";
   const isCollapsed = isVertical && !expanded;
   const hasCollection = layerVariant === "collection";
@@ -144,7 +156,12 @@ export default function QuickActionMenuDemo(_props: PatternPreviewProps) {
         bar.setPointerCapture(e.pointerId);
       }
       const next = nearestId(e.clientX, e.clientY);
-      if (next !== activeRef.current) setActive(next);
+      if (next !== activeRef.current || selectionLayerRef.current !== "main") {
+        activeRef.current = next;
+        selectionLayerRef.current = "main";
+        setActive(next);
+        setSelectionLayer("main");
+      }
     };
 
     const onUp = (e: PointerEvent) => {
@@ -153,6 +170,7 @@ export default function QuickActionMenuDemo(_props: PatternPreviewProps) {
       if (!moved) return;
       const next = nearestId(e.clientX, e.clientY);
       setActive(next);
+      setSelectionLayer("main");
 
       const block = (ev: Event) => {
         ev.preventDefault();
@@ -173,6 +191,104 @@ export default function QuickActionMenuDemo(_props: PatternPreviewProps) {
       bar.removeEventListener("pointercancel", onUp);
     };
   }, [mode, orientation, expanded]);
+
+  useEffect(() => {
+    const tray = collectionRef.current;
+    if (!tray || !collectionOpen) return;
+
+    let pid: number | null = null;
+    let start = 0;
+    let capturing = false;
+    let moved = false;
+
+    const nearestId = (clientX: number, clientY: number) => {
+      const vertical = orientationRef.current === "vertical";
+      let best = collectionActions[0].id;
+      let bestDist = Infinity;
+      collectionItemRefs.current.forEach((element, index) => {
+        if (!element) return;
+        const rect = element.getBoundingClientRect();
+        const center = vertical
+          ? rect.top + rect.height / 2
+          : rect.left + rect.width / 2;
+        const pointer = vertical ? clientY : clientX;
+        const distance = Math.abs(pointer - center);
+        if (distance < bestDist) {
+          bestDist = distance;
+          best = collectionActions[index]?.id ?? best;
+        }
+      });
+      return best;
+    };
+
+    const onDown = (event: PointerEvent) => {
+      if (event.pointerType === "mouse" && event.button !== 0) return;
+      pid = event.pointerId;
+      start = orientationRef.current === "vertical" ? event.clientY : event.clientX;
+      capturing = false;
+      moved = false;
+    };
+
+    const onMove = (event: PointerEvent) => {
+      if (pid !== event.pointerId) return;
+      const position = orientationRef.current === "vertical" ? event.clientY : event.clientX;
+      if (!capturing) {
+        if (Math.abs(position - start) < 8) return;
+        capturing = true;
+        moved = true;
+        tray.setPointerCapture(event.pointerId);
+      }
+      const next = nearestId(event.clientX, event.clientY);
+      if (next !== collectionActiveRef.current || selectionLayerRef.current !== "collection") {
+        collectionActiveRef.current = next;
+        selectionLayerRef.current = "collection";
+        setCollectionActive(next);
+        setSelectionLayer("collection");
+      }
+    };
+
+    const onUp = (event: PointerEvent) => {
+      if (pid !== event.pointerId) return;
+      pid = null;
+      if (!moved) return;
+      const next = nearestId(event.clientX, event.clientY);
+      setCollectionActive(next);
+      setSelectionLayer("collection");
+
+      const block = (clickEvent: Event) => {
+        clickEvent.preventDefault();
+        clickEvent.stopPropagation();
+        tray.removeEventListener("click", block, true);
+      };
+      tray.addEventListener("click", block, true);
+    };
+
+    tray.addEventListener("pointerdown", onDown);
+    tray.addEventListener("pointermove", onMove);
+    tray.addEventListener("pointerup", onUp);
+    tray.addEventListener("pointercancel", onUp);
+    return () => {
+      tray.removeEventListener("pointerdown", onDown);
+      tray.removeEventListener("pointermove", onMove);
+      tray.removeEventListener("pointerup", onUp);
+      tray.removeEventListener("pointercancel", onUp);
+    };
+  }, [collectionOpen, orientation, expanded]);
+
+  useEffect(() => {
+    if (!collectionOpen) return;
+
+    const closeOutside = (event: PointerEvent) => {
+      const target = event.target;
+      if (target instanceof Node && stackRef.current?.contains(target)) return;
+      selectionLayerRef.current = "main";
+      setSelectionLayer("main");
+      setCollectionOpen(false);
+    };
+
+    document.addEventListener("pointerdown", closeOutside, true);
+    return () => document.removeEventListener("pointerdown", closeOutside, true);
+  }, [collectionOpen]);
 
   return (
     <MenuShowcase
@@ -202,6 +318,7 @@ export default function QuickActionMenuDemo(_props: PatternPreviewProps) {
       onModeChange={(id) => {
         setMode(id as Mode);
         setActive("home");
+        setSelectionLayer("main");
       }}
       variants={[
         { id: "horizontal", label: "Inferior" },
@@ -221,6 +338,7 @@ export default function QuickActionMenuDemo(_props: PatternPreviewProps) {
               onClick={() => {
                 setLayerVariant("classic");
                 setCollectionOpen(false);
+                setSelectionLayer("main");
               }}
             >
               Clássico
@@ -259,6 +377,7 @@ export default function QuickActionMenuDemo(_props: PatternPreviewProps) {
         <div className={cn("qam-stage", isVertical && "is-vertical")}>
           <motion.div
             layout
+            ref={stackRef}
             className={cn(
               "qam-stack",
               isVertical && "is-vertical",
@@ -277,6 +396,7 @@ export default function QuickActionMenuDemo(_props: PatternPreviewProps) {
                     isVertical && "is-vertical",
                     isCollapsed && "is-collapsed",
                   )}
+                  ref={collectionRef}
                   initial={
                     isVertical
                       ? { opacity: 0, x: -28, scaleX: 0.82 }
@@ -291,33 +411,52 @@ export default function QuickActionMenuDemo(_props: PatternPreviewProps) {
                   transition={gooey}
                   aria-label="Atalhos da coleção"
                 >
-                  <span className="qam-collection-glass" aria-hidden="true" />
+                  <span className="qam-collection-glass" aria-hidden="true">
+                    <span className="qam-glass-base" />
+                    <span className="qam-glass-tint" />
+                    <span className="qam-glass-sheen" />
+                    <span className="qam-glass-rim" />
+                  </span>
                   <div className="qam-collection-items">
-                    {collectionActions.map((action) => {
+                    {collectionActions.map((action, index) => {
                       const Icon = action.icon;
-                      const selected = collectionActive === action.id;
+                      const selected =
+                        selectionLayer === "collection" && collectionActive === action.id;
                       return (
                         <motion.button
                           layout
                           key={action.id}
+                          ref={(element) => {
+                            collectionItemRefs.current[index] = element;
+                          }}
                           type="button"
                           className={cn("qam-collection-item", selected && "is-active")}
                           aria-label={action.label}
                           aria-current={selected ? "page" : undefined}
                           title={isCollapsed ? action.label : undefined}
-                          onClick={() => setCollectionActive(action.id)}
+                          onClick={() => {
+                            setCollectionActive(action.id);
+                            setSelectionLayer("collection");
+                          }}
                           whileTap={{ scale: 0.9 }}
                           transition={gooey}
                         >
-                          {selected ? (
-                            <motion.span
-                              layoutId="qam-collection-pill"
-                              className="qam-collection-pill"
-                              transition={pillSpring}
-                              aria-hidden="true"
-                            />
-                          ) : null}
-                          <Icon className="qam-collection-icon" />
+                          <span className="qam-collection-icon-slot">
+                            <AnimatePresence>
+                              {selected ? (
+                                <motion.span
+                                  layoutId="qam-active-pill"
+                                  className="qam-active-pill qam-collection-active-pill"
+                                  initial={{ opacity: 0, scaleX: 1.35, scaleY: 0.65 }}
+                                  animate={{ opacity: 1, scaleX: 1, scaleY: 1 }}
+                                  exit={{ opacity: 0, scaleX: 0.65, scaleY: 1.35 }}
+                                  transition={pillSpring}
+                                  aria-hidden="true"
+                                />
+                              ) : null}
+                            </AnimatePresence>
+                            <Icon className="qam-collection-icon" />
+                          </span>
                           {!isCollapsed ? (
                             <span className="qam-collection-label">{action.label}</span>
                           ) : null}
@@ -355,7 +494,12 @@ export default function QuickActionMenuDemo(_props: PatternPreviewProps) {
                   className="qam-collection-toggle"
                   aria-label={collectionOpen ? "Fechar coleção" : "Abrir coleção"}
                   aria-expanded={collectionOpen}
-                  onClick={() => setCollectionOpen((value) => !value)}
+                  onClick={() => {
+                    setCollectionOpen((value) => {
+                      if (value) setSelectionLayer("main");
+                      return !value;
+                    });
+                  }}
                   animate={{ opacity: 1 }}
                   transition={gooey}
                 >
@@ -366,7 +510,7 @@ export default function QuickActionMenuDemo(_props: PatternPreviewProps) {
               <motion.div layout className="qam-items" transition={gooey}>
                 {actions.map((action, index) => {
                   const Icon = action.icon;
-                  const isActive = active === action.id;
+                  const isActive = selectionLayer === "main" && active === action.id;
 
                   return (
                     <motion.button
@@ -380,7 +524,10 @@ export default function QuickActionMenuDemo(_props: PatternPreviewProps) {
                       aria-label={action.label}
                       aria-current={isActive ? "page" : undefined}
                       title={isCollapsed ? action.label : undefined}
-                      onClick={() => setActive(action.id)}
+                      onClick={() => {
+                        setActive(action.id);
+                        setSelectionLayer("main");
+                      }}
                       transition={gooey}
                     >
                       <div className="qam-icon-slot">

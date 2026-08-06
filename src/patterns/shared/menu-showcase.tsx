@@ -150,17 +150,23 @@ function ColorRoulette({
   const trackRef = useRef<HTMLDivElement>(null);
   const settleRef = useRef(0);
   const scrollFrameRef = useRef(0);
+  const inertiaFrameRef = useRef(0);
   const ignoreTimerRef = useRef(0);
   const ignoreScrollRef = useRef(false);
   const draggingRef = useRef(false);
+  const glidingRef = useRef(false);
   const blockClickRef = useRef(false);
   const dragRef = useRef({
     pointerId: -1,
     startX: 0,
     startScrollLeft: 0,
+    lastX: 0,
+    lastAt: 0,
+    velocity: 0,
     moved: false,
   });
   const [isDragging, setIsDragging] = useState(false);
+  const [isGliding, setIsGliding] = useState(false);
   const labelId = label.replace(/\s+/g, "-").toLowerCase();
 
   const selectedIndex = Math.max(
@@ -225,7 +231,7 @@ function ColorRoulette({
   }, [centerOnIndex, options.length]);
 
   useEffect(() => {
-    if (ignoreScrollRef.current || draggingRef.current) return;
+    if (ignoreScrollRef.current || draggingRef.current || glidingRef.current) return;
     centerOnIndex(selectedIndex, "smooth");
   }, [centerOnIndex, selectedIndex]);
 
@@ -234,6 +240,7 @@ function ColorRoulette({
       window.clearTimeout(settleRef.current);
       window.clearTimeout(ignoreTimerRef.current);
       window.cancelAnimationFrame(scrollFrameRef.current);
+      window.cancelAnimationFrame(inertiaFrameRef.current);
     };
   }, []);
 
@@ -243,6 +250,46 @@ function ColorRoulette({
       pickCenter(false);
     });
   }, [pickCenter]);
+
+  const startInertia = useCallback(
+    (track: HTMLDivElement, initialVelocity: number) => {
+      window.cancelAnimationFrame(inertiaFrameRef.current);
+      let velocity = Math.max(-2.8, Math.min(2.8, initialVelocity));
+      if (Math.abs(velocity) < 0.055) {
+        glidingRef.current = false;
+        setIsGliding(false);
+        window.requestAnimationFrame(() => pickCenter(true));
+        return;
+      }
+
+      glidingRef.current = true;
+      setIsGliding(true);
+      let previous = performance.now();
+
+      const glide = (now: number) => {
+        const dt = Math.min(now - previous, 32);
+        previous = now;
+        const before = track.scrollLeft;
+        track.scrollLeft = before + velocity * dt;
+        const travelled = Math.abs(track.scrollLeft - before);
+        updateCenterFromScroll();
+
+        velocity *= Math.pow(0.918, dt / 16.67);
+        if (travelled > 0.05 && Math.abs(velocity) > 0.022) {
+          inertiaFrameRef.current = window.requestAnimationFrame(glide);
+          return;
+        }
+
+        inertiaFrameRef.current = 0;
+        glidingRef.current = false;
+        setIsGliding(false);
+        window.requestAnimationFrame(() => pickCenter(true));
+      };
+
+      inertiaFrameRef.current = window.requestAnimationFrame(glide);
+    },
+    [pickCenter, updateCenterFromScroll],
+  );
 
   const finishDrag = useCallback(
     (track: HTMLDivElement, pointerId: number) => {
@@ -258,9 +305,12 @@ function ColorRoulette({
       window.setTimeout(() => {
         blockClickRef.current = false;
       }, 80);
-      window.requestAnimationFrame(() => pickCenter(true));
+      const idleFor = Math.max(0, performance.now() - dragRef.current.lastAt);
+      const releaseVelocity = dragRef.current.velocity * Math.exp(-idleFor / 90);
+      if (moved) startInertia(track, releaseVelocity);
+      else window.requestAnimationFrame(() => pickCenter(true));
     },
-    [draggable, pickCenter],
+    [draggable, pickCenter, startInertia],
   );
 
   return (
@@ -276,6 +326,7 @@ function ColorRoulette({
             "menu-show-roulette-track",
             draggable && "is-draggable",
             isDragging && "is-dragging",
+            isGliding && "is-gliding",
           )}
           role="listbox"
           aria-label={label}
@@ -285,10 +336,12 @@ function ColorRoulette({
             if (draggable) updateCenterFromScroll();
             window.clearTimeout(settleRef.current);
             if (!draggingRef.current) {
-              settleRef.current = window.setTimeout(
-                () => pickCenter(true),
-                draggable ? 120 : 80,
-              );
+              if (!glidingRef.current) {
+                settleRef.current = window.setTimeout(
+                  () => pickCenter(true),
+                  draggable ? 120 : 80,
+                );
+              }
             }
           }}
           onPointerDown={(event) => {
@@ -296,11 +349,19 @@ function ColorRoulette({
             if (event.pointerType === "mouse" && event.button !== 0) return;
             const track = event.currentTarget;
             window.clearTimeout(settleRef.current);
+            window.cancelAnimationFrame(inertiaFrameRef.current);
+            inertiaFrameRef.current = 0;
+            glidingRef.current = false;
+            setIsGliding(false);
             ignoreScrollRef.current = false;
+            const now = performance.now();
             dragRef.current = {
               pointerId: event.pointerId,
               startX: event.clientX,
               startScrollLeft: track.scrollLeft,
+              lastX: event.clientX,
+              lastAt: now,
+              velocity: 0,
               moved: false,
             };
             draggingRef.current = true;
@@ -312,6 +373,13 @@ function ColorRoulette({
             const delta = event.clientX - dragRef.current.startX;
             if (!dragRef.current.moved && Math.abs(delta) < 3) return;
             dragRef.current.moved = true;
+            const now = performance.now();
+            const elapsed = Math.max(now - dragRef.current.lastAt, 1);
+            const instantaneous = -(event.clientX - dragRef.current.lastX) / elapsed;
+            dragRef.current.velocity =
+              dragRef.current.velocity * 0.58 + instantaneous * 0.42;
+            dragRef.current.lastX = event.clientX;
+            dragRef.current.lastAt = now;
             event.currentTarget.scrollLeft = dragRef.current.startScrollLeft - delta;
             updateCenterFromScroll();
           }}
@@ -345,6 +413,10 @@ function ColorRoulette({
                     event.preventDefault();
                     return;
                   }
+                  window.cancelAnimationFrame(inertiaFrameRef.current);
+                  inertiaFrameRef.current = 0;
+                  glidingRef.current = false;
+                  setIsGliding(false);
                   onChange(swatch.value);
                   const index = options.findIndex((item) => item.value === swatch.value);
                   if (index >= 0) centerOnIndex(index, "smooth");

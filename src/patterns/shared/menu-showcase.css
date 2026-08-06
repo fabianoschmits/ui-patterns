@@ -208,7 +208,8 @@
   touch-action: pan-y;
 }
 
-.menu-show-roulette-track.is-dragging {
+.menu-show-roulette-track.is-dragging,
+.menu-show-roulette-track.is-gliding {
   cursor: grabbing;
   scroll-behavior: auto;
   scroll-snap-type: none;

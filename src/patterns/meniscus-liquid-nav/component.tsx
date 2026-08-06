@@ -29,6 +29,7 @@ type Mode = "public" | "logged";
 type Orientation = "horizontal" | "vertical";
 type Side = "left" | "right";
 type LayerVariant = "classic" | "collection";
+type SelectionLayer = "main" | "collection";
 
 const gooey = {
   type: "spring" as const,
@@ -234,10 +235,14 @@ export default function MeniscusLiquidNav(_props: PatternPreviewProps) {
   const clipRef = useRef<SVGPathElement>(null);
   const beadRef = useRef<HTMLSpanElement>(null);
   const tabRefs = useRef<(HTMLButtonElement | null)[]>([]);
+  const collectionRef = useRef<HTMLDivElement>(null);
+  const collectionItemRefs = useRef<(HTMLButtonElement | null)[]>([]);
   const currentRef = useRef(0);
   const actionsRef = useRef(loggedActions);
   const orientationRef = useRef<Orientation>("horizontal");
   const sideRef = useRef<Side>("left");
+  const collectionActiveRef = useRef("favorites");
+  const selectionLayerRef = useRef<SelectionLayer>("main");
 
   const [mode, setMode] = useState<Mode>("logged");
   const [orientation, setOrientation] = useState<Orientation>("horizontal");
@@ -247,6 +252,7 @@ export default function MeniscusLiquidNav(_props: PatternPreviewProps) {
   const [layerVariant, setLayerVariant] = useState<LayerVariant>("classic");
   const [collectionOpen, setCollectionOpen] = useState(false);
   const [collectionActive, setCollectionActive] = useState("favorites");
+  const [selectionLayer, setSelectionLayer] = useState<SelectionLayer>("main");
   const [ready, setReady] = useState(false);
   const [box, setBox] = useState({ w: 400, h: 48 });
   const [accent, setAccent] = useState(MENU_ACCENTS[0].value);
@@ -255,11 +261,17 @@ export default function MeniscusLiquidNav(_props: PatternPreviewProps) {
   actionsRef.current = actions;
   orientationRef.current = orientation;
   sideRef.current = side;
+  collectionActiveRef.current = collectionActive;
+  selectionLayerRef.current = selectionLayer;
   const isVertical = orientation === "vertical";
   const isCollapsed = isVertical && !expanded;
   const isRight = isVertical && side === "right";
   const hasCollection = layerVariant === "collection";
   const active = actions[current] ?? actions[0];
+  const activeLabel =
+    selectionLayer === "collection"
+      ? collectionActions.find((action) => action.id === collectionActive)?.label ?? "Favoritos"
+      : active.label;
 
   const physics = useRef({
     x: 0,
@@ -288,7 +300,7 @@ export default function MeniscusLiquidNav(_props: PatternPreviewProps) {
     const fill = fillRef.current;
     const bead = beadRef.current;
     const root = rootRef.current;
-    if (!fill || !bead || !root || G.W < 40) return;
+    if (!fill || !root || G.W < 40) return;
 
     const vertical = orientationRef.current === "vertical";
     const onRight = vertical && sideRef.current === "right";
@@ -317,17 +329,27 @@ export default function MeniscusLiquidNav(_props: PatternPreviewProps) {
           : troughLeft(G.W, G.H, G.R, G.x, bx, G.RB, sA, sB),
       );
       const sy = 1 + 0.07 * mag;
-      bead.style.transform = `translate3d(0,${G.x.toFixed(2)}px,0) scale(${(1 / sy).toFixed(3)},${sy.toFixed(3)})`;
+      if (bead) {
+        bead.style.translate = `0 ${G.x.toFixed(2)}px`;
+        bead.style.scale = `${(1 / sy).toFixed(3)} ${sy.toFixed(3)}`;
+      }
     } else {
       applyShape(troughTop(G.W, G.H, G.R, G.x, G.CY, G.RB, sA, sB));
       const sx = 1 + 0.07 * mag;
-      bead.style.transform = `translate3d(${G.x.toFixed(2)}px,0,0) scale(${sx.toFixed(3)},${(1 / sx).toFixed(3)})`;
+      if (bead) {
+        bead.style.translate = `${G.x.toFixed(2)}px 0`;
+        bead.style.scale = `${sx.toFixed(3)} ${(1 / sx).toFixed(3)}`;
+      }
     }
 
     tabRefs.current.forEach((tab, i) => {
       if (!tab) return;
       const dx = Math.abs(G.x - (G.slots[i] ?? 0));
-      tab.style.setProperty("--t", smooth(clamp(1 - dx / (G.span * 0.55), 0, 1)).toFixed(3));
+      const influence =
+        selectionLayerRef.current === "main"
+          ? smooth(clamp(1 - dx / (G.span * 0.55), 0, 1))
+          : 0;
+      tab.style.setProperty("--t", influence.toFixed(3));
     });
   }, []);
 
@@ -440,6 +462,8 @@ export default function MeniscusLiquidNav(_props: PatternPreviewProps) {
     (i: number, { focus = false, animate = true } = {}) => {
       const len = actionsRef.current.length;
       const next = ((i % len) + len) % len;
+      selectionLayerRef.current = "main";
+      setSelectionLayer("main");
       currentRef.current = next;
       setCurrent(next);
       const G = physics.current;
@@ -487,7 +511,7 @@ export default function MeniscusLiquidNav(_props: PatternPreviewProps) {
 
   useEffect(() => {
     paint();
-  }, [accent, paint]);
+  }, [accent, paint, selectionLayer]);
 
   useEffect(() => {
     const dock = dockRef.current;
@@ -499,6 +523,10 @@ export default function MeniscusLiquidNav(_props: PatternPreviewProps) {
 
     const onDown = (e: PointerEvent) => {
       if (e.button !== 0 && e.pointerType === "mouse") return;
+      if (selectionLayerRef.current !== "main") {
+        selectionLayerRef.current = "main";
+        setSelectionLayer("main");
+      }
       pid = e.pointerId;
       start = orientationRef.current === "vertical" ? e.clientY : e.clientX;
       capturing = false;
@@ -565,6 +593,105 @@ export default function MeniscusLiquidNav(_props: PatternPreviewProps) {
     };
   }, [run, select, mode, orientation]);
 
+  useEffect(() => {
+    const tray = collectionRef.current;
+    if (!tray || !collectionOpen) return;
+
+    let pointerId: number | null = null;
+    let start = 0;
+    let capturing = false;
+    let moved = false;
+
+    const nearestId = (clientX: number, clientY: number) => {
+      const vertical = orientationRef.current === "vertical";
+      let best = collectionActions[0].id;
+      let bestDistance = Infinity;
+      collectionItemRefs.current.forEach((element, index) => {
+        if (!element) return;
+        const rect = element.getBoundingClientRect();
+        const center = vertical
+          ? rect.top + rect.height / 2
+          : rect.left + rect.width / 2;
+        const pointer = vertical ? clientY : clientX;
+        const distance = Math.abs(pointer - center);
+        if (distance < bestDistance) {
+          bestDistance = distance;
+          best = collectionActions[index]?.id ?? best;
+        }
+      });
+      return best;
+    };
+
+    const onDown = (event: PointerEvent) => {
+      if (event.pointerType === "mouse" && event.button !== 0) return;
+      pointerId = event.pointerId;
+      start = orientationRef.current === "vertical" ? event.clientY : event.clientX;
+      capturing = false;
+      moved = false;
+    };
+
+    const onMove = (event: PointerEvent) => {
+      if (pointerId !== event.pointerId) return;
+      const position = orientationRef.current === "vertical" ? event.clientY : event.clientX;
+      if (!capturing) {
+        if (Math.abs(position - start) < 8) return;
+        capturing = true;
+        moved = true;
+        tray.setPointerCapture(event.pointerId);
+      }
+
+      const next = nearestId(event.clientX, event.clientY);
+      if (next !== collectionActiveRef.current || selectionLayerRef.current !== "collection") {
+        collectionActiveRef.current = next;
+        selectionLayerRef.current = "collection";
+        setCollectionActive(next);
+        setSelectionLayer("collection");
+      }
+    };
+
+    const onUp = (event: PointerEvent) => {
+      if (pointerId !== event.pointerId) return;
+      pointerId = null;
+      if (!moved) return;
+      const next = nearestId(event.clientX, event.clientY);
+      setCollectionActive(next);
+      setSelectionLayer("collection");
+
+      const blockClick = (clickEvent: Event) => {
+        clickEvent.preventDefault();
+        clickEvent.stopPropagation();
+        tray.removeEventListener("click", blockClick, true);
+      };
+      tray.addEventListener("click", blockClick, true);
+    };
+
+    tray.addEventListener("pointerdown", onDown);
+    tray.addEventListener("pointermove", onMove);
+    tray.addEventListener("pointerup", onUp);
+    tray.addEventListener("pointercancel", onUp);
+    return () => {
+      tray.removeEventListener("pointerdown", onDown);
+      tray.removeEventListener("pointermove", onMove);
+      tray.removeEventListener("pointerup", onUp);
+      tray.removeEventListener("pointercancel", onUp);
+    };
+  }, [collectionOpen, orientation, expanded, side]);
+
+  useEffect(() => {
+    if (!collectionOpen) return;
+
+    const closeOutside = (event: PointerEvent) => {
+      const target = event.target;
+      if (target instanceof Node && rootRef.current?.contains(target)) return;
+      selectionLayerRef.current = "main";
+      setSelectionLayer("main");
+      setCollectionOpen(false);
+    };
+
+    document.addEventListener("pointerdown", closeOutside, true);
+    return () => document.removeEventListener("pointerdown", closeOutside, true);
+  }, [collectionOpen]);
+
   const onKeyDown = (e: React.KeyboardEvent) => {
     const step = ({ ArrowRight: 1, ArrowDown: 1, ArrowLeft: -1, ArrowUp: -1 } as Record<string, number>)[e.key];
     let next: number | null = null;
@@ -592,7 +719,7 @@ export default function MeniscusLiquidNav(_props: PatternPreviewProps) {
         collectionOpen && "is-collection-open",
       )}
       eyebrow="Meniscus"
-      title={active.label}
+      title={activeLabel}
       description={
         isVertical
           ? "Variante lateral — a gota desliza no menisco da lateral."
@@ -610,6 +737,7 @@ export default function MeniscusLiquidNav(_props: PatternPreviewProps) {
         setMode(id as Mode);
         setCurrent(0);
         currentRef.current = 0;
+        setSelectionLayer("main");
       }}
       variants={[
         { id: "horizontal", label: "Inferior" },
@@ -629,6 +757,7 @@ export default function MeniscusLiquidNav(_props: PatternPreviewProps) {
               onClick={() => {
                 setLayerVariant("classic");
                 setCollectionOpen(false);
+                setSelectionLayer("main");
               }}
             >
               Clássico
@@ -708,6 +837,7 @@ export default function MeniscusLiquidNav(_props: PatternPreviewProps) {
                       isCollapsed && "is-collapsed",
                       isRight && "is-right",
                     )}
+                    ref={collectionRef}
                     initial={
                       isVertical
                         ? { opacity: 0, x: isRight ? 28 : -28, scaleX: 0.82 }
@@ -722,33 +852,52 @@ export default function MeniscusLiquidNav(_props: PatternPreviewProps) {
                     transition={gooey}
                     aria-label="Atalhos da coleção Meniscus"
                   >
-                    <span className="meniscus-collection-glass" aria-hidden="true" />
+                    <span className="meniscus-collection-glass" aria-hidden="true">
+                      <span className="meniscus-glass-base" />
+                      <span className="meniscus-glass-tint" />
+                      <span className="meniscus-glass-sheen" />
+                      <span className="meniscus-glass-rim" />
+                    </span>
                     <div className="meniscus-collection-items">
-                      {collectionActions.map((action) => {
+                      {collectionActions.map((action, index) => {
                         const Icon = action.Icon;
-                        const selected = collectionActive === action.id;
+                        const selected =
+                          selectionLayer === "collection" && collectionActive === action.id;
                         return (
                           <motion.button
                             layout
                             key={action.id}
+                            ref={(element) => {
+                              collectionItemRefs.current[index] = element;
+                            }}
                             type="button"
                             className={cn("meniscus-collection-item", selected && "is-active")}
                             aria-label={action.label}
                             aria-current={selected ? "page" : undefined}
                             title={isCollapsed ? action.label : undefined}
-                            onClick={() => setCollectionActive(action.id)}
+                            onClick={() => {
+                              setCollectionActive(action.id);
+                              setSelectionLayer("collection");
+                            }}
                             whileTap={{ scale: 0.9 }}
                             transition={gooey}
                           >
-                            {selected ? (
-                              <motion.span
-                                layoutId="meniscus-collection-pill"
-                                className="meniscus-collection-pill"
-                                transition={pillSpring}
-                                aria-hidden="true"
-                              />
-                            ) : null}
-                            <Icon className="meniscus-collection-icon" strokeWidth={1.8} />
+                            <span className="meniscus-collection-icon-slot">
+                              <AnimatePresence>
+                                {selected ? (
+                                  <motion.span
+                                    layoutId="meniscus-active-bead"
+                                    className="meniscus-bead meniscus-collection-bead"
+                                    initial={{ opacity: 0, scale: 0.7 }}
+                                    animate={{ opacity: 1, scale: 1 }}
+                                    exit={{ opacity: 0, scale: 0.7 }}
+                                    transition={pillSpring}
+                                    aria-hidden="true"
+                                  />
+                                ) : null}
+                              </AnimatePresence>
+                              <Icon className="meniscus-collection-icon" strokeWidth={1.8} />
+                            </span>
                             {!isCollapsed ? (
                               <span className="meniscus-collection-label">{action.label}</span>
                             ) : null}
@@ -801,7 +950,17 @@ export default function MeniscusLiquidNav(_props: PatternPreviewProps) {
                 </defs>
                 <path ref={fillRef} className="meniscus-fill" d="" />
               </svg>
-              <span className="meniscus-bead" ref={beadRef} aria-hidden="true" />
+              <AnimatePresence>
+                {selectionLayer === "main" ? (
+                  <motion.span
+                    layoutId="meniscus-active-bead"
+                    className="meniscus-bead"
+                    ref={beadRef}
+                    transition={pillSpring}
+                    aria-hidden="true"
+                  />
+                ) : null}
+              </AnimatePresence>
 
               {hasCollection ? (
                 <motion.button
@@ -809,7 +968,12 @@ export default function MeniscusLiquidNav(_props: PatternPreviewProps) {
                   className="meniscus-collection-toggle"
                   aria-label={collectionOpen ? "Fechar coleção" : "Abrir coleção"}
                   aria-expanded={collectionOpen}
-                  onClick={() => setCollectionOpen((value) => !value)}
+                  onClick={() => {
+                    setCollectionOpen((value) => {
+                      if (value) setSelectionLayer("main");
+                      return !value;
+                    });
+                  }}
                   animate={{ opacity: 1 }}
                   transition={gooey}
                 >
@@ -838,8 +1002,8 @@ export default function MeniscusLiquidNav(_props: PatternPreviewProps) {
                       role="tab"
                       className="meniscus-tab"
                       aria-label={tab.label}
-                      aria-selected={current === i}
-                      tabIndex={current === i ? 0 : -1}
+                      aria-selected={selectionLayer === "main" && current === i}
+                      tabIndex={selectionLayer === "main" && current === i ? 0 : -1}
                       title={isCollapsed ? tab.label : undefined}
                       onClick={onTabClick(i)}
                       transition={gooey}
