@@ -173,6 +173,7 @@ export default function QuickActionMenuDemo(_props: PatternPreviewProps) {
       }
       accent={accent}
       onAccentChange={setAccent}
+      draggableRoulette
       modes={[
         { id: "public", label: "Público" },
         { id: "logged", label: "Logado" },

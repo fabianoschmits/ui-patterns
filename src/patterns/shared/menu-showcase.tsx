@@ -94,6 +94,7 @@ interface MenuShowcaseProps {
   onSurfaceChange?: (value: string) => void;
   surfaces?: AccentSwatch[];
   showSurfaceColors?: boolean;
+  draggableRoulette?: boolean;
   modes?: MenuModeOption[];
   mode?: string;
   onModeChange?: (id: string) => void;
@@ -138,16 +139,28 @@ function ColorRoulette({
   options,
   value,
   onChange,
+  draggable = false,
 }: {
   label: string;
   options: AccentSwatch[];
   value: string;
   onChange: (value: string) => void;
+  draggable?: boolean;
 }) {
   const trackRef = useRef<HTMLDivElement>(null);
   const settleRef = useRef(0);
+  const scrollFrameRef = useRef(0);
+  const ignoreTimerRef = useRef(0);
   const ignoreScrollRef = useRef(false);
   const draggingRef = useRef(false);
+  const blockClickRef = useRef(false);
+  const dragRef = useRef({
+    pointerId: -1,
+    startX: 0,
+    startScrollLeft: 0,
+    moved: false,
+  });
+  const [isDragging, setIsDragging] = useState(false);
   const labelId = label.replace(/\s+/g, "-").toLowerCase();
 
   const selectedIndex = Math.max(
@@ -169,7 +182,8 @@ function ColorRoulette({
       if (Math.abs(delta) < 1) return;
       ignoreScrollRef.current = true;
       track.scrollBy({ left: delta, behavior });
-      window.setTimeout(
+      window.clearTimeout(ignoreTimerRef.current);
+      ignoreTimerRef.current = window.setTimeout(
         () => {
           ignoreScrollRef.current = false;
         },
@@ -215,6 +229,40 @@ function ColorRoulette({
     centerOnIndex(selectedIndex, "smooth");
   }, [centerOnIndex, selectedIndex]);
 
+  useEffect(() => {
+    return () => {
+      window.clearTimeout(settleRef.current);
+      window.clearTimeout(ignoreTimerRef.current);
+      window.cancelAnimationFrame(scrollFrameRef.current);
+    };
+  }, []);
+
+  const updateCenterFromScroll = useCallback(() => {
+    window.cancelAnimationFrame(scrollFrameRef.current);
+    scrollFrameRef.current = window.requestAnimationFrame(() => {
+      pickCenter(false);
+    });
+  }, [pickCenter]);
+
+  const finishDrag = useCallback(
+    (track: HTMLDivElement, pointerId: number) => {
+      if (!draggable || dragRef.current.pointerId !== pointerId) return;
+      const moved = dragRef.current.moved;
+      if (track.hasPointerCapture(pointerId)) {
+        track.releasePointerCapture(pointerId);
+      }
+      dragRef.current.pointerId = -1;
+      draggingRef.current = false;
+      setIsDragging(false);
+      blockClickRef.current = moved;
+      window.setTimeout(() => {
+        blockClickRef.current = false;
+      }, 80);
+      window.requestAnimationFrame(() => pickCenter(true));
+    },
+    [draggable, pickCenter],
+  );
+
   return (
     <div className="menu-show-roulette">
       <span className="menu-show-swatch-label">{label}</span>
@@ -224,29 +272,54 @@ function ColorRoulette({
         <div className="menu-show-roulette-lens" aria-hidden="true" />
         <div
           ref={trackRef}
-          className="menu-show-roulette-track"
+          className={cn(
+            "menu-show-roulette-track",
+            draggable && "is-draggable",
+            isDragging && "is-dragging",
+          )}
           role="listbox"
           aria-label={label}
           aria-activedescendant={`swatch-${labelId}-${value}`}
           onScroll={() => {
-            if (ignoreScrollRef.current || draggingRef.current) return;
+            if (ignoreScrollRef.current) return;
+            if (draggable) updateCenterFromScroll();
             window.clearTimeout(settleRef.current);
-            settleRef.current = window.setTimeout(() => pickCenter(true), 80);
+            if (!draggingRef.current) {
+              settleRef.current = window.setTimeout(
+                () => pickCenter(true),
+                draggable ? 120 : 80,
+              );
+            }
           }}
-          onPointerDown={() => {
+          onPointerDown={(event) => {
+            if (!draggable) return;
+            if (event.pointerType === "mouse" && event.button !== 0) return;
+            const track = event.currentTarget;
+            window.clearTimeout(settleRef.current);
+            ignoreScrollRef.current = false;
+            dragRef.current = {
+              pointerId: event.pointerId,
+              startX: event.clientX,
+              startScrollLeft: track.scrollLeft,
+              moved: false,
+            };
             draggingRef.current = true;
+            setIsDragging(true);
+            track.setPointerCapture(event.pointerId);
           }}
-          onPointerUp={() => {
-            draggingRef.current = false;
-            window.setTimeout(() => pickCenter(true), 40);
+          onPointerMove={(event) => {
+            if (!draggable || dragRef.current.pointerId !== event.pointerId) return;
+            const delta = event.clientX - dragRef.current.startX;
+            if (!dragRef.current.moved && Math.abs(delta) < 3) return;
+            dragRef.current.moved = true;
+            event.currentTarget.scrollLeft = dragRef.current.startScrollLeft - delta;
+            updateCenterFromScroll();
           }}
-          onPointerCancel={() => {
-            draggingRef.current = false;
-            window.setTimeout(() => pickCenter(true), 40);
+          onPointerUp={(event) => {
+            finishDrag(event.currentTarget, event.pointerId);
           }}
-          onTouchEnd={() => {
-            draggingRef.current = false;
-            window.setTimeout(() => pickCenter(true), 40);
+          onPointerCancel={(event) => {
+            finishDrag(event.currentTarget, event.pointerId);
           }}
         >
           {options.map((swatch) => {
@@ -267,7 +340,11 @@ function ColorRoulette({
                   selected && "is-selected",
                 )}
                 style={isAuto ? undefined : { background: swatch.value }}
-                onClick={() => {
+                onClick={(event) => {
+                  if (blockClickRef.current) {
+                    event.preventDefault();
+                    return;
+                  }
                   onChange(swatch.value);
                   const index = options.findIndex((item) => item.value === swatch.value);
                   if (index >= 0) centerOnIndex(index, "smooth");
@@ -292,6 +369,7 @@ export function MenuShowcase({
   onSurfaceChange,
   surfaces = MENU_SURFACES,
   showSurfaceColors = true,
+  draggableRoulette = false,
   modes,
   mode,
   onModeChange,
@@ -367,6 +445,7 @@ export function MenuShowcase({
             options={accents}
             value={accent}
             onChange={onAccentChange}
+            draggable={draggableRoulette}
           />
 
           {showSurfaceColors ? (
@@ -375,6 +454,7 @@ export function MenuShowcase({
               options={surfaces}
               value={surfaceValue}
               onChange={handleSurfaceChange}
+              draggable={draggableRoulette}
             />
           ) : null}
         </div>

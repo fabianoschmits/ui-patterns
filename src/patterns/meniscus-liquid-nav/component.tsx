@@ -580,6 +580,7 @@ export default function MeniscusLiquidNav(_props: PatternPreviewProps) {
       }
       accent={accent}
       onAccentChange={setAccent}
+      draggableRoulette
       modes={[
         { id: "public", label: "Público" },
         { id: "logged", label: "Logado" },

@@ -204,6 +204,16 @@
   cursor: grabbing;
 }
 
+.menu-show-roulette-track.is-draggable {
+  touch-action: pan-y;
+}
+
+.menu-show-roulette-track.is-dragging {
+  cursor: grabbing;
+  scroll-behavior: auto;
+  scroll-snap-type: none;
+}
+
 .menu-show-roulette-lens {
   position: absolute;
   top: 50%;
