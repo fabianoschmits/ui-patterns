@@ -442,15 +442,24 @@ export default function QuickActionMenuDemo(_props: PatternPreviewProps) {
                           transition={gooey}
                         >
                           <span className="qam-collection-icon-slot">
-                            {selected ? (
-                              <motion.span
-                                layoutId="qam-active-pill"
-                                className="qam-active-pill qam-collection-active-pill"
-                                transition={pillSpring}
-                                aria-hidden="true"
+                            <motion.span
+                              className="qam-collection-icon-wrap"
+                              animate={isVertical ? { x: 0, y: 0 } : { y: selected ? -14 : 0 }}
+                              transition={gooey}
+                            >
+                              {selected ? (
+                                <motion.span
+                                  layoutId="qam-active-pill"
+                                  className="qam-active-pill qam-collection-active-pill"
+                                  initial={false}
+                                  transition={pillSpring}
+                                  aria-hidden="true"
+                                />
+                              ) : null}
+                              <Icon
+                                className={cn("qam-collection-icon", selected && "is-active")}
                               />
-                            ) : null}
-                            <Icon className="qam-collection-icon" />
+                            </motion.span>
                           </span>
                           {!isCollapsed ? (
                             <span className="qam-collection-label">{action.label}</span>

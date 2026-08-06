@@ -196,6 +196,18 @@ html[data-theme="dark"] .qam-show {
   height: 2rem;
   flex: none;
   place-items: center;
+  overflow: visible;
+}
+
+.qam-collection-icon-wrap {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  width: 2.75rem;
+  height: 2.75rem;
+  flex: none;
+  place-items: center;
+  will-change: transform;
 }
 
 .qam-collection-active-pill {
@@ -208,16 +220,23 @@ html[data-theme="dark"] .qam-show {
 
 .qam-collection-icon {
   position: relative;
-  z-index: 1;
-  width: 1rem;
-  height: 1rem;
+  z-index: 2;
+  width: 1.15rem;
+  height: 1.15rem;
   stroke-width: 1.8;
   transition: color 220ms ease, transform 300ms ease;
 }
 
 .qam-collection-item.is-active .qam-collection-icon {
   color: #fff;
-  transform: scale(1.06);
+  transform: scale(1.08);
+  stroke-width: 2.25;
+}
+
+.qam-collection.is-vertical .qam-collection-icon-slot,
+.qam-collection.is-vertical .qam-collection-icon-wrap {
+  width: 2.5rem;
+  height: 2.5rem;
 }
 
 .qam-collection-label {
