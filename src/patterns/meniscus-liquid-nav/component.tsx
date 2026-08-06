@@ -514,192 +514,153 @@ export default function MeniscusLiquidNav(_props: PatternPreviewProps) {
   }, [accent, paint, selectionLayer]);
 
   useEffect(() => {
+    const root = rootRef.current;
     const dock = dockRef.current;
-    if (!dock) return;
+    if (!root || !dock) return;
 
-    let pid: number | null = null;
-    let start = 0;
-    let lastPosition = 0;
-    let capturing = false;
-
-    const onDown = (e: PointerEvent) => {
-      if (e.button !== 0 && e.pointerType === "mouse") return;
-      if (selectionLayerRef.current !== "main") {
-        selectionLayerRef.current = "main";
-        setSelectionLayer("main");
-      }
-      pid = e.pointerId;
-      start = orientationRef.current === "vertical" ? e.clientY : e.clientX;
-      lastPosition = start;
-      capturing = false;
-      physics.current.dragging = false;
-      physics.current.moved = false;
-      dock.setPointerCapture(e.pointerId);
+    type DragTarget = {
+      layer: SelectionLayer;
+      id: string;
+      index: number;
+      distance: number;
     };
 
-    const onMove = (e: PointerEvent) => {
-      if (pid !== e.pointerId) return;
-      const vertical = orientationRef.current === "vertical";
-      const pos = vertical ? e.clientY : e.clientX;
-      lastPosition = pos;
-      if (!capturing) {
-        if (Math.abs(pos - start) < 8) return;
-        capturing = true;
-        physics.current.dragging = true;
-        physics.current.moved = true;
+    let pointerId: number | null = null;
+    let startX = 0;
+    let startY = 0;
+    let lastX = 0;
+    let lastY = 0;
+    let moved = false;
+
+    const nearestTarget = (clientX: number, clientY: number): DragTarget => {
+      let best: DragTarget = {
+        layer: "main",
+        id: actionsRef.current[0]?.id ?? "home",
+        index: 0,
+        distance: Infinity,
+      };
+
+      const consider = (
+        element: HTMLElement | null,
+        layer: SelectionLayer,
+        id: string | undefined,
+        index: number,
+      ) => {
+        if (!element || !id) return;
+        const rect = element.getBoundingClientRect();
+        const dx = clientX - (rect.left + rect.width / 2);
+        const dy = clientY - (rect.top + rect.height / 2);
+        const distance = Math.hypot(dx, dy);
+        if (distance < best.distance) best = { layer, id, index, distance };
+      };
+
+      tabRefs.current.forEach((element, index) => {
+        consider(element, "main", actionsRef.current[index]?.id, index);
+      });
+      if (collectionOpen) {
+        collectionItemRefs.current.forEach((element, index) => {
+          consider(element, "collection", collectionActions[index]?.id, index);
+        });
       }
-      const r = dock.getBoundingClientRect();
+      return best;
+    };
+
+    const applyDragTarget = (target: DragTarget, clientX: number, clientY: number) => {
       const G = physics.current;
+      if (target.layer === "collection") {
+        G.dragging = false;
+        if (
+          target.id !== collectionActiveRef.current ||
+          selectionLayerRef.current !== "collection"
+        ) {
+          collectionActiveRef.current = target.id;
+          selectionLayerRef.current = "collection";
+          setCollectionActive(target.id);
+          setSelectionLayer("collection");
+        }
+        return;
+      }
+
+      currentRef.current = target.index;
+      selectionLayerRef.current = "main";
+      setCurrent(target.index);
+      setSelectionLayer("main");
       if (!G.slots.length) return;
-      const local = vertical ? pos - r.top : pos - r.left;
+
+      const vertical = orientationRef.current === "vertical";
+      const rect = dock.getBoundingClientRect();
+      const local = vertical ? clientY - rect.top : clientX - rect.left;
+      G.dragging = true;
+      G.moved = true;
       G.target = clamp(local, G.slots[0], G.slots[G.slots.length - 1]);
       run();
     };
 
-    const onUp = (e: PointerEvent) => {
-      if (pid !== e.pointerId) return;
-      pid = null;
+    const finishTarget = (target: DragTarget) => {
       const G = physics.current;
-      const wasDrag = G.moved;
       G.dragging = false;
       G.moved = false;
-      if (!wasDrag) return;
-
-      const vertical = orientationRef.current === "vertical";
-      const rect = dock.getBoundingClientRect();
-      const pointer = e.type === "pointercancel"
-        ? lastPosition
-        : vertical
-          ? e.clientY
-          : e.clientX;
-      const release = pointer - (vertical ? rect.top : rect.left);
-      G.target = clamp(release, G.slots[0], G.slots[G.slots.length - 1]);
-
-      let near = 0;
-      let nd = Infinity;
-      G.slots.forEach((s, i) => {
-        const d = Math.abs(G.target - s);
-        if (d < nd) {
-          nd = d;
-          near = i;
-        }
-      });
-      select(near, { animate: true });
-
-      const block = (ev: Event) => {
-        ev.preventDefault();
-        ev.stopPropagation();
-        dock.removeEventListener("click", block, true);
-      };
-      dock.addEventListener("click", block, true);
-    };
-
-    dock.addEventListener("pointerdown", onDown);
-    dock.addEventListener("pointermove", onMove);
-    dock.addEventListener("pointerup", onUp);
-    dock.addEventListener("pointercancel", onUp);
-    return () => {
-      dock.removeEventListener("pointerdown", onDown);
-      dock.removeEventListener("pointermove", onMove);
-      dock.removeEventListener("pointerup", onUp);
-      dock.removeEventListener("pointercancel", onUp);
-    };
-  }, [run, select, mode, orientation]);
-
-  useEffect(() => {
-    const tray = collectionRef.current;
-    if (!tray || !collectionOpen) return;
-
-    let pointerId: number | null = null;
-    let start = 0;
-    let lastClientX = 0;
-    let lastClientY = 0;
-    let capturing = false;
-    let moved = false;
-
-    const nearestId = (clientX: number, clientY: number) => {
-      const vertical = orientationRef.current === "vertical";
-      let best = collectionActions[0].id;
-      let bestDistance = Infinity;
-      collectionItemRefs.current.forEach((element, index) => {
-        if (!element) return;
-        const rect = element.getBoundingClientRect();
-        const center = vertical
-          ? rect.top + rect.height / 2
-          : rect.left + rect.width / 2;
-        const pointer = vertical ? clientY : clientX;
-        const distance = Math.abs(pointer - center);
-        if (distance < bestDistance) {
-          bestDistance = distance;
-          best = collectionActions[index]?.id ?? best;
-        }
-      });
-      return best;
+      if (target.layer === "main") {
+        select(target.index, { animate: true });
+        return;
+      }
+      collectionActiveRef.current = target.id;
+      selectionLayerRef.current = "collection";
+      setCollectionActive(target.id);
+      setSelectionLayer("collection");
     };
 
     const onDown = (event: PointerEvent) => {
       if (event.pointerType === "mouse" && event.button !== 0) return;
       pointerId = event.pointerId;
-      start = orientationRef.current === "vertical" ? event.clientY : event.clientX;
-      lastClientX = event.clientX;
-      lastClientY = event.clientY;
-      capturing = false;
+      startX = lastX = event.clientX;
+      startY = lastY = event.clientY;
       moved = false;
-      tray.setPointerCapture(event.pointerId);
+      physics.current.dragging = false;
+      physics.current.moved = false;
+      root.setPointerCapture(event.pointerId);
     };
 
     const onMove = (event: PointerEvent) => {
       if (pointerId !== event.pointerId) return;
-      lastClientX = event.clientX;
-      lastClientY = event.clientY;
-      const position = orientationRef.current === "vertical" ? event.clientY : event.clientX;
-      if (!capturing) {
-        if (Math.abs(position - start) < 8) return;
-        capturing = true;
+      lastX = event.clientX;
+      lastY = event.clientY;
+      if (!moved) {
+        if (Math.hypot(lastX - startX, lastY - startY) < 7) return;
         moved = true;
       }
-
-      const next = nearestId(event.clientX, event.clientY);
-      if (next !== collectionActiveRef.current || selectionLayerRef.current !== "collection") {
-        collectionActiveRef.current = next;
-        selectionLayerRef.current = "collection";
-        setCollectionActive(next);
-        setSelectionLayer("collection");
-      }
+      event.preventDefault();
+      applyDragTarget(nearestTarget(lastX, lastY), lastX, lastY);
     };
 
     const onUp = (event: PointerEvent) => {
       if (pointerId !== event.pointerId) return;
       pointerId = null;
       if (!moved) return;
-      const next = nearestId(
-        event.type === "pointercancel" ? lastClientX : event.clientX,
-        event.type === "pointercancel" ? lastClientY : event.clientY,
-      );
-      collectionActiveRef.current = next;
-      selectionLayerRef.current = "collection";
-      setCollectionActive(next);
-      setSelectionLayer("collection");
+
+      const clientX = event.type === "pointercancel" ? lastX : event.clientX;
+      const clientY = event.type === "pointercancel" ? lastY : event.clientY;
+      finishTarget(nearestTarget(clientX, clientY));
 
       const blockClick = (clickEvent: Event) => {
         clickEvent.preventDefault();
         clickEvent.stopPropagation();
-        tray.removeEventListener("click", blockClick, true);
       };
-      tray.addEventListener("click", blockClick, true);
+      root.addEventListener("click", blockClick, true);
+      window.setTimeout(() => root.removeEventListener("click", blockClick, true), 0);
     };
 
-    tray.addEventListener("pointerdown", onDown);
-    tray.addEventListener("pointermove", onMove);
-    tray.addEventListener("pointerup", onUp);
-    tray.addEventListener("pointercancel", onUp);
+    root.addEventListener("pointerdown", onDown);
+    root.addEventListener("pointermove", onMove);
+    root.addEventListener("pointerup", onUp);
+    root.addEventListener("pointercancel", onUp);
     return () => {
-      tray.removeEventListener("pointerdown", onDown);
-      tray.removeEventListener("pointermove", onMove);
-      tray.removeEventListener("pointerup", onUp);
-      tray.removeEventListener("pointercancel", onUp);
+      root.removeEventListener("pointerdown", onDown);
+      root.removeEventListener("pointermove", onMove);
+      root.removeEventListener("pointerup", onUp);
+      root.removeEventListener("pointercancel", onUp);
     };
-  }, [collectionOpen, orientation, expanded, side]);
+  }, [collectionOpen, expanded, mode, orientation, run, select, side]);
 
   useEffect(() => {
     if (!collectionOpen) return;

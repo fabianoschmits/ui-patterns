@@ -54,6 +54,9 @@
   padding: 0.35rem 0.45rem 0.72rem;
   color: var(--ink);
   transform-origin: 50% 100%;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
 }
 
 .meniscus-collection.is-vertical {
@@ -337,6 +340,8 @@ html[data-theme="dark"] .meniscus-collection-curve {
   background: transparent;
   color: var(--ink);
   font-family: var(--font-ui);
+  touch-action: none;
+  -webkit-tap-highlight-color: transparent;
 }
 
 html[data-theme="dark"] .meniscus-show .meniscus {

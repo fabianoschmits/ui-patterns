@@ -110,170 +110,120 @@ export default function QuickActionMenuDemo(_props: PatternPreviewProps) {
   const hasCollection = layerVariant === "collection";
 
   useEffect(() => {
-    const bar = barRef.current;
-    if (!bar) return;
+    const stack = stackRef.current;
+    if (!stack) return;
 
-    let pid: number | null = null;
-    let start = 0;
-    let capturing = false;
+    type DragTarget = { layer: SelectionLayer; id: string; distance: number };
+
+    let pointerId: number | null = null;
+    let startX = 0;
+    let startY = 0;
+    let lastX = 0;
+    let lastY = 0;
     let moved = false;
 
-    const nearestId = (clientX: number, clientY: number) => {
-      const vertical = orientationRef.current === "vertical";
-      let best = actionsRef.current[0]?.id ?? "home";
-      let bestDist = Infinity;
-      itemRefs.current.forEach((el, index) => {
-        if (!el) return;
-        const rect = el.getBoundingClientRect();
-        const cx = rect.left + rect.width / 2;
-        const cy = rect.top + rect.height / 2;
-        const dist = vertical
-          ? Math.abs(clientY - cy)
-          : Math.abs(clientX - cx);
-        if (dist < bestDist) {
-          bestDist = dist;
-          best = actionsRef.current[index]?.id ?? best;
-        }
+    const nearestTarget = (clientX: number, clientY: number): DragTarget => {
+      let best: DragTarget = {
+        layer: "main",
+        id: actionsRef.current[0]?.id ?? "home",
+        distance: Infinity,
+      };
+
+      const consider = (
+        element: HTMLElement | null,
+        layer: SelectionLayer,
+        id: string | undefined,
+      ) => {
+        if (!element || !id) return;
+        const rect = element.getBoundingClientRect();
+        const dx = clientX - (rect.left + rect.width / 2);
+        const dy = clientY - (rect.top + rect.height / 2);
+        const distance = Math.hypot(dx, dy);
+        if (distance < best.distance) best = { layer, id, distance };
+      };
+
+      itemRefs.current.forEach((element, index) => {
+        consider(element, "main", actionsRef.current[index]?.id);
       });
+      if (collectionOpen) {
+        collectionItemRefs.current.forEach((element, index) => {
+          consider(element, "collection", collectionActions[index]?.id);
+        });
+      }
       return best;
     };
 
-    const onDown = (e: PointerEvent) => {
-      if (e.button !== 0 && e.pointerType === "mouse") return;
-      pid = e.pointerId;
-      start = orientationRef.current === "vertical" ? e.clientY : e.clientX;
-      capturing = false;
-      moved = false;
-    };
-
-    const onMove = (e: PointerEvent) => {
-      if (pid !== e.pointerId) return;
-      const pos = orientationRef.current === "vertical" ? e.clientY : e.clientX;
-      if (!capturing) {
-        if (Math.abs(pos - start) < 8) return;
-        capturing = true;
-        moved = true;
-        bar.setPointerCapture(e.pointerId);
+    const applyTarget = (target: DragTarget) => {
+      if (target.layer === "collection") {
+        if (
+          target.id !== collectionActiveRef.current ||
+          selectionLayerRef.current !== "collection"
+        ) {
+          collectionActiveRef.current = target.id;
+          selectionLayerRef.current = "collection";
+          setCollectionActive(target.id);
+          setSelectionLayer("collection");
+        }
+        return;
       }
-      const next = nearestId(e.clientX, e.clientY);
-      if (next !== activeRef.current || selectionLayerRef.current !== "main") {
-        activeRef.current = next;
+
+      if (target.id !== activeRef.current || selectionLayerRef.current !== "main") {
+        activeRef.current = target.id;
         selectionLayerRef.current = "main";
-        setActive(next);
+        setActive(target.id);
         setSelectionLayer("main");
       }
     };
 
-    const onUp = (e: PointerEvent) => {
-      if (pid !== e.pointerId) return;
-      pid = null;
-      if (!moved) return;
-      const next = nearestId(e.clientX, e.clientY);
-      setActive(next);
-      setSelectionLayer("main");
-
-      const block = (ev: Event) => {
-        ev.preventDefault();
-        ev.stopPropagation();
-        bar.removeEventListener("click", block, true);
-      };
-      bar.addEventListener("click", block, true);
-    };
-
-    bar.addEventListener("pointerdown", onDown);
-    bar.addEventListener("pointermove", onMove);
-    bar.addEventListener("pointerup", onUp);
-    bar.addEventListener("pointercancel", onUp);
-    return () => {
-      bar.removeEventListener("pointerdown", onDown);
-      bar.removeEventListener("pointermove", onMove);
-      bar.removeEventListener("pointerup", onUp);
-      bar.removeEventListener("pointercancel", onUp);
-    };
-  }, [mode, orientation, expanded]);
-
-  useEffect(() => {
-    const tray = collectionRef.current;
-    if (!tray || !collectionOpen) return;
-
-    let pid: number | null = null;
-    let start = 0;
-    let capturing = false;
-    let moved = false;
-
-    const nearestId = (clientX: number, clientY: number) => {
-      const vertical = orientationRef.current === "vertical";
-      let best = collectionActions[0].id;
-      let bestDist = Infinity;
-      collectionItemRefs.current.forEach((element, index) => {
-        if (!element) return;
-        const rect = element.getBoundingClientRect();
-        const center = vertical
-          ? rect.top + rect.height / 2
-          : rect.left + rect.width / 2;
-        const pointer = vertical ? clientY : clientX;
-        const distance = Math.abs(pointer - center);
-        if (distance < bestDist) {
-          bestDist = distance;
-          best = collectionActions[index]?.id ?? best;
-        }
-      });
-      return best;
-    };
-
     const onDown = (event: PointerEvent) => {
       if (event.pointerType === "mouse" && event.button !== 0) return;
-      pid = event.pointerId;
-      start = orientationRef.current === "vertical" ? event.clientY : event.clientX;
-      capturing = false;
+      pointerId = event.pointerId;
+      startX = lastX = event.clientX;
+      startY = lastY = event.clientY;
       moved = false;
+      stack.setPointerCapture(event.pointerId);
     };
 
     const onMove = (event: PointerEvent) => {
-      if (pid !== event.pointerId) return;
-      const position = orientationRef.current === "vertical" ? event.clientY : event.clientX;
-      if (!capturing) {
-        if (Math.abs(position - start) < 8) return;
-        capturing = true;
+      if (pointerId !== event.pointerId) return;
+      lastX = event.clientX;
+      lastY = event.clientY;
+      if (!moved) {
+        if (Math.hypot(lastX - startX, lastY - startY) < 7) return;
         moved = true;
-        tray.setPointerCapture(event.pointerId);
       }
-      const next = nearestId(event.clientX, event.clientY);
-      if (next !== collectionActiveRef.current || selectionLayerRef.current !== "collection") {
-        collectionActiveRef.current = next;
-        selectionLayerRef.current = "collection";
-        setCollectionActive(next);
-        setSelectionLayer("collection");
-      }
+      event.preventDefault();
+      applyTarget(nearestTarget(lastX, lastY));
     };
 
     const onUp = (event: PointerEvent) => {
-      if (pid !== event.pointerId) return;
-      pid = null;
+      if (pointerId !== event.pointerId) return;
+      pointerId = null;
       if (!moved) return;
-      const next = nearestId(event.clientX, event.clientY);
-      setCollectionActive(next);
-      setSelectionLayer("collection");
 
-      const block = (clickEvent: Event) => {
+      const clientX = event.type === "pointercancel" ? lastX : event.clientX;
+      const clientY = event.type === "pointercancel" ? lastY : event.clientY;
+      applyTarget(nearestTarget(clientX, clientY));
+
+      const blockClick = (clickEvent: Event) => {
         clickEvent.preventDefault();
         clickEvent.stopPropagation();
-        tray.removeEventListener("click", block, true);
       };
-      tray.addEventListener("click", block, true);
+      stack.addEventListener("click", blockClick, true);
+      window.setTimeout(() => stack.removeEventListener("click", blockClick, true), 0);
     };
 
-    tray.addEventListener("pointerdown", onDown);
-    tray.addEventListener("pointermove", onMove);
-    tray.addEventListener("pointerup", onUp);
-    tray.addEventListener("pointercancel", onUp);
+    stack.addEventListener("pointerdown", onDown);
+    stack.addEventListener("pointermove", onMove);
+    stack.addEventListener("pointerup", onUp);
+    stack.addEventListener("pointercancel", onUp);
     return () => {
-      tray.removeEventListener("pointerdown", onDown);
-      tray.removeEventListener("pointermove", onMove);
-      tray.removeEventListener("pointerup", onUp);
-      tray.removeEventListener("pointercancel", onUp);
+      stack.removeEventListener("pointerdown", onDown);
+      stack.removeEventListener("pointermove", onMove);
+      stack.removeEventListener("pointerup", onUp);
+      stack.removeEventListener("pointercancel", onUp);
     };
-  }, [collectionOpen, orientation, expanded]);
+  }, [collectionOpen, mode, orientation, expanded]);
 
   useEffect(() => {
     if (!collectionOpen) return;

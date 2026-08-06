@@ -54,6 +54,8 @@ html[data-theme="dark"] .qam-show {
   width: 100%;
   max-width: 420px;
   margin-inline: auto;
+  touch-action: none;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .qam-stack.is-vertical {
@@ -108,6 +110,9 @@ html[data-theme="dark"] .qam-show {
   padding: 0.35rem 0.45rem 0.7rem;
   transform-origin: 50% 100%;
   color: var(--qam-ink);
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
 }
 
 .qam-collection.is-vertical {
