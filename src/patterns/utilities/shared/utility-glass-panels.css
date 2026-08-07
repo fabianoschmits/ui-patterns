@@ -1,0 +1,138 @@
+/* The same four-part material used by quick-action-menu, applied to the
+   interactive surfaces that behave like cards inside every utility. */
+.utility-card :where(
+  .u-list-item,
+  .u-input-wrap,
+  .u-tabs,
+  .u-secondary,
+  .u-icon-button,
+  .search-filters,
+  .profile-stats > span,
+  .settings-nav > button,
+  .upload-drop,
+  .booking-days > button,
+  .booking-times,
+  .booking-format,
+  .share-link,
+  .chat-bubble,
+  .chat-typing,
+  .chat-compose,
+  .cart-quantity,
+  .cart-summary,
+  .checkout-address,
+  .checkout-options > button,
+  .checkout-review > div,
+  .filter-rule,
+  .filters-preview,
+  .onboarding-tip,
+  .timeline-events > li,
+  .timeline-summary,
+  .data-table,
+  .table-bulk,
+  .table-pagination button,
+  .auth-mode-switch
+) {
+  border-color: color-mix(in srgb, var(--ink) 8%, transparent);
+  background:
+    linear-gradient(
+      118deg,
+      rgb(255 255 255 / 0.34) 0%,
+      rgb(255 255 255 / 0.1) 18%,
+      transparent 40%,
+      transparent 64%,
+      rgb(255 255 255 / 0.08) 100%
+    ),
+    linear-gradient(
+      165deg,
+      color-mix(in srgb, var(--utility-glass-tint) 100%, #fff 9%),
+      color-mix(in srgb, var(--utility-glass-tint) 46%, transparent) 58%,
+      color-mix(in srgb, var(--utility-glass-tint) 60%, transparent)
+    );
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.54),
+    inset 0 -1px 0 rgb(255 255 255 / 0.1),
+    inset 1px 0 0 rgb(255 255 255 / 0.18),
+    inset -1px 0 0 rgb(255 255 255 / 0.12),
+    0 7px 20px color-mix(in srgb, var(--ink) 7%, transparent);
+  backdrop-filter: blur(18px) saturate(1.4) brightness(1.04);
+  -webkit-backdrop-filter: blur(18px) saturate(1.4) brightness(1.04);
+}
+
+html[data-theme="dark"] .utility-card :where(
+  .u-list-item,
+  .u-input-wrap,
+  .u-tabs,
+  .u-secondary,
+  .u-icon-button,
+  .search-filters,
+  .profile-stats > span,
+  .settings-nav > button,
+  .upload-drop,
+  .booking-days > button,
+  .booking-times,
+  .booking-format,
+  .share-link,
+  .chat-bubble,
+  .chat-typing,
+  .chat-compose,
+  .cart-quantity,
+  .cart-summary,
+  .checkout-address,
+  .checkout-options > button,
+  .checkout-review > div,
+  .filter-rule,
+  .filters-preview,
+  .onboarding-tip,
+  .timeline-events > li,
+  .timeline-summary,
+  .data-table,
+  .table-bulk,
+  .table-pagination button,
+  .auth-mode-switch
+) {
+  border-color: rgb(255 255 255 / 0.1);
+  background:
+    linear-gradient(
+      118deg,
+      rgb(255 255 255 / 0.15) 0%,
+      rgb(255 255 255 / 0.045) 20%,
+      transparent 43%,
+      transparent 66%,
+      rgb(255 255 255 / 0.035) 100%
+    ),
+    linear-gradient(
+      165deg,
+      color-mix(in srgb, var(--utility-glass-tint) 92%, #fff 5%),
+      color-mix(in srgb, var(--utility-glass-tint) 42%, transparent) 58%,
+      color-mix(in srgb, var(--utility-glass-tint) 55%, transparent)
+    );
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.2),
+    inset 0 -1px 0 rgb(0 0 0 / 0.28),
+    inset 1px 0 0 rgb(255 255 255 / 0.07),
+    inset -1px 0 0 rgb(255 255 255 / 0.045),
+    0 8px 22px rgb(0 0 0 / 0.18);
+}
+
+.utility-card :where(.profile-stats > span, .timeline-events > li) {
+  border: 1px solid color-mix(in srgb, var(--ink) 8%, transparent);
+  border-radius: 0.78rem;
+  padding: 0.58rem;
+}
+
+.utility-card :where(.timeline-events > li) {
+  margin-bottom: 0.35rem;
+}
+
+.utility-card :where(.cart-summary, .filters-preview, .onboarding-tip, .timeline-summary, .share-link) {
+  border: 1px solid color-mix(in srgb, var(--ink) 8%, transparent);
+  border-radius: 0.84rem;
+  padding: 0.68rem;
+}
+
+.utility-card :where(.search-result.is-selected, .notify-item.is-unread, .data-row.is-selected) {
+  border-color: color-mix(in srgb, var(--utility-accent) 44%, transparent);
+  background:
+    linear-gradient(118deg, rgb(255 255 255 / 0.2), transparent 42%),
+    color-mix(in srgb, var(--utility-accent) 11%, var(--utility-glass-tint));
+}

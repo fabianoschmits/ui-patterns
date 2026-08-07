@@ -10,6 +10,9 @@ const initialItems = [
   { id: 1, name: "Luminária Nébula", variant: "Areia · 42 cm", price: 389, quantity: 1, tone: "coral" },
   { id: 2, name: "Vaso Horizonte", variant: "Fumê · médio", price: 218, quantity: 2, tone: "blue" },
   { id: 3, name: "Manta Bruma", variant: "Linho · natural", price: 174, quantity: 1, tone: "mint" },
+  { id: 4, name: "Bandeja Orbe", variant: "Freijó · 34 cm", price: 146, quantity: 1, tone: "coral" },
+  { id: 5, name: "Almofada Aurora", variant: "Bouclé · areia", price: 129, quantity: 2, tone: "blue" },
+  { id: 6, name: "Difusor Sereno", variant: "Cedro · 250 ml", price: 98, quantity: 1, tone: "mint" },
 ];
 
 export default function ShoppingCart(props: PatternPreviewProps) {
@@ -49,7 +52,7 @@ export default function ShoppingCart(props: PatternPreviewProps) {
             <div className="u-row cart-head"><div><span className="u-kicker">Meu carrinho</span><b>Revise sua escolha</b></div><Package size={16} /></div>
             <motion.ul layout className="u-list cart-items">
               <AnimatePresence mode="popLayout" initial={false}>
-                {items.slice(0, size === "small" ? 2 : 3).map((item) => (
+                {items.slice(0, size === "small" ? 3 : size === "medium" ? 5 : 6).map((item) => (
                   <motion.li layout key={item.id} className="u-list-item cart-item" initial={{ opacity: 0, x: -12 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 25, scale: 0.95 }} transition={utilitySpring}>
                     <span className={`cart-product tone-${item.tone}`}><Package size={17} /></span>
                     <div className="u-grow"><b>{item.name}</b><small>{item.variant}</small><strong>R$ {item.price.toFixed(2).replace(".", ",")}</strong></div>

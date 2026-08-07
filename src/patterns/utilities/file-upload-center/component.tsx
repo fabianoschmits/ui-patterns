@@ -30,6 +30,10 @@ interface UploadFile {
 const starterFiles: UploadFile[] = [
   { id: 1, name: "Capa-aurora.png", size: "4,8 MB", progress: 100, type: "image" },
   { id: 2, name: "Briefing-final.pdf", size: "1,2 MB", progress: 72, type: "document" },
+  { id: 3, name: "Fluxo-checkout.pdf", size: "3,4 MB", progress: 100, type: "document" },
+  { id: 4, name: "Moodboard-lume.jpg", size: "8,1 MB", progress: 100, type: "image" },
+  { id: 5, name: "Pesquisa-campo.pdf", size: "5,7 MB", progress: 46, type: "document" },
+  { id: 6, name: "Hero-mobile.png", size: "2,9 MB", progress: 100, type: "image" },
 ];
 
 export default function FileUploadCenter(props: PatternPreviewProps) {
@@ -93,7 +97,7 @@ export default function FileUploadCenter(props: PatternPreviewProps) {
 
             <AnimatePresence mode="popLayout" initial={false}>
               <motion.ul layout className="u-list upload-list">
-                {files.slice(-(size === "small" ? 2 : size === "medium" ? 3 : 4)).map((file) => {
+                {files.slice(-(size === "small" ? 4 : size === "medium" ? 6 : 8)).map((file) => {
                   const Icon = file.type === "image" ? FileImage : FileText;
                   return (
                     <motion.li layout key={file.id} className="u-list-item upload-file" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, x: 20 }} transition={utilitySpring}>

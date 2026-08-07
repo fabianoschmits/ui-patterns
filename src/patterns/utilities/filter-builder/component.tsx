@@ -11,10 +11,12 @@ const choices = [
   ["Responsável", "contém", "Meu time"],
   ["Prazo", "antes de", "30 de agosto"],
   ["Prioridade", "é", "Alta"],
+  ["Projeto", "não é", "Arquivados"],
+  ["Etiqueta", "contém", "Experiência"],
 ];
 
 export default function FilterBuilder(props: PatternPreviewProps) {
-  const [rules, setRules] = useState(choices.slice(0, 2).map((values, index) => ({ id: index + 1, values })));
+  const [rules, setRules] = useState(choices.slice(0, 5).map((values, index) => ({ id: index + 1, values })));
   const [logic, setLogic] = useState<"E" | "OU">("E");
   const [applied, setApplied] = useState(true);
   const count = useMemo(() => Math.max(4, 36 - rules.length * 9 - (logic === "E" ? 4 : 0)), [logic, rules.length]);
@@ -35,7 +37,7 @@ export default function FilterBuilder(props: PatternPreviewProps) {
 
             <motion.div layout className="filters-rules">
               <AnimatePresence mode="popLayout" initial={false}>
-                {rules.slice(0, size === "small" ? 2 : size === "medium" ? 3 : 4).map((rule, index) => <motion.div layout key={rule.id} className="filter-rule" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, x: 20 }} transition={utilitySpring}><span>{index + 1}</span>{rule.values.map((value) => <button type="button" key={value}>{value}<ChevronDown size={11} /></button>)}<button type="button" className="filter-delete" onClick={() => setRules((current) => current.filter((item) => item.id !== rule.id))}><Trash2 size={12} /></button></motion.div>)}
+                {rules.slice(0, size === "small" ? 3 : size === "medium" ? 5 : 6).map((rule, index) => <motion.div layout key={rule.id} className="filter-rule" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, x: 20 }} transition={utilitySpring}><span>{index + 1}</span>{rule.values.map((value) => <button type="button" key={value}>{value}<ChevronDown size={11} /></button>)}<button type="button" className="filter-delete" onClick={() => setRules((current) => current.filter((item) => item.id !== rule.id))}><Trash2 size={12} /></button></motion.div>)}
               </AnimatePresence>
               {rules.length === 0 ? <motion.div className="u-empty" initial={{ opacity: 0 }} animate={{ opacity: 1 }}><Filter size={22} /><b>Nenhuma regra ainda</b><small>Comece criando um filtro.</small></motion.div> : null}
             </motion.div>

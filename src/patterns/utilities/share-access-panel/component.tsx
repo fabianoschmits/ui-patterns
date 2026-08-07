@@ -27,6 +27,9 @@ const initialPeople = [
   { id: 1, initials: "MC", name: "Marina Costa", email: "marina@lume.studio", role: "Editora" },
   { id: 2, initials: "CL", name: "Caio Lima", email: "caio@lume.studio", role: "Comentarista" },
   { id: 3, initials: "AN", name: "Ana Nunes", email: "ana@lume.studio", role: "Leitora" },
+  { id: 4, initials: "RS", name: "Ravi Souza", email: "ravi@lume.studio", role: "Editor" },
+  { id: 5, initials: "LT", name: "Lia Torres", email: "lia@lume.studio", role: "Comentarista" },
+  { id: 6, initials: "BM", name: "Bia Mendes", email: "bia@lume.studio", role: "Leitora" },
 ];
 
 export default function ShareAccessPanel(props: PatternPreviewProps) {
@@ -75,7 +78,7 @@ export default function ShareAccessPanel(props: PatternPreviewProps) {
             <div className="u-row share-title"><span>{people.length} pessoas com acesso</span><UserPlus size={14} /></div>
             <motion.ul layout className="u-list share-people">
               <AnimatePresence mode="popLayout" initial={false}>
-                {people.slice(0, size === "small" ? 2 : size === "medium" ? 3 : 4).map((person) => (
+                {people.slice(0, size === "small" ? 4 : size === "medium" ? 5 : 6).map((person) => (
                   <motion.li layout key={person.id} className="u-list-item" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, x: 18 }} transition={utilitySpring}>
                     <span className="u-avatar">{person.initials}</span>
                     <div className="u-grow"><b>{person.name}</b><small>{person.email}</small></div>

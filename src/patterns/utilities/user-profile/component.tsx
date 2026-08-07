@@ -22,6 +22,9 @@ const projects = [
   { name: "Aurora", role: "Direção de produto", tone: "violet" },
   { name: "Nexo", role: "Sistema visual", tone: "mint" },
   { name: "Orbe", role: "Pesquisa", tone: "blue" },
+  { name: "Horizonte", role: "Estratégia de produto", tone: "violet" },
+  { name: "Brisa", role: "Direção de arte", tone: "mint" },
+  { name: "Lume", role: "Experiência e motion", tone: "blue" },
 ];
 
 export default function UserProfile(props: PatternPreviewProps) {
@@ -59,6 +62,21 @@ export default function UserProfile(props: PatternPreviewProps) {
           </aside>
 
           <main className="u-main profile-main">
+            <div className="profile-main-hero">
+              <motion.div className="profile-avatar" whileHover={{ scale: 1.04, rotate: -2 }} transition={utilityQuickSpring}>
+                MC <span><Check size={11} /></span>
+              </motion.div>
+              <div className="profile-main-identity">
+                <span className="u-kicker">Product designer</span>
+                <h2>Marina Costa</h2>
+                <p><MapPin size={12} /> Florianópolis, Brasil</p>
+              </div>
+              <div className="profile-stats">
+                <span><b>42</b><small>Projetos</small></span>
+                <span><b>8,4k</b><small>Seguidores</small></span>
+                <span><b>126</b><small>Conexões</small></span>
+              </div>
+            </div>
             <div className="u-row profile-actions">
               <button type="button" className="u-primary" onClick={() => setFollowing((value) => !value)}>
                 {following ? <><Check size={14} /> Seguindo</> : <><Sparkles size={14} /> Seguir</>}
@@ -96,7 +114,7 @@ export default function UserProfile(props: PatternPreviewProps) {
                 </motion.div>
               ) : (
                 <motion.ul key="projects" className="u-list" initial={{ opacity: 0, x: 18 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -16 }} transition={utilitySpring}>
-                  {projects.slice(0, size === "small" ? 2 : 3).map((project) => (
+                  {projects.slice(0, size === "small" ? 3 : size === "medium" ? 5 : 6).map((project) => (
                     <li className="u-list-item" key={project.name}>
                       <span className={`profile-project tone-${project.tone}`}>{project.name.slice(0, 1)}</span>
                       <div className="u-grow"><b>{project.name}</b><small>{project.role}</small></div>

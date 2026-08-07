@@ -12,6 +12,10 @@ const events = [
   { id: 3, type: "sistema", icon: GitCommitHorizontal, person: "Sistema", action: "publicou uma nova versão", detail: "Release 2.8 · produção", time: "há 1 h", tone: "blue" },
   { id: 4, type: "equipe", icon: UserPlus, person: "Caio", action: "entrou no projeto", detail: "Convidado por Marina", time: "há 3 h", tone: "coral" },
   { id: 5, type: "projeto", icon: FileText, person: "Ana", action: "atualizou um documento", detail: "Diretrizes de conteúdo", time: "ontem", tone: "gold" },
+  { id: 6, type: "equipe", icon: MessageCircle, person: "Lia", action: "respondeu uma conversa", detail: "Checklist de acessibilidade", time: "ontem", tone: "violet" },
+  { id: 7, type: "sistema", icon: GitCommitHorizontal, person: "Sistema", action: "sincronizou a biblioteca", detail: "84 componentes atualizados", time: "ontem", tone: "blue" },
+  { id: 8, type: "projeto", icon: CheckCircle2, person: "Ravi", action: "aprovou uma entrega", detail: "Protótipo responsivo", time: "2 dias", tone: "mint" },
+  { id: 9, type: "equipe", icon: UserPlus, person: "Bia", action: "entrou no workspace", detail: "Time de Conteúdo", time: "2 dias", tone: "coral" },
 ];
 
 export default function ActivityTimeline(props: PatternPreviewProps) {
@@ -33,7 +37,7 @@ export default function ActivityTimeline(props: PatternPreviewProps) {
             <div className="u-row timeline-head"><div><span className="u-kicker">Hoje · 6 de agosto</span><b>Movimentos recentes</b></div><button type="button" className="u-icon-button"><MoreHorizontal size={15} /></button></div>
             <div className="timeline-filters">{[["todos", "Tudo"], ["equipe", "Equipe"], ["projeto", "Projeto"], ["sistema", "Sistema"]].map(([value, label]) => <button type="button" key={value} className={filter === value ? "is-active" : ""} onClick={() => setFilter(value)}>{filter === value ? <motion.span layoutId="timeline-filter" transition={utilityQuickSpring} /> : null}{label}</button>)}</div>
             <motion.ol layout className="timeline-events">
-              <AnimatePresence mode="popLayout" initial={false}>{visible.slice(0, size === "small" ? 3 : size === "medium" ? 4 : 5).map((event) => { const Icon = event.icon; return <motion.li layout key={event.id} initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, x: 20 }} transition={utilitySpring}><div className={`timeline-icon tone-${event.tone}`}><Icon size={14} /></div><div className="timeline-line" /><div><p><b>{event.person}</b> {event.action}</p><span>{event.detail}</span><small><Clock3 size={10} />{event.time}</small></div></motion.li>; })}</AnimatePresence>
+              <AnimatePresence mode="popLayout" initial={false}>{visible.slice(0, size === "small" ? 4 : size === "medium" ? 7 : 9).map((event) => { const Icon = event.icon; return <motion.li layout key={event.id} initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, x: 20 }} transition={utilitySpring}><div className={`timeline-icon tone-${event.tone}`}><Icon size={14} /></div><div className="timeline-line" /><div><p><b>{event.person}</b> {event.action}</p><span>{event.detail}</span><small><Clock3 size={10} />{event.time}</small></div></motion.li>; })}</AnimatePresence>
             </motion.ol>
             {size === "large" ? <div className="timeline-summary"><Sparkles size={14} /><span><b>Resumo do dia</b> · 12 tarefas concluídas e 4 decisões registradas.</span></div> : null}
           </main>

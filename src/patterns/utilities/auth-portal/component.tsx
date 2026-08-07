@@ -64,6 +64,7 @@ export default function AuthPortal(props: PatternPreviewProps) {
       title="Login & Cadastro"
       description="Um portal de acesso delicado, com transições contínuas entre entrada, criação de conta e recuperação."
       accent={props.accent ?? "#10b9ae"}
+      showAppChrome={false}
     >
       {({ size }) => (
         <div className="utility-view u-split auth-view">

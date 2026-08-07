@@ -38,6 +38,10 @@
 .profile-stats b { font-size: 0.78rem; }
 .profile-stats small { color: var(--utility-muted); font-size: 0.45rem; }
 .profile-main { display: flex; flex-direction: column; }
+.profile-main-hero { display: grid; grid-template-columns: auto minmax(9rem, 1fr) minmax(14rem, auto); align-items: center; gap: 1rem; margin-bottom: 1rem; }
+.profile-main-hero .profile-avatar { width: 4rem; height: 4rem; margin: 0; }
+.profile-main-identity h2 { margin: 0.22rem 0 0; font-family: var(--font-editorial); font-size: 1.65rem; font-weight: 540; letter-spacing: -0.045em; }
+.profile-main-identity p { display: flex; align-items: center; gap: 0.3rem; margin: 0.28rem 0 0; color: var(--utility-muted); font-size: 0.58rem; }
 .profile-actions { justify-content: flex-end; }
 .profile-actions .u-primary { min-height: 2.25rem; }
 .profile-tabs { margin: 0.8rem 0; }
@@ -58,6 +62,8 @@
 .settings-account small { display: block; font-size: 0.55rem; }
 .settings-account small { margin-top: 0.12rem; color: var(--utility-muted); font-size: 0.47rem; }
 .settings-title { margin: 0.42rem 0 1rem; font-family: var(--font-editorial); font-size: clamp(1.2rem, 3vw, 1.8rem); font-weight: 540; letter-spacing: -0.045em; }
+.settings-inline-nav { width: min(100%, 34rem); margin-bottom: 1.15rem; }
+.settings-inline-nav button { display: flex; align-items: center; justify-content: center; gap: 0.38rem; }
 .settings-options { gap: 0.55rem; }
 .settings-option { min-height: 3.45rem; }
 .settings-save { width: 100%; margin-top: 0.85rem; }
@@ -66,11 +72,16 @@
 .utility-card.is-vertical .notify-aside,
 .utility-card.is-vertical .profile-aside,
 .utility-card.is-vertical .settings-aside { min-height: 9.5rem; }
+.utility-card.is-vertical .profile-main-hero { grid-template-columns: auto 1fr; }
+.utility-card.is-vertical .profile-main-hero .profile-stats { grid-column: 1 / -1; width: 100%; }
 .utility-card.is-vertical .settings-nav { grid-template-columns: repeat(3, 1fr); margin-top: 0.8rem; }
 .utility-card.is-vertical .settings-nav button { display: flex; min-height: 2.35rem; justify-content: center; padding: 0; }
 .utility-card.is-vertical .settings-nav button span,
 .utility-card.is-vertical .settings-nav button svg:last-child { display: none; }
 .utility-card.is-small .profile-avatar { width: 3rem; height: 3rem; margin-bottom: 0.4rem; font-size: 0.85rem; }
+.utility-card.is-small .profile-main-hero { grid-template-columns: auto 1fr; gap: 0.65rem; margin-bottom: 0.55rem; }
+.utility-card.is-small .profile-main-hero .profile-stats { display: none; }
+.utility-card.is-small .profile-main-identity h2 { font-size: 1.05rem; }
 .utility-card.is-small .profile-stats { gap: 0.2rem; }
 .utility-card.is-small .profile-actions { display: none; }
 .utility-card.is-small .settings-nav button { min-height: 2.1rem; }

@@ -8,13 +8,19 @@ import {
   type CSSProperties,
   type ReactNode,
 } from "react";
-import { Check, Columns2, PencilLine, Rows2 } from "lucide-react";
-import { LayoutGroup, motion } from "motion/react";
+import { Bell, Check, Columns2, PencilLine, Rows2, Search, Wifi } from "lucide-react";
+import { AnimatePresence, LayoutGroup, motion } from "motion/react";
 import type { PatternPreviewProps } from "@/types/pattern";
 import { cn } from "@/lib/utils";
-import { ColorRoulette, MENU_ACCENTS } from "@/patterns/shared/menu-showcase";
+import {
+  ColorRoulette,
+  MENU_ACCENTS,
+  MENU_SURFACE_AUTO,
+  MENU_SURFACES,
+} from "@/patterns/shared/menu-showcase";
 import "./utility-showcase.css";
 import "./utility-components.css";
+import "./utility-glass-panels.css";
 
 export type UtilityOrientation = "horizontal" | "vertical";
 export type UtilitySize = "small" | "medium" | "large";
@@ -29,6 +35,7 @@ interface UtilityShowcaseProps extends PatternPreviewProps {
   title: string;
   description: string;
   accent?: string;
+  showAppChrome?: boolean;
   children: ReactNode | ((variant: UtilityVariant) => ReactNode);
 }
 
@@ -57,6 +64,7 @@ export function UtilityShowcase({
   title,
   description,
   compact = false,
+  showAppChrome = true,
   children,
 }: UtilityShowcaseProps) {
   const uid = useId().replace(/:/g, "");
@@ -64,10 +72,15 @@ export function UtilityShowcase({
     useState<UtilityOrientation>("horizontal");
   const [size, setSize] = useState<UtilitySize>(compact ? "small" : "medium");
   const [activeAccent, setActiveAccent] = useState(MENU_ACCENTS[0].value);
+  const [activeSurface, setActiveSurface] = useState(MENU_SURFACE_AUTO);
   const [editing, setEditing] = useState(false);
+  const [workspaceSearch, setWorkspaceSearch] = useState("");
+  const [showNotifications, setShowNotifications] = useState(false);
   const contentRef = useRef<HTMLDivElement>(null);
+  const hasAppChrome = !compact && showAppChrome;
   const variant = { orientation, size };
   const content = typeof children === "function" ? children(variant) : children;
+  const resolvedSurface = activeSurface === MENU_SURFACE_AUTO ? "var(--canvas)" : activeSurface;
 
   useEffect(() => {
     const root = contentRef.current;
@@ -108,6 +121,8 @@ export function UtilityShowcase({
       style={{
         "--utility-accent": activeAccent,
         "--menu-accent": activeAccent,
+        "--utility-card-surface": resolvedSurface,
+        "--menu-surface": resolvedSurface,
       } as CSSProperties}
     >
       {!compact ? (
@@ -201,6 +216,25 @@ export function UtilityShowcase({
         </header>
       ) : null}
 
+      {!compact ? (
+        <div className="utility-palette">
+          <ColorRoulette
+            label="Destaque"
+            options={MENU_ACCENTS}
+            value={activeAccent}
+            onChange={setActiveAccent}
+            draggable
+          />
+          <ColorRoulette
+            label="Card"
+            options={MENU_SURFACES}
+            value={activeSurface}
+            onChange={setActiveSurface}
+            draggable
+          />
+        </div>
+      ) : null}
+
       <main className="utility-stage">
         <LayoutGroup id={`utility-card-${uid}`}>
           <motion.section
@@ -234,26 +268,78 @@ export function UtilityShowcase({
             <motion.div
               ref={contentRef}
               layout
-              className={cn("utility-card-content", editing && "is-editing")}
+              className={cn(
+                "utility-card-content",
+                hasAppChrome && "has-appbar",
+                editing && "is-editing",
+              )}
               transition={utilitySpring}
             >
-              {content}
+              {hasAppChrome ? (
+                <div className="utility-appbar">
+                  <div className="utility-appbrand">
+                    <span className="utility-appmark"><Columns2 size={14} /></span>
+                    <span>
+                      <b>{title}</b>
+                      <small>Workspace principal</small>
+                    </span>
+                  </div>
+
+                  <label className="utility-appsearch">
+                    <Search size={14} />
+                    <input
+                      value={workspaceSearch}
+                      onChange={(event) => setWorkspaceSearch(event.target.value)}
+                      placeholder="Buscar nesta tela"
+                      aria-label="Buscar nesta tela"
+                    />
+                    <kbd>⌘ K</kbd>
+                  </label>
+
+                  <div className="utility-appstatus" role="status">
+                    <Wifi size={13} />
+                    <span>Sincronizado</span>
+                  </div>
+
+                  <div className="utility-appactions">
+                    <motion.button
+                      type="button"
+                      aria-label="Abrir notificações"
+                      aria-expanded={showNotifications}
+                      onClick={() => setShowNotifications((value) => !value)}
+                      whileTap={{ scale: 0.9 }}
+                      transition={utilityQuickSpring}
+                    >
+                      <Bell size={14} />
+                      <i />
+                    </motion.button>
+                    <span className="utility-appavatar" aria-label="Conta de Marina Souza">MS</span>
+                  </div>
+
+                  <AnimatePresence>
+                    {showNotifications ? (
+                      <motion.div
+                        className="utility-appnotifications"
+                        initial={{ opacity: 0, y: -8, scale: 0.96 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: -6, scale: 0.97 }}
+                        transition={utilityQuickSpring}
+                      >
+                        <span className="u-kicker">Agora</span>
+                        <b>Seu workspace está atualizado</b>
+                        <small>Todos os dados desta tela foram sincronizados.</small>
+                      </motion.div>
+                    ) : null}
+                  </AnimatePresence>
+                </div>
+              ) : null}
+              <motion.div layout className="utility-app-view" transition={utilitySpring}>
+                {content}
+              </motion.div>
             </motion.div>
           </motion.section>
         </LayoutGroup>
       </main>
-
-      {!compact ? (
-        <div className="utility-palette">
-          <ColorRoulette
-            label="Cor do componente"
-            options={MENU_ACCENTS}
-            value={activeAccent}
-            onChange={setActiveAccent}
-            draggable
-          />
-        </div>
-      ) : null}
     </div>
   );
 }

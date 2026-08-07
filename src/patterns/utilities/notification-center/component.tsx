@@ -23,6 +23,10 @@ const initialNotifications = [
   { id: 2, title: "Arquivo aprovado", copy: "Identidade-v4.pdf está pronto para entrega.", time: "12 min", unread: true, Icon: FileCheck2 },
   { id: 3, title: "Novo membro no espaço", copy: "Caio entrou no time de Produto.", time: "1 h", unread: false, Icon: UserPlus },
   { id: 4, title: "Resumo semanal disponível", copy: "Você concluiu 18 atividades esta semana.", time: "ontem", unread: false, Icon: Sparkles },
+  { id: 5, title: "Comentário resolvido", copy: "Ana encerrou a conversa sobre o checkout.", time: "ontem", unread: false, Icon: MessageSquareText },
+  { id: 6, title: "Nova entrega aprovada", copy: "Protótipo-mobile.fig seguiu para desenvolvimento.", time: "2 dias", unread: false, Icon: FileCheck2 },
+  { id: 7, title: "Convite aceito", copy: "Ravi agora participa do projeto Horizonte.", time: "2 dias", unread: false, Icon: UserPlus },
+  { id: 8, title: "Marco alcançado", copy: "A equipe completou 100 entregas no workspace.", time: "3 dias", unread: false, Icon: Sparkles },
 ];
 
 export default function NotificationCenter(props: PatternPreviewProps) {
@@ -87,7 +91,7 @@ export default function NotificationCenter(props: PatternPreviewProps) {
             <AnimatePresence mode="popLayout" initial={false}>
               {visible.length ? (
                 <motion.ul layout className="u-list notify-list">
-                  {visible.slice(0, size === "small" ? 2 : 4).map((item) => {
+                  {visible.slice(0, size === "small" ? 4 : size === "medium" ? 6 : 8).map((item) => {
                     const Icon = item.Icon;
                     return (
                       <motion.li

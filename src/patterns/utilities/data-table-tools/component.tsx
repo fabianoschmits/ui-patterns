@@ -12,6 +12,13 @@ const starterRows = [
   { id: 3, name: "Ana Nunes", initials: "AN", project: "Nébula", status: "Concluído", value: 100 },
   { id: 4, name: "Ravi Souza", initials: "RS", project: "Lume", status: "Em curso", value: 76 },
   { id: 5, name: "Lia Torres", initials: "LT", project: "Brisa", status: "Planejado", value: 18 },
+  { id: 6, name: "Bia Mendes", initials: "BM", project: "Aurora", status: "Revisão", value: 54 },
+  { id: 7, name: "João Viana", initials: "JV", project: "Nexo", status: "Em curso", value: 69 },
+  { id: 8, name: "Nina Alves", initials: "NA", project: "Orbe", status: "Concluído", value: 100 },
+  { id: 9, name: "Ivo Rocha", initials: "IR", project: "Brisa", status: "Planejado", value: 24 },
+  { id: 10, name: "Luna Freire", initials: "LF", project: "Lume", status: "Em curso", value: 81 },
+  { id: 11, name: "Theo Martins", initials: "TM", project: "Horizonte", status: "Revisão", value: 47 },
+  { id: 12, name: "Eva Ramos", initials: "ER", project: "Nébula", status: "Em curso", value: 73 },
 ];
 
 export default function DataTableTools(props: PatternPreviewProps) {
@@ -45,10 +52,10 @@ export default function DataTableTools(props: PatternPreviewProps) {
 
             <div className="data-table" role="table">
               <div className="data-row data-head" role="row"><span /><span>Pessoa</span>{size !== "small" ? <span>Projeto</span> : null}<span>Status</span><span>Avanço</span><span /></div>
-              <AnimatePresence mode="popLayout" initial={false}>{filtered.slice(0, size === "small" ? 3 : size === "medium" ? 4 : 5).map((row) => <motion.div layout key={row.id} className={`data-row${selected.has(row.id) ? " is-selected" : ""}`} role="row" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, x: 20 }} transition={utilitySpring}><button type="button" className={`table-check${selected.has(row.id) ? " is-on" : ""}`} onClick={() => toggle(row.id)}>{selected.has(row.id) ? <Check size={10} /> : null}</button><span className="data-person"><i className="u-avatar">{row.initials}</i><b>{row.name}</b></span>{size !== "small" ? <span>{row.project}</span> : null}<span><i className={`data-status is-${row.status.toLowerCase().replace(" ", "-")}`}>{row.status}</i></span><span className="data-progress"><i><motion.b animate={{ width: `${row.value}%` }} transition={utilitySpring} /></i><small>{row.value}%</small></span><button type="button" className="table-more"><MoreHorizontal size={13} /></button></motion.div>)}</AnimatePresence>
+              <AnimatePresence mode="popLayout" initial={false}>{filtered.slice(0, size === "small" ? 5 : size === "medium" ? 8 : 12).map((row) => <motion.div layout key={row.id} className={`data-row${selected.has(row.id) ? " is-selected" : ""}`} role="row" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, x: 20 }} transition={utilitySpring}><button type="button" className={`table-check${selected.has(row.id) ? " is-on" : ""}`} onClick={() => toggle(row.id)}>{selected.has(row.id) ? <Check size={10} /> : null}</button><span className="data-person"><i className="u-avatar">{row.initials}</i><b>{row.name}</b></span>{size !== "small" ? <span>{row.project}</span> : null}<span><i className={`data-status is-${row.status.toLowerCase().replace(" ", "-")}`}>{row.status}</i></span><span className="data-progress"><i><motion.b animate={{ width: `${row.value}%` }} transition={utilitySpring} /></i><small>{row.value}%</small></span><button type="button" className="table-more"><MoreHorizontal size={13} /></button></motion.div>)}</AnimatePresence>
             </div>
             {!filtered.length ? <div className="u-empty"><Search size={20} /><b>Nenhum resultado</b><small>Tente um nome ou projeto diferente.</small></div> : null}
-            <div className="table-pagination"><span>1–{Math.min(filtered.length, size === "small" ? 3 : size === "medium" ? 4 : 5)} de {filtered.length}</span><div><button type="button"><ChevronLeft size={13} /></button><button type="button"><ChevronRight size={13} /></button></div></div>
+            <div className="table-pagination"><span>1–{Math.min(filtered.length, size === "small" ? 5 : size === "medium" ? 8 : 12)} de {filtered.length}</span><div><button type="button"><ChevronLeft size={13} /></button><button type="button"><ChevronRight size={13} /></button></div></div>
           </main>
         </div>
       )}

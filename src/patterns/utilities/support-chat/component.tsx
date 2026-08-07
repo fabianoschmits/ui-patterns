@@ -27,6 +27,10 @@ const initialMessages: ChatMessage[] = [
   { id: 1, text: "Olá! Sou a Lia. Como posso ajudar hoje?", mine: false, time: "10:32" },
   { id: 2, text: "Quero entender como organizar as permissões do meu time.", mine: true, time: "10:33" },
   { id: 3, text: "Claro. Posso mostrar o caminho mais simples e revisar com você.", mine: false, time: "10:33" },
+  { id: 4, text: "Quero que editores publiquem, mas convidados apenas comentem.", mine: true, time: "10:34" },
+  { id: 5, text: "Perfeito. Crie dois grupos e aplique as permissões no nível do projeto.", mine: false, time: "10:34" },
+  { id: 6, text: "Encontrei. As mudanças são salvas automaticamente?", mine: true, time: "10:35" },
+  { id: 7, text: "Sim. O histórico também registra quem alterou cada acesso.", mine: false, time: "10:35" },
 ];
 
 export default function SupportChat(props: PatternPreviewProps) {
@@ -76,7 +80,7 @@ export default function SupportChat(props: PatternPreviewProps) {
 
             <div className="chat-messages" aria-live="polite">
               <AnimatePresence initial={false}>
-                {messages.slice(-(size === "small" ? 3 : size === "medium" ? 5 : 7)).map((message) => (
+                {messages.slice(-(size === "small" ? 4 : size === "medium" ? 7 : 10)).map((message) => (
                   <motion.div key={message.id} className={`chat-bubble${message.mine ? " is-mine" : ""}`} initial={{ opacity: 0, y: 12, scale: 0.96 }} animate={{ opacity: 1, y: 0, scale: 1 }} transition={utilitySpring}>
                     <p>{message.text}</p>
                     <small>{message.time}{message.mine ? <CheckCheck size={11} /> : null}</small>

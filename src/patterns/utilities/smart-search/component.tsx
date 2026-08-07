@@ -25,6 +25,11 @@ const searchable = [
   { title: "Marina Costa", detail: "Product designer", type: "Pessoas", Icon: Users },
   { title: "Pesquisa de usuários", detail: "6 arquivos encontrados", type: "Arquivos", Icon: FileText },
   { title: "Time de Produto", detail: "12 participantes", type: "Pessoas", Icon: Users },
+  { title: "Projeto Horizonte", detail: "Atualizado há 34 min", type: "Projetos", Icon: FolderKanban },
+  { title: "Relatório de métricas", detail: "Documento · 18 páginas", type: "Arquivos", Icon: FileText },
+  { title: "Caio Lima", detail: "Design engineer", type: "Pessoas", Icon: Users },
+  { title: "Biblioteca de componentes", detail: "84 componentes publicados", type: "Projetos", Icon: FolderKanban },
+  { title: "Notas da retrospectiva", detail: "Editado ontem por Ana", type: "Arquivos", Icon: FileText },
 ];
 
 export default function SmartSearch(props: PatternPreviewProps) {
@@ -105,7 +110,7 @@ export default function SmartSearch(props: PatternPreviewProps) {
             <AnimatePresence mode="popLayout" initial={false}>
               {results.length ? (
                 <motion.ul layout className="u-list search-results" key={`${filter}-${query || "all"}`}>
-                  {results.slice(0, size === "small" ? 2 : size === "medium" ? 4 : 5).map((item, index) => {
+                  {results.slice(0, size === "small" ? 4 : size === "medium" ? 7 : 10).map((item, index) => {
                     const Icon = item.Icon;
                     return (
                       <motion.li
