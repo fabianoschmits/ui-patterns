@@ -13,17 +13,37 @@
   --utility-danger: #c65f62;
   position: relative;
   isolation: isolate;
-  display: flex;
-  flex-direction: column;
+  display: block;
   width: 100%;
+  height: 100%;
   min-height: 100%;
-  overflow-x: hidden;
-  overflow-y: auto;
-  overscroll-behavior-y: contain;
-  -webkit-overflow-scrolling: touch;
+  overflow: hidden;
   background: transparent;
   color: var(--utility-ink);
   font-family: var(--font-ui);
+}
+
+.utility-show-body {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  width: 100%;
+  height: 100%;
+  min-height: 100%;
+  max-height: 100%;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.85rem;
+  padding:
+    max(4.5rem, calc(env(safe-area-inset-top) + 3.75rem))
+    max(4.25rem, calc(env(safe-area-inset-right) + 3.5rem))
+    max(2rem, calc(env(safe-area-inset-bottom) + 1.5rem))
+    max(4.25rem, calc(env(safe-area-inset-left) + 3.5rem));
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-gutter: stable;
 }
 
 html[data-theme="dark"] .utility-show {
@@ -50,40 +70,47 @@ html[data-theme="dark"] .utility-show {
   color: inherit;
 }
 
-.utility-show-head {
+.utility-show-top {
   position: relative;
   z-index: 4;
   display: flex;
-  width: min(100%, 34rem);
-  margin: 0 auto;
-  padding: clamp(4.3rem, 8vw, 5.4rem) max(1.25rem, 4vw) 0.8rem;
+  width: 100%;
+  max-width: 34rem;
+  flex: 0 0 auto;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  gap: 0.85rem;
+  gap: 0.75rem;
   text-align: center;
 }
 
-.utility-heading > span {
-  color: var(--utility-accent);
-  font-size: 0.62rem;
-  font-weight: 720;
-  letter-spacing: 0.16em;
+.utility-show-head {
+  display: flex;
+  width: 100%;
+  max-width: 28rem;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.utility-show-head > span {
+  color: var(--utility-muted);
+  font-size: 0.68rem;
+  font-weight: 650;
+  letter-spacing: 0.18em;
   text-transform: uppercase;
 }
 
-.utility-heading h1 {
-  margin: 0.42rem 0 0;
+.utility-show-head h1 {
+  margin: 0.55rem 0 0.35rem;
   font-family: var(--font-editorial);
   font-size: clamp(2rem, 7vw, 3.4rem);
-  font-weight: 520;
-  letter-spacing: -0.055em;
-  line-height: 0.96;
+  letter-spacing: -0.04em;
+  line-height: 0.95;
 }
 
-.utility-heading p {
-  max-width: 34rem;
-  margin: 0.65rem 0 0;
+.utility-show-head p {
+  max-width: 26rem;
+  margin: 0;
   color: var(--utility-muted);
   font-size: 0.88rem;
   line-height: 1.45;
@@ -191,17 +218,18 @@ html[data-theme="dark"] .utility-show {
   position: relative;
   z-index: 2;
   display: grid;
-  flex: 0 0 auto;
-  min-height: max-content;
+  min-width: 0;
   width: 100%;
-  padding: 1.15rem max(0.75rem, 2vw) 3rem;
+  flex: 1 0 auto;
+  min-height: min(42vh, 22rem);
+  padding: 1rem 0;
   place-items: center;
 }
 
 .utility-card {
   position: relative;
   isolation: isolate;
-  max-width: calc(100vw - 2rem);
+  max-width: 100%;
   max-height: calc(100svh - 2rem);
   overflow: hidden;
   border: 0;
@@ -958,18 +986,21 @@ html[data-theme="dark"] .utility-glass-rim {
 
 .utility-show.is-compact {
   min-height: 100%;
-  grid-template-rows: 1fr;
 }
 
 .utility-palette {
   position: relative;
   z-index: 3;
-  display: grid;
-  width: min(100%, 52rem);
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  display: flex;
+  width: 100%;
+  max-width: 34rem;
+  flex: 0 0 auto;
+  flex-direction: column;
+  align-items: center;
   gap: 1rem;
-  margin: 0 auto;
-  padding: 0.45rem max(1.25rem, 4vw) 1rem;
+  margin-top: 1.25rem;
+  padding-top: 0.75rem;
+  padding-bottom: 1.5rem;
 }
 
 .utility-palette .menu-show-roulette-frame {
@@ -982,6 +1013,10 @@ html[data-theme="dark"] .utility-glass-rim {
   padding: 0.55rem;
 }
 
+.utility-show.is-compact .utility-show-body {
+  padding: 0;
+}
+
 .utility-show.is-compact .utility-card {
   width: min(100%, 22rem) !important;
   height: min(100%, 14rem) !important;
@@ -989,21 +1024,22 @@ html[data-theme="dark"] .utility-glass-rim {
 }
 
 @media (max-width: 720px) {
-  .utility-show-head {
-    padding-top: 4.5rem;
-    flex-direction: column;
-    align-items: center;
-    text-align: center;
+  .utility-show-body {
+    gap: 0.7rem;
+    padding:
+      max(4rem, calc(env(safe-area-inset-top) + 3.35rem))
+      max(3.75rem, calc(env(safe-area-inset-right) + 3rem))
+      max(2.25rem, calc(env(safe-area-inset-bottom) + 1.75rem))
+      max(3.75rem, calc(env(safe-area-inset-left) + 3rem));
   }
 
-  .utility-heading p { margin-inline: auto; }
   .utility-controls { justify-content: center; }
   .utility-palette {
-    width: min(100%, 28rem);
-    grid-template-columns: minmax(0, 1fr);
-    padding-bottom: 0.8rem;
+    margin-top: 1.75rem;
+    padding-top: 1rem;
+    padding-bottom: 2.5rem;
   }
-  .utility-stage { padding-top: 0.5rem; }
+  .utility-stage { min-height: min(38vh, 18rem); padding-block: 0.5rem; }
 
   .utility-appbar { grid-template-columns: minmax(0, 1fr) auto; }
   .utility-appsearch,
@@ -1012,26 +1048,28 @@ html[data-theme="dark"] .utility-glass-rim {
   .utility-card.is-horizontal.is-small,
   .utility-card.is-horizontal.is-medium,
   .utility-card.is-horizontal.is-large {
-    width: calc(100vw - 1.5rem);
+    width: 100%;
   }
 
+  .utility-card.is-vertical.is-small,
+  .utility-card.is-vertical.is-medium,
   .utility-card.is-vertical.is-large {
-    width: min(31rem, calc(100vw - 1.5rem));
+    width: 100%;
   }
 }
 
 @media (max-width: 480px) {
-  .utility-show-head { padding-inline: 1rem; }
-  .utility-heading h1 { font-size: 2.2rem; }
+  .utility-show-head h1 { font-size: clamp(1.75rem, 11vw, 2.4rem); }
+  .utility-show-head p { font-size: 0.8rem; }
   .utility-segment button { padding-inline: 0.58rem; }
-  .utility-card { max-width: calc(100vw - 1rem); }
+  .utility-card { max-width: 100%; }
   .utility-card.is-horizontal .utility-view.u-split { grid-template-columns: minmax(0, 1fr); }
   .utility-card.is-horizontal .u-aside,
   .utility-card.is-horizontal .u-main { padding: 0.78rem; }
   .utility-card.is-horizontal .u-aside .u-copy,
   .utility-card.is-horizontal .u-aside-copy { display: none; }
   .utility-card.is-horizontal .u-title { font-size: 1.28rem; }
-  .utility-card.is-horizontal.is-small { width: calc(100vw - 1rem); }
+  .utility-card.is-horizontal.is-small { width: 100%; }
   .utility-card.is-horizontal.is-small { height: 30rem; }
   .utility-card.is-horizontal.is-medium { height: 38rem; }
   .utility-card.is-horizontal.is-large { height: 44rem; }

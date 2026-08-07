@@ -125,17 +125,18 @@ export function UtilityShowcase({
         "--menu-surface": resolvedSurface,
       } as CSSProperties}
     >
-      {!compact ? (
-        <header className="utility-show-head">
-          <div className="utility-heading">
-            <span>{eyebrow}</span>
-            <motion.h1 layout transition={utilitySpring}>
-              {title}
-            </motion.h1>
-            <p>{description}</p>
-          </div>
+      <div className="utility-show-body">
+        {!compact ? (
+          <div className="utility-show-top">
+            <header className="utility-show-head">
+              <span>{eyebrow}</span>
+              <motion.h1 layout transition={utilitySpring}>
+                {title}
+              </motion.h1>
+              <p>{description}</p>
+            </header>
 
-          <LayoutGroup id={`utility-controls-${uid}`}>
+            <LayoutGroup id={`utility-controls-${uid}`}>
             <div className="utility-controls" aria-label="Variações do componente">
               <div className="utility-segment" role="group" aria-label="Orientação">
                 {(
@@ -212,30 +213,11 @@ export function UtilityShowcase({
                 <span>{editing ? "Concluir" : "Editar dados"}</span>
               </motion.button>
             </div>
-          </LayoutGroup>
-        </header>
-      ) : null}
+            </LayoutGroup>
+          </div>
+        ) : null}
 
-      {!compact ? (
-        <div className="utility-palette">
-          <ColorRoulette
-            label="Destaque"
-            options={MENU_ACCENTS}
-            value={activeAccent}
-            onChange={setActiveAccent}
-            draggable
-          />
-          <ColorRoulette
-            label="Card"
-            options={MENU_SURFACES}
-            value={activeSurface}
-            onChange={setActiveSurface}
-            draggable
-          />
-        </div>
-      ) : null}
-
-      <main className="utility-stage">
+        <main className="utility-stage">
         <LayoutGroup id={`utility-card-${uid}`}>
           <motion.section
             layout
@@ -339,7 +321,27 @@ export function UtilityShowcase({
             </motion.div>
           </motion.section>
         </LayoutGroup>
-      </main>
+        </main>
+
+        {!compact ? (
+          <div className="utility-palette">
+            <ColorRoulette
+              label="Destaque"
+              options={MENU_ACCENTS}
+              value={activeAccent}
+              onChange={setActiveAccent}
+              draggable
+            />
+            <ColorRoulette
+              label="Componente"
+              options={MENU_SURFACES}
+              value={activeSurface}
+              onChange={setActiveSurface}
+              draggable
+            />
+          </div>
+        ) : null}
+      </div>
     </div>
   );
 }
