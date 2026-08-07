@@ -95,24 +95,33 @@ export default function FileUploadCenter(props: PatternPreviewProps) {
               <button type="button" className="u-link-button" onClick={addMockFile}><Plus size={12} /> Adicionar</button>
             </div>
 
-            <AnimatePresence mode="popLayout" initial={false}>
-              <motion.ul layout className="u-list upload-list">
+            <motion.ul layout className="u-list upload-list">
+              <AnimatePresence mode="popLayout" initial={false}>
                 {files.slice(-(size === "small" ? 4 : size === "medium" ? 6 : 8)).map((file) => {
                   const Icon = file.type === "image" ? FileImage : FileText;
                   return (
-                    <motion.li layout key={file.id} className="u-list-item upload-file" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, x: 20 }} transition={utilitySpring}>
+                    <motion.li layout="position" key={file.id} className="u-list-item upload-file" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, x: 20, scale: 0.97 }} transition={utilitySpring}>
                       <span className="u-list-icon"><Icon size={15} /></span>
                       <div className="u-grow">
                         <b>{file.name}</b>
                         <small>{file.progress === 100 ? `${file.size} · concluído` : `${file.progress}% de ${file.size}`}</small>
-                        {file.progress < 100 ? <div className="u-progress"><motion.span animate={{ width: `${file.progress}%` }} transition={utilitySpring} /></div> : null}
+                        {file.progress < 100 ? (
+                          <div className="u-progress">
+                            <motion.span
+                              style={{ width: "100%", transformOrigin: "left center" }}
+                              initial={false}
+                              animate={{ scaleX: file.progress / 100 }}
+                              transition={utilitySpring}
+                            />
+                          </div>
+                        ) : null}
                       </div>
-                      {file.progress === 100 ? <span className="upload-done"><Check size={13} /></span> : <button type="button" className="upload-remove" onClick={() => setFiles((current) => current.filter((item) => item.id !== file.id))}><X size={13} /></button>}
+                      {file.progress === 100 ? <span className="upload-done"><Check size={13} /></span> : <button type="button" className="upload-remove" aria-label={`Remover ${file.name}`} onClick={() => setFiles((current) => current.filter((item) => item.id !== file.id))}><X size={13} /></button>}
                     </motion.li>
                   );
                 })}
-              </motion.ul>
-            </AnimatePresence>
+              </AnimatePresence>
+            </motion.ul>
 
             {size === "large" ? (
               <div className="upload-folders u-secondary-detail">

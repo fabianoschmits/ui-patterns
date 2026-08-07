@@ -9,7 +9,7 @@ import {
   type ReactNode,
 } from "react";
 import { Bell, Check, Columns2, PencilLine, Rows2, Search, Wifi } from "lucide-react";
-import { AnimatePresence, LayoutGroup, motion } from "motion/react";
+import { AnimatePresence, LayoutGroup, MotionConfig, motion } from "motion/react";
 import type { PatternPreviewProps } from "@/types/pattern";
 import { cn } from "@/lib/utils";
 import {
@@ -24,6 +24,7 @@ import "./utility-glass-panels.css";
 
 export type UtilityOrientation = "horizontal" | "vertical";
 export type UtilitySize = "small" | "medium" | "large";
+export type UtilityFrame = "narrow" | "standard" | "wide";
 
 export interface UtilityVariant {
   orientation: UtilityOrientation;
@@ -35,6 +36,7 @@ interface UtilityShowcaseProps extends PatternPreviewProps {
   title: string;
   description: string;
   accent?: string;
+  frame?: UtilityFrame;
   showAppChrome?: boolean;
   children: ReactNode | ((variant: UtilityVariant) => ReactNode);
 }
@@ -53,17 +55,57 @@ export const utilityQuickSpring = {
   mass: 0.9,
 };
 
+export type UtilityLiquidIndicatorTone = "solid" | "soft" | "outline";
+
+export function UtilityLiquidIndicator({
+  layoutId,
+  tone = "solid",
+  className,
+}: {
+  layoutId: string;
+  tone?: UtilityLiquidIndicatorTone;
+  className?: string;
+}) {
+  return (
+    <motion.span
+      layoutId={layoutId}
+      className={cn("u-liquid-indicator", `is-${tone}`, className)}
+      initial={{ opacity: 0, scaleX: 1.32, scaleY: 0.68 }}
+      animate={{ opacity: 1, scaleX: 1, scaleY: 1 }}
+      exit={{ opacity: 0, scaleX: 0.68, scaleY: 1.28 }}
+      transition={utilityQuickSpring}
+      aria-hidden="true"
+    />
+  );
+}
+
 const sizes: Array<{ value: UtilitySize; label: string; short: string }> = [
   { value: "small", label: "Pequeno", short: "P" },
   { value: "medium", label: "Médio", short: "M" },
   { value: "large", label: "Grande", short: "G" },
 ];
 
+function getAccentInk(color: string) {
+  const value = color.replace("#", "");
+  if (!/^[0-9a-f]{6}$/i.test(value)) return "#ffffff";
+
+  const channels = [0, 2, 4].map((offset) => {
+    const channel = Number.parseInt(value.slice(offset, offset + 2), 16) / 255;
+    return channel <= 0.04045
+      ? channel / 12.92
+      : ((channel + 0.055) / 1.055) ** 2.4;
+  });
+  const luminance = channels[0] * 0.2126 + channels[1] * 0.7152 + channels[2] * 0.0722;
+
+  return luminance > 0.18 ? "#000000" : "#ffffff";
+}
+
 export function UtilityShowcase({
   eyebrow,
   title,
   description,
   compact = false,
+  frame = "standard",
   showAppChrome = true,
   children,
 }: UtilityShowcaseProps) {
@@ -116,23 +158,23 @@ export function UtilityShowcase({
   }, [editing, orientation, size]);
 
   return (
-    <div
-      className={cn("utility-show", compact && "is-compact")}
-      style={{
-        "--utility-accent": activeAccent,
-        "--menu-accent": activeAccent,
-        "--utility-card-surface": resolvedSurface,
-        "--menu-surface": resolvedSurface,
-      } as CSSProperties}
-    >
+    <MotionConfig reducedMotion="user" transition={utilitySpring}>
+      <div
+        className={cn("utility-show", compact && "is-compact")}
+        style={{
+          "--utility-accent": activeAccent,
+          "--utility-accent-ink": getAccentInk(activeAccent),
+          "--menu-accent": activeAccent,
+          "--utility-card-surface": resolvedSurface,
+          "--menu-surface": resolvedSurface,
+        } as CSSProperties}
+      >
       <div className="utility-show-body">
         {!compact ? (
           <div className="utility-show-top">
             <header className="utility-show-head">
               <span>{eyebrow}</span>
-              <motion.h1 layout transition={utilitySpring}>
-                {title}
-              </motion.h1>
+              <h1>{title}</h1>
               <p>{description}</p>
             </header>
 
@@ -158,11 +200,9 @@ export function UtilityShowcase({
                       transition={utilitySpring}
                     >
                       {active ? (
-                        <motion.span
+                        <UtilityLiquidIndicator
                           layoutId={`utility-orientation-${uid}`}
                           className="utility-control-pill"
-                          initial={false}
-                          transition={utilityQuickSpring}
                         />
                       ) : null}
                       <Icon size={14} strokeWidth={1.8} />
@@ -188,11 +228,9 @@ export function UtilityShowcase({
                       transition={utilitySpring}
                     >
                       {active ? (
-                        <motion.span
+                        <UtilityLiquidIndicator
                           layoutId={`utility-size-${uid}`}
                           className="utility-control-pill"
-                          initial={false}
-                          transition={utilityQuickSpring}
                         />
                       ) : null}
                       <span>{option.short}</span>
@@ -225,9 +263,11 @@ export function UtilityShowcase({
               "utility-card",
               `is-${orientation}`,
               `is-${size}`,
+              `is-frame-${frame}`,
             )}
             data-orientation={orientation}
             data-size={size}
+            data-frame={frame}
             animate={{
               borderRadius: orientation === "vertical" ? 34 : size === "small" ? 20 : 28,
             }}
@@ -315,7 +355,11 @@ export function UtilityShowcase({
                   </AnimatePresence>
                 </div>
               ) : null}
-              <motion.div layout className="utility-app-view" transition={utilitySpring}>
+              <motion.div
+                layout
+                className="utility-app-view"
+                transition={utilitySpring}
+              >
                 {content}
               </motion.div>
             </motion.div>
@@ -341,7 +385,8 @@ export function UtilityShowcase({
             />
           </div>
         ) : null}
+        </div>
       </div>
-    </div>
+    </MotionConfig>
   );
 }

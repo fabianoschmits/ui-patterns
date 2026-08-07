@@ -13,6 +13,7 @@ import {
 import { AnimatePresence, LayoutGroup, motion } from "motion/react";
 import type { PatternPreviewProps } from "@/types/pattern";
 import {
+  UtilityLiquidIndicator,
   UtilityShowcase,
   utilityQuickSpring,
   utilitySpring,
@@ -44,7 +45,15 @@ export default function UserProfile(props: PatternPreviewProps) {
           <aside className="u-aside profile-aside">
             <div className="profile-top u-row">
               <span className="u-brand"><span className="u-brand-mark"><UserRound size={16} /></span> Pessoas</span>
-              <button type="button" className="u-icon-button"><MoreHorizontal size={15} /></button>
+              <motion.button
+                type="button"
+                className="u-icon-button"
+                aria-label="Mais opções"
+                whileTap={{ scale: 0.88, rotate: -6 }}
+                transition={utilityQuickSpring}
+              >
+                <MoreHorizontal size={15} />
+              </motion.button>
             </div>
             <div className="profile-identity">
               <motion.div className="profile-avatar" whileHover={{ scale: 1.04, rotate: -2 }} transition={utilityQuickSpring}>
@@ -78,27 +87,64 @@ export default function UserProfile(props: PatternPreviewProps) {
               </div>
             </div>
             <div className="u-row profile-actions">
-              <button type="button" className="u-primary" onClick={() => setFollowing((value) => !value)}>
-                {following ? <><Check size={14} /> Seguindo</> : <><Sparkles size={14} /> Seguir</>}
-              </button>
-              <button type="button" className="u-icon-button" aria-label="Enviar mensagem"><MessageCircle size={15} /></button>
+              <motion.button
+                layout
+                type="button"
+                className="u-primary"
+                aria-pressed={following}
+                onClick={() => setFollowing((value) => !value)}
+                whileTap={{ scale: 0.94 }}
+                transition={utilityQuickSpring}
+              >
+                <AnimatePresence mode="popLayout" initial={false}>
+                  <motion.span
+                    layout
+                    key={following ? "following" : "follow"}
+                    initial={{ opacity: 0, y: 5, scale: 0.9 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: -5, scale: 0.9 }}
+                    transition={utilityQuickSpring}
+                    style={{ display: "inline-flex", alignItems: "center", gap: "0.45rem" }}
+                  >
+                    {following ? <Check size={14} /> : <Sparkles size={14} />}
+                    {following ? "Seguindo" : "Seguir"}
+                  </motion.span>
+                </AnimatePresence>
+              </motion.button>
+              <motion.button
+                type="button"
+                className="u-icon-button"
+                aria-label="Enviar mensagem"
+                whileTap={{ scale: 0.88, rotate: -5 }}
+                transition={utilityQuickSpring}
+              >
+                <MessageCircle size={15} />
+              </motion.button>
             </div>
 
             <LayoutGroup id="profile-tabs">
-              <div className="u-tabs profile-tabs">
+              <div className="u-tabs profile-tabs" role="group" aria-label="Conteúdo do perfil">
                 {(["about", "projects"] as const).map((item) => {
                   const active = tab === item;
                   return (
-                    <button key={item} type="button" className={active ? "is-active" : undefined} onClick={() => setTab(item)}>
-                      {active ? <motion.span layoutId="profile-tab-pill" className="u-tab-pill" transition={utilityQuickSpring} /> : null}
+                    <motion.button
+                      key={item}
+                      type="button"
+                      className={active ? "is-active" : undefined}
+                      aria-pressed={active}
+                      onClick={() => setTab(item)}
+                      whileTap={{ scale: 0.94 }}
+                      transition={utilityQuickSpring}
+                    >
+                      {active ? <UtilityLiquidIndicator layoutId="profile-tab-pill" /> : null}
                       {item === "about" ? "Sobre" : "Projetos"}
-                    </button>
+                    </motion.button>
                   );
                 })}
               </div>
             </LayoutGroup>
 
-            <AnimatePresence mode="wait" initial={false}>
+            <AnimatePresence mode="popLayout" initial={false}>
               {tab === "about" ? (
                 <motion.div key="about" className="profile-about" initial={{ opacity: 0, x: -16 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 16 }} transition={utilitySpring}>
                   <span className="u-kicker">Biografia</span>

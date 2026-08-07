@@ -15,6 +15,7 @@ import {
 import { AnimatePresence, motion } from "motion/react";
 import type { PatternPreviewProps } from "@/types/pattern";
 import {
+  UtilityLiquidIndicator,
   UtilityShowcase,
   utilityQuickSpring,
   utilitySpring,
@@ -40,9 +41,23 @@ export default function AccountSettings(props: PatternPreviewProps) {
   const [saved, setSaved] = useState(false);
 
   const toggle = (value: boolean, setValue: (next: boolean) => void, label: string) => (
-    <button type="button" className={`u-switch${value ? " is-on" : ""}`} aria-label={label} aria-pressed={value} onClick={() => setValue(!value)}>
-      <motion.span animate={{ x: value ? 16 : 0 }} transition={utilityQuickSpring} />
-    </button>
+    <motion.button
+      type="button"
+      className={`u-switch${value ? " is-on" : ""}`}
+      aria-label={label}
+      aria-pressed={value}
+      onClick={() => {
+        setValue(!value);
+        setSaved(false);
+      }}
+      whileTap={{ scale: 0.9 }}
+      transition={utilityQuickSpring}
+    >
+      <motion.span
+        animate={{ x: value ? 16 : 0, scale: value ? 1.04 : 1 }}
+        transition={utilityQuickSpring}
+      />
+    </motion.button>
   );
 
   return (
@@ -59,9 +74,16 @@ export default function AccountSettings(props: PatternPreviewProps) {
             <div className="u-brand"><span className="u-brand-mark"><Settings size={16} /></span> Preferências</div>
             <nav className="settings-nav" aria-label="Seções de configuração">
               {sections.map(({ id, label, Icon }) => (
-                <button key={id} type="button" className={section === id ? "is-active" : undefined} onClick={() => { setSection(id); setSaved(false); }}>
+                <motion.button
+                  key={id}
+                  type="button"
+                  className={section === id ? "is-active" : undefined}
+                  onClick={() => { setSection(id); setSaved(false); }}
+                  whileTap={{ scale: 0.96 }}
+                  transition={utilityQuickSpring}
+                >
                   <Icon size={15} /> <span>{label}</span> <ChevronRight size={13} />
-                </button>
+                </motion.button>
               ))}
             </nav>
             <div className="settings-account u-hide-small">
@@ -75,14 +97,23 @@ export default function AccountSettings(props: PatternPreviewProps) {
               {sections.map(({ id, label, Icon }) => {
                 const active = section === id;
                 return (
-                  <button key={id} type="button" role="tab" aria-selected={active} className={active ? "is-active" : undefined} onClick={() => { setSection(id); setSaved(false); }}>
-                    {active ? <motion.span layoutId="settings-inline-pill" className="u-tab-pill" transition={utilityQuickSpring} /> : null}
+                  <motion.button
+                    key={id}
+                    type="button"
+                    role="tab"
+                    aria-selected={active}
+                    className={active ? "is-active" : undefined}
+                    onClick={() => { setSection(id); setSaved(false); }}
+                    whileTap={{ scale: 0.94 }}
+                    transition={utilityQuickSpring}
+                  >
+                    {active ? <UtilityLiquidIndicator layoutId="settings-inline-pill" /> : null}
                     <Icon size={14} /> <span>{label}</span>
-                  </button>
+                  </motion.button>
                 );
               })}
             </div>
-            <AnimatePresence mode="wait" initial={false}>
+            <AnimatePresence mode="popLayout" initial={false}>
               <motion.div key={section} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={utilitySpring}>
                 <span className="u-kicker">{sections.find((item) => item.id === section)?.label}</span>
                 <h2 className="settings-title">
@@ -95,7 +126,7 @@ export default function AccountSettings(props: PatternPreviewProps) {
                       <div className="u-list-item settings-option">
                         <span className="u-list-icon"><UserRound size={15} /></span>
                         <div className="u-grow"><b>Nome público</b><small>Fabiano Schmits</small></div>
-                        <button type="button" className="u-link-button">Editar</button>
+                        <motion.button type="button" className="u-link-button" whileTap={{ scale: 0.9 }} transition={utilityQuickSpring}>Editar</motion.button>
                       </div>
                       <div className="u-list-item settings-option">
                         <span className="u-list-icon"><Palette size={15} /></span>
@@ -163,8 +194,29 @@ export default function AccountSettings(props: PatternPreviewProps) {
                 </div>
 
                 {size !== "small" ? (
-                  <motion.button type="button" className="u-primary settings-save" onClick={() => setSaved(true)} whileTap={{ scale: 0.96 }}>
-                    {saved ? <><Check size={14} /> Preferências salvas</> : "Salvar alterações"}
+                  <motion.button
+                    layout
+                    type="button"
+                    className="u-primary settings-save"
+                    aria-live="polite"
+                    onClick={() => setSaved(true)}
+                    whileTap={{ scale: 0.96 }}
+                    transition={utilityQuickSpring}
+                  >
+                    <AnimatePresence mode="popLayout" initial={false}>
+                      <motion.span
+                        layout
+                        key={saved ? "saved" : "save"}
+                        initial={{ opacity: 0, y: 5, scale: 0.92 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: -5, scale: 0.92 }}
+                        transition={utilityQuickSpring}
+                        style={{ display: "inline-flex", alignItems: "center", gap: "0.42rem" }}
+                      >
+                        {saved ? <Check size={14} /> : null}
+                        {saved ? "Preferências salvas" : "Salvar alterações"}
+                      </motion.span>
+                    </AnimatePresence>
                   </motion.button>
                 ) : null}
               </motion.div>

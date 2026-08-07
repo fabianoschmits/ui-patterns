@@ -156,6 +156,7 @@ export function ColorRoulette({
   const draggingRef = useRef(false);
   const glidingRef = useRef(false);
   const blockClickRef = useRef(false);
+  const centersRef = useRef<number[]>([]);
   const valueRef = useRef(value);
   const onChangeRef = useRef(onChange);
   const dragRef = useRef({
@@ -178,18 +179,28 @@ export function ColorRoulette({
     0,
     options.findIndex((option) => option.value === value),
   );
+  const selectedIndexRef = useRef(selectedIndex);
+  selectedIndexRef.current = selectedIndex;
+
+  const measureCenters = useCallback(() => {
+    const track = trackRef.current;
+    if (!track) return [];
+    const centers = Array.from(
+      track.querySelectorAll<HTMLElement>(".menu-show-swatch"),
+      (button) => button.offsetLeft + button.offsetWidth / 2,
+    );
+    centersRef.current = centers;
+    return centers;
+  }, []);
 
   const centerOnIndex = useCallback(
     (index: number, behavior: ScrollBehavior = "smooth") => {
       const track = trackRef.current;
-      const button = track?.querySelectorAll<HTMLElement>(".menu-show-swatch")[index];
-      if (!track || !button) return;
-      const trackRect = track.getBoundingClientRect();
-      const buttonRect = button.getBoundingClientRect();
-      const delta =
-        buttonRect.left +
-        buttonRect.width / 2 -
-        (trackRect.left + trackRect.width / 2);
+      if (!track) return;
+      const centers = centersRef.current.length ? centersRef.current : measureCenters();
+      const center = centers[index];
+      if (center == null) return;
+      const delta = center - (track.scrollLeft + track.clientWidth / 2);
       if (Math.abs(delta) < 1) return;
       ignoreScrollRef.current = true;
       track.scrollBy({ left: delta, behavior });
@@ -201,23 +212,20 @@ export function ColorRoulette({
         behavior === "smooth" ? 420 : 32,
       );
     },
-    [],
+    [measureCenters],
   );
 
   const pickCenter = useCallback(
     (snap = true) => {
       const track = trackRef.current;
       if (!track || ignoreScrollRef.current) return;
-      const buttons = Array.from(
-        track.querySelectorAll<HTMLElement>(".menu-show-swatch"),
-      );
-      if (!buttons.length) return;
-      const mid = track.getBoundingClientRect().left + track.clientWidth / 2;
+      const centers = centersRef.current.length ? centersRef.current : measureCenters();
+      if (!centers.length) return;
+      const mid = track.scrollLeft + track.clientWidth / 2;
       let bestIndex = 0;
       let bestDist = Infinity;
-      buttons.forEach((button, index) => {
-        const rect = button.getBoundingClientRect();
-        const dist = Math.abs(rect.left + rect.width / 2 - mid);
+      centers.forEach((center, index) => {
+        const dist = Math.abs(center - mid);
         if (dist < bestDist) {
           bestDist = dist;
           bestIndex = index;
@@ -231,12 +239,23 @@ export function ColorRoulette({
       }
       if (snap) centerOnIndex(bestIndex, "smooth");
     },
-    [centerOnIndex, options],
+    [centerOnIndex, measureCenters, options],
   );
 
   useLayoutEffect(() => {
-    centerOnIndex(selectedIndex, "auto");
-  }, [centerOnIndex, options.length]);
+    measureCenters();
+    centerOnIndex(selectedIndexRef.current, "auto");
+    const track = trackRef.current;
+    if (!track || typeof ResizeObserver === "undefined") return;
+    const observer = new ResizeObserver(() => {
+      measureCenters();
+      if (!draggingRef.current && !glidingRef.current) {
+        centerOnIndex(selectedIndexRef.current, "auto");
+      }
+    });
+    observer.observe(track);
+    return () => observer.disconnect();
+  }, [centerOnIndex, measureCenters, options.length]);
 
   useEffect(() => {
     if (ignoreScrollRef.current || draggingRef.current || glidingRef.current) return;

@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useId, useMemo, useRef, useState } from "react";
 import {
   ArrowUpRight,
   Clock3,
@@ -12,10 +12,12 @@ import {
   Users,
   X,
 } from "lucide-react";
-import { AnimatePresence, motion } from "motion/react";
+import { AnimatePresence, LayoutGroup, motion } from "motion/react";
 import type { PatternPreviewProps } from "@/types/pattern";
 import {
+  UtilityLiquidIndicator,
   UtilityShowcase,
+  utilityQuickSpring,
   utilitySpring,
 } from "@/patterns/utilities/shared/utility-showcase";
 
@@ -33,9 +35,11 @@ const searchable = [
 ];
 
 export default function SmartSearch(props: PatternPreviewProps) {
+  const uid = useId().replace(/:/g, "");
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState("Tudo");
   const [selected, setSelected] = useState(0);
+  const resultRefs = useRef<Array<HTMLLIElement | null>>([]);
   const filters = ["Tudo", "Projetos", "Arquivos", "Pessoas"];
   const results = useMemo(
     () => searchable.filter((item) =>
@@ -45,6 +49,13 @@ export default function SmartSearch(props: PatternPreviewProps) {
     [filter, query],
   );
 
+  const focusResult = (index: number, resultCount: number) => {
+    if (!resultCount) return;
+    const nextIndex = Math.max(0, Math.min(index, resultCount - 1));
+    setSelected(nextIndex);
+    window.requestAnimationFrame(() => resultRefs.current[nextIndex]?.focus());
+  };
+
   return (
     <UtilityShowcase
       {...props}
@@ -52,8 +63,13 @@ export default function SmartSearch(props: PatternPreviewProps) {
       title="Busca inteligente"
       description="Pesquisa global com filtros, atalhos recentes e resultados que se reorganizam enquanto você digita."
       accent={props.accent ?? "#5b7fe5"}
+      frame="wide"
     >
-      {({ size }) => (
+      {({ size }) => {
+        const visibleResults = results.slice(0, size === "small" ? 4 : size === "medium" ? 7 : 10);
+        const activeResult = visibleResults.length ? Math.min(selected, visibleResults.length - 1) : -1;
+
+        return (
         <div className="utility-view u-split search-view">
           <aside className="u-aside search-aside">
             <div className="u-brand">
@@ -81,67 +97,152 @@ export default function SmartSearch(props: PatternPreviewProps) {
                 }}
                 placeholder="Busque em todo o espaço…"
                 aria-label="Busca global"
+                onKeyDown={(event) => {
+                  if (event.key === "ArrowDown") {
+                    event.preventDefault();
+                    focusResult(0, visibleResults.length);
+                  } else if (event.key === "ArrowUp") {
+                    event.preventDefault();
+                    focusResult(visibleResults.length - 1, visibleResults.length);
+                  }
+                }}
               />
               {query ? (
-                <button type="button" aria-label="Limpar busca" onClick={() => setQuery("")}>
+                <button type="button" aria-label="Limpar busca" onClick={() => { setQuery(""); setSelected(0); }}>
                   <X size={14} />
                 </button>
               ) : <kbd>⌘ K</kbd>}
             </label>
 
-            <div className="search-filters" role="group" aria-label="Filtrar resultados">
-              {filters.map((item) => (
-                <button
-                  type="button"
-                  key={item}
-                  className={filter === item ? "is-active" : undefined}
-                  onClick={() => setFilter(item)}
-                >
-                  {item}
-                </button>
-              ))}
-            </div>
+            <LayoutGroup id={`search-filters-${uid}`}>
+              <div className="search-filters search-liquid-filters" role="group" aria-label="Filtrar resultados">
+                {filters.map((item) => {
+                  const active = filter === item;
+                  return (
+                    <motion.button
+                      type="button"
+                      key={item}
+                      className={active ? "is-active" : undefined}
+                      aria-pressed={active}
+                      onClick={() => { setFilter(item); setSelected(0); }}
+                      whileTap={{ scale: 0.92 }}
+                      transition={utilityQuickSpring}
+                    >
+                      {active ? (
+                        <UtilityLiquidIndicator
+                          layoutId={`search-filter-indicator-${uid}`}
+                          tone="soft"
+                          className="search-filter-liquid-indicator"
+                        />
+                      ) : null}
+                      <motion.span
+                        className="search-filter-label"
+                        animate={{ y: active ? -1 : 0, scale: active ? 1.03 : 1 }}
+                        transition={utilityQuickSpring}
+                      >
+                        {item}
+                      </motion.span>
+                    </motion.button>
+                  );
+                })}
+              </div>
+            </LayoutGroup>
 
             <div className="u-row search-result-head">
               <span>{query ? `${results.length} resultados` : "Sugestões para você"}</span>
               <span className="u-badge"><Sparkles size={11} /> Inteligente</span>
             </div>
 
-            <AnimatePresence mode="popLayout" initial={false}>
-              {results.length ? (
-                <motion.ul layout className="u-list search-results" key={`${filter}-${query || "all"}`}>
-                  {results.slice(0, size === "small" ? 4 : size === "medium" ? 7 : 10).map((item, index) => {
-                    const Icon = item.Icon;
-                    return (
-                      <motion.li
-                        layout
-                        key={item.title}
-                        className={`u-list-item search-result${selected === index ? " is-selected" : ""}`}
-                        initial={{ opacity: 0, y: 9 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, scale: 0.96 }}
-                        transition={utilitySpring}
-                        onMouseEnter={() => setSelected(index)}
-                      >
-                        <span className="u-list-icon"><Icon size={15} /></span>
-                        <div className="u-grow">
-                          <b>{item.title}</b>
-                          <small>{item.detail}</small>
-                        </div>
-                        <span className="search-type">{item.type}</span>
-                        <ArrowUpRight size={14} />
-                      </motion.li>
-                    );
-                  })}
-                </motion.ul>
-              ) : (
-                <motion.div className="u-empty" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-                  <span><Search size={19} /></span>
-                  <b>Nenhum resultado ainda</b>
-                  <p>Tente uma palavra mais curta ou selecione outro filtro.</p>
-                </motion.div>
-              )}
-            </AnimatePresence>
+            <LayoutGroup id={`search-results-${uid}`}>
+              <AnimatePresence mode="popLayout" initial={false}>
+                {visibleResults.length ? (
+                  <motion.ul
+                    layout="position"
+                    className="u-list search-results search-liquid-results"
+                    key="search-results"
+                    role="listbox"
+                    aria-label="Resultados da busca"
+                  >
+                    <AnimatePresence mode="popLayout" initial={false}>
+                      {visibleResults.map((item, index) => {
+                        const Icon = item.Icon;
+                        const isSelected = activeResult === index;
+                        return (
+                          <motion.li
+                            layout="position"
+                            ref={(element) => { resultRefs.current[index] = element; }}
+                            key={item.title}
+                            id={`search-result-${uid}-${index}`}
+                            className={`u-list-item search-result search-liquid-result${isSelected ? " is-selected" : ""}`}
+                            role="option"
+                            aria-selected={isSelected}
+                            tabIndex={isSelected ? 0 : -1}
+                            initial={{ opacity: 0, y: 9 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.96 }}
+                            transition={utilitySpring}
+                            onClick={() => setSelected(index)}
+                            onFocus={() => setSelected(index)}
+                            onMouseEnter={() => setSelected(index)}
+                            onKeyDown={(event) => {
+                              if (event.key === "ArrowDown") {
+                                event.preventDefault();
+                                focusResult((index + 1) % visibleResults.length, visibleResults.length);
+                              } else if (event.key === "ArrowUp") {
+                                event.preventDefault();
+                                focusResult((index - 1 + visibleResults.length) % visibleResults.length, visibleResults.length);
+                              } else if (event.key === "Home") {
+                                event.preventDefault();
+                                focusResult(0, visibleResults.length);
+                              } else if (event.key === "End") {
+                                event.preventDefault();
+                                focusResult(visibleResults.length - 1, visibleResults.length);
+                              } else if (event.key === "Enter" || event.key === " ") {
+                                event.preventDefault();
+                                setSelected(index);
+                              }
+                            }}
+                          >
+                            {isSelected ? (
+                              <UtilityLiquidIndicator
+                                layoutId={`search-result-indicator-${uid}`}
+                                tone="soft"
+                                className="search-result-liquid-indicator"
+                              />
+                            ) : null}
+                            <motion.span
+                              className="u-list-icon search-result-liquid-icon"
+                              animate={{ y: isSelected ? -2 : 0, scale: isSelected ? 1.06 : 1 }}
+                              transition={utilityQuickSpring}
+                            >
+                              <Icon size={15} />
+                            </motion.span>
+                            <div className="u-grow">
+                              <b>{item.title}</b>
+                              <small>{item.detail}</small>
+                            </div>
+                            <span className="search-type">{item.type}</span>
+                            <motion.span
+                              className="search-result-liquid-arrow"
+                              animate={{ x: isSelected ? 2 : 0, y: isSelected ? -2 : 0 }}
+                              transition={utilityQuickSpring}
+                            >
+                              <ArrowUpRight size={14} />
+                            </motion.span>
+                          </motion.li>
+                        );
+                      })}
+                    </AnimatePresence>
+                  </motion.ul>
+                ) : (
+                  <motion.div key="search-empty" className="u-empty" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+                    <span><Search size={19} /></span>
+                    <b>Nenhum resultado ainda</b>
+                    <p>Tente uma palavra mais curta ou selecione outro filtro.</p>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </LayoutGroup>
 
             {!query && size !== "small" ? (
               <div className="search-recent u-secondary-detail">
@@ -150,7 +251,8 @@ export default function SmartSearch(props: PatternPreviewProps) {
             ) : null}
           </main>
         </div>
-      )}
+        );
+      }}
     </UtilityShowcase>
   );
 }

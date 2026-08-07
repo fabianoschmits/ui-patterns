@@ -57,6 +57,7 @@ export default function SupportChat(props: PatternPreviewProps) {
       title="Chat de suporte"
       description="Conversa em tempo real, respostas assistidas e composição fluida em um painel pronto para qualquer página."
       accent={props.accent ?? "#16a98f"}
+      frame="narrow"
     >
       {({ size }) => (
         <div className="utility-view u-split chat-view">

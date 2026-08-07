@@ -1,14 +1,15 @@
 "use client";
 
-import { useState } from "react";
+import { useId, useState } from "react";
 import { ArrowLeft, ArrowRight, Check, CreditCard, LockKeyhole, MapPin, PackageCheck, ShieldCheck, Truck } from "lucide-react";
-import { AnimatePresence, motion } from "motion/react";
+import { AnimatePresence, LayoutGroup, motion } from "motion/react";
 import type { PatternPreviewProps } from "@/types/pattern";
-import { UtilityShowcase, utilityQuickSpring, utilitySpring } from "@/patterns/utilities/shared/utility-showcase";
+import { UtilityLiquidIndicator, UtilityShowcase, utilityQuickSpring, utilitySpring } from "@/patterns/utilities/shared/utility-showcase";
 
 const steps = ["Entrega", "Pagamento", "Revisão"];
 
 export default function CheckoutFlow(props: PatternPreviewProps) {
+  const uid = useId().replace(/:/g, "");
   const [step, setStep] = useState(0);
   const [complete, setComplete] = useState(false);
   const [shipping, setShipping] = useState("express");
@@ -40,21 +41,72 @@ export default function CheckoutFlow(props: PatternPreviewProps) {
           </aside>
 
           <main className="u-main checkout-main">
-            <div className="checkout-steps" aria-label="Progresso da compra">
-              {steps.map((label, index) => <button type="button" key={label} className={index === step ? "is-active" : index < step ? "is-done" : ""} onClick={() => !complete && setStep(index)}><span>{index < step ? <Check size={11} /> : index + 1}</span><small>{label}</small></button>)}
-              <motion.i animate={{ width: `${step * 50}%` }} transition={utilitySpring} />
-            </div>
+            <LayoutGroup id={`checkout-steps-${uid}`}>
+              <div className="checkout-steps checkout-liquid-steps" aria-label="Progresso da compra">
+                {steps.map((label, index) => {
+                  const active = index === step;
+                  const done = index < step;
+                  return (
+                    <motion.button
+                      type="button"
+                      key={label}
+                      className={active ? "is-active" : done ? "is-done" : ""}
+                      aria-current={active ? "step" : undefined}
+                      onClick={() => !complete && setStep(index)}
+                      whileTap={{ scale: 0.94 }}
+                      transition={utilityQuickSpring}
+                    >
+                      <motion.span
+                        className="checkout-step-liquid-marker"
+                        animate={{ y: active ? -2 : 0, scale: active ? 1.07 : 1 }}
+                        transition={utilityQuickSpring}
+                      >
+                        {active ? (
+                          <UtilityLiquidIndicator
+                            layoutId={`checkout-step-indicator-${uid}`}
+                            className="checkout-step-liquid-indicator"
+                          />
+                        ) : null}
+                        <AnimatePresence mode="popLayout" initial={false}>
+                          <motion.span
+                            key={done ? "done" : `step-${index}`}
+                            className="checkout-step-liquid-value"
+                            initial={{ opacity: 0, scale: 0.6, rotate: -16 }}
+                            animate={{ opacity: 1, scale: 1, rotate: 0 }}
+                            exit={{ opacity: 0, scale: 0.65, rotate: 16 }}
+                            transition={utilityQuickSpring}
+                          >
+                            {done ? <Check size={11} /> : index + 1}
+                          </motion.span>
+                        </AnimatePresence>
+                      </motion.span>
+                      <motion.small
+                        animate={{ y: active ? -1 : 0, scale: active ? 1.03 : 1 }}
+                        transition={utilityQuickSpring}
+                      >
+                        {label}
+                      </motion.small>
+                    </motion.button>
+                  );
+                })}
+                <motion.i
+                  style={{ transformOrigin: "left center" }}
+                  animate={{ scaleX: step / 2 }}
+                  transition={utilitySpring}
+                />
+              </div>
+            </LayoutGroup>
 
-            <AnimatePresence mode="wait" initial={false}>
+            <AnimatePresence mode="popLayout" initial={false}>
               {complete ? (
-                <motion.div key="complete" className="checkout-complete" initial={{ opacity: 0, scale: 0.88 }} animate={{ opacity: 1, scale: 1 }} transition={utilitySpring}>
+                <motion.div key="complete" className="checkout-complete" initial={{ opacity: 0, scale: 0.88 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.94, y: -8 }} transition={utilitySpring}>
                   <motion.span initial={{ scale: 0, rotate: -20 }} animate={{ scale: 1, rotate: 0 }} transition={{ ...utilityQuickSpring, delay: 0.1 }}><Check size={24} /></motion.span>
                   <span className="u-kicker">Pedido confirmado</span><h3>Agora é com a gente.</h3><p>Você receberá atualizações enquanto o pedido percorre o caminho até sua casa.</p>
                   <button type="button" className="u-secondary" onClick={() => { setComplete(false); setStep(0); }}>Acompanhar outro fluxo</button>
                 </motion.div>
               ) : (
                 <motion.div key={step} className="checkout-pane" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={utilitySpring}>
-                  {step === 0 ? <Delivery shipping={shipping} onShipping={setShipping} compact={size === "small"} /> : null}
+                  {step === 0 ? <Delivery shipping={shipping} onShipping={setShipping} compact={size === "small"} indicatorId={`checkout-shipping-indicator-${uid}`} /> : null}
                   {step === 1 ? <Payment saveCard={saveCard} onSaveCard={setSaveCard} compact={size === "small"} /> : null}
                   {step === 2 ? <Review compact={size === "small"} /> : null}
                 </motion.div>
@@ -69,8 +121,73 @@ export default function CheckoutFlow(props: PatternPreviewProps) {
   );
 }
 
-function Delivery({ shipping, onShipping, compact }: { shipping: string; onShipping: (value: string) => void; compact: boolean }) {
-  return <><span className="u-kicker">Onde entregar</span><h3 className="checkout-title">Endereço e envio</h3><div className="checkout-address"><MapPin size={15} /><span><b>Rua das Acácias, 128</b><small>Florianópolis · SC · 88000-120</small></span><button type="button">Editar</button></div><div className="checkout-options">{[{ id: "express", icon: Truck, title: "Expresso", copy: "Amanhã · grátis" }, { id: "standard", icon: PackageCheck, title: "Consciente", copy: compact ? "4 dias" : "4 dias · menos emissões" }].map(({ id, icon: Icon, title, copy }) => <button type="button" key={id} className={shipping === id ? "is-active" : ""} onClick={() => onShipping(id)}><Icon size={16} /><span><b>{title}</b><small>{copy}</small></span><i /></button>)}</div></>;
+function Delivery({
+  shipping,
+  onShipping,
+  compact,
+  indicatorId,
+}: {
+  shipping: string;
+  onShipping: (value: string) => void;
+  compact: boolean;
+  indicatorId: string;
+}) {
+  const shippingOptions = [
+    { id: "express", icon: Truck, title: "Expresso", copy: "Amanhã · grátis" },
+    { id: "standard", icon: PackageCheck, title: "Consciente", copy: compact ? "4 dias" : "4 dias · menos emissões" },
+  ];
+
+  return (
+    <>
+      <span className="u-kicker">Onde entregar</span>
+      <h3 className="checkout-title">Endereço e envio</h3>
+      <div className="checkout-address">
+        <MapPin size={15} />
+        <span><b>Rua das Acácias, 128</b><small>Florianópolis · SC · 88000-120</small></span>
+        <button type="button">Editar</button>
+      </div>
+      <LayoutGroup id={`${indicatorId}-group`}>
+        <div className="checkout-options checkout-liquid-shipping" role="radiogroup" aria-label="Método de entrega">
+          {shippingOptions.map(({ id, icon: Icon, title, copy }) => {
+            const active = shipping === id;
+            return (
+              <motion.button
+                type="button"
+                role="radio"
+                key={id}
+                className={active ? "is-active" : ""}
+                aria-checked={active}
+                onClick={() => onShipping(id)}
+                whileTap={{ scale: 0.96 }}
+                transition={utilityQuickSpring}
+              >
+                {active ? (
+                  <UtilityLiquidIndicator
+                    layoutId={indicatorId}
+                    tone="outline"
+                    className="checkout-shipping-liquid-indicator"
+                  />
+                ) : null}
+                <motion.span
+                  className="checkout-shipping-liquid-icon"
+                  animate={{ y: active ? -2 : 0, scale: active ? 1.08 : 1 }}
+                  transition={utilityQuickSpring}
+                >
+                  <Icon size={16} />
+                </motion.span>
+                <span className="checkout-shipping-liquid-copy"><b>{title}</b><small>{copy}</small></span>
+                <motion.i
+                  className="checkout-shipping-liquid-radio"
+                  animate={{ scale: active ? 1.08 : 1 }}
+                  transition={utilityQuickSpring}
+                />
+              </motion.button>
+            );
+          })}
+        </div>
+      </LayoutGroup>
+    </>
+  );
 }
 
 function Payment({ saveCard, onSaveCard, compact }: { saveCard: boolean; onSaveCard: (value: boolean) => void; compact: boolean }) {

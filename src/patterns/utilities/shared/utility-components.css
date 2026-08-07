@@ -30,7 +30,7 @@
 /* Profile */
 .profile-top { position: relative; z-index: 1; }
 .profile-identity { position: relative; z-index: 1; }
-.profile-avatar { position: relative; display: grid; width: 4.6rem; height: 4.6rem; place-items: center; margin-bottom: 0.8rem; border: 1px solid rgb(255 255 255 / 0.48); border-radius: 38% 62% 55% 45%; background: linear-gradient(145deg, color-mix(in srgb, var(--utility-accent) 72%, #fff), var(--utility-accent)); color: #fff; font-family: var(--font-editorial); font-size: 1.28rem; box-shadow: 0 18px 38px color-mix(in srgb, var(--utility-accent) 25%, transparent); }
+.profile-avatar { position: relative; display: grid; width: 4.6rem; height: 4.6rem; place-items: center; margin-bottom: 0.8rem; border: 1px solid rgb(255 255 255 / 0.48); border-radius: 38% 62% 55% 45%; background: linear-gradient(145deg, color-mix(in srgb, var(--utility-accent) 72%, #fff), var(--utility-accent)); color: var(--utility-accent-ink); font-family: var(--font-editorial); font-size: 1.28rem; box-shadow: 0 18px 38px color-mix(in srgb, var(--utility-accent) 25%, transparent); }
 .profile-avatar span { position: absolute; right: -0.16rem; bottom: 0.18rem; display: grid; width: 1.35rem; height: 1.35rem; place-items: center; border: 3px solid color-mix(in srgb, var(--utility-bg) 75%, transparent); border-radius: 50%; background: var(--utility-accent); }
 .profile-identity .u-copy { display: flex; align-items: center; gap: 0.3rem; }
 .profile-stats { position: relative; z-index: 1; display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.5rem; }
@@ -121,8 +121,8 @@
 .booking-days button small { color: var(--utility-muted); font-size: 0.38rem; }
 .booking-days button span { font-size: 0.6rem; }
 .booking-days button:disabled { opacity: 0.28; cursor: not-allowed; text-decoration: line-through; }
-.booking-days button.is-active { background: var(--utility-accent); color: #fff; box-shadow: 0 7px 18px color-mix(in srgb, var(--utility-accent) 28%, transparent); }
-.booking-days button.is-active small { color: rgb(255 255 255 / 0.72); }
+.booking-days button.is-active { background: var(--utility-accent); color: var(--utility-accent-ink); box-shadow: 0 7px 18px color-mix(in srgb, var(--utility-accent) 28%, transparent); }
+.booking-days button.is-active small { color: var(--utility-accent-ink); opacity: 0.72; }
 .booking-times { display: flex; gap: 0.34rem; margin: 0.7rem 0; overflow-x: auto; scrollbar-width: none; }
 .booking-times button { min-width: 3.15rem; min-height: 1.82rem; flex: 1 0 auto; border-radius: 0.55rem; background: transparent; color: var(--utility-muted); cursor: pointer; font-size: 0.5rem; }
 .booking-times button.is-active { background: color-mix(in srgb, var(--utility-accent) 13%, transparent); color: var(--utility-accent); }
@@ -171,7 +171,7 @@
 .chat-compose { display: grid; min-height: 2.45rem; flex: none; grid-template-columns: auto auto 1fr auto; align-items: center; gap: 0.18rem; border: 1px solid var(--utility-line); border-radius: 0.78rem; background: color-mix(in srgb, var(--utility-surface-strong) 70%, transparent); padding: 0.2rem; }
 .chat-compose > button { display: grid; width: 1.8rem; height: 1.8rem; place-items: center; border: 0; background: transparent; color: var(--utility-muted); cursor: pointer; }
 .chat-compose input { min-width: 0; border: 0; outline: 0; background: transparent; color: var(--utility-text); font: inherit; font-size: 0.53rem; }
-.chat-compose .chat-send { border-radius: 0.58rem; background: var(--utility-accent); color: #fff; }
+.chat-compose .chat-send { border-radius: 0.58rem; background: var(--utility-accent); color: var(--utility-accent-ink); }
 
 @keyframes chat-pulse { to { transform: translateY(-0.18rem); opacity: 0.45; } }
 
@@ -229,14 +229,14 @@
 .checkout-steps { position: relative; display: grid; flex: none; grid-template-columns: repeat(3, 1fr); margin-bottom: 0.95rem; }
 .checkout-steps::before,
 .checkout-steps > i { position: absolute; top: 0.73rem; right: 16.5%; left: 16.5%; height: 1px; background: var(--utility-line); content: ""; }
-.checkout-steps > i { right: auto; z-index: 1; max-width: 67%; background: var(--utility-accent); }
+.checkout-steps > i { right: auto; z-index: 1; width: 67%; background: var(--utility-accent); }
 .checkout-steps button { position: relative; z-index: 2; display: grid; justify-items: center; gap: 0.25rem; background: transparent; color: var(--utility-muted); cursor: pointer; }
 .checkout-steps button > span { display: grid; width: 1.46rem; height: 1.46rem; place-items: center; border: 1px solid var(--utility-line); border-radius: 50%; background: var(--utility-surface-strong); font-size: 0.46rem; }
 .checkout-steps button small { font-size: 0.42rem; }
 .checkout-steps button.is-active,
 .checkout-steps button.is-done { color: var(--utility-accent); }
 .checkout-steps button.is-active > span,
-.checkout-steps button.is-done > span { border-color: var(--utility-accent); background: var(--utility-accent); color: #fff; }
+.checkout-steps button.is-done > span { border-color: var(--utility-accent); background: var(--utility-accent); color: var(--utility-accent-ink); }
 .checkout-pane { min-height: 0; flex: 1; }
 .checkout-title { margin: 0.3rem 0 0.72rem; font-family: var(--font-editorial); font-size: 1.04rem; font-weight: 560; }
 .checkout-address { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 0.55rem; border-radius: 0.8rem; background: color-mix(in srgb, var(--utility-surface-strong) 72%, transparent); padding: 0.65rem; }
@@ -289,7 +289,7 @@
 .filters-logic .u-tabs { width: auto; padding: 0.12rem; }
 .filters-logic .u-tabs button { position: relative; isolation: isolate; min-width: 2rem; padding: 0.28rem; }
 .filters-logic .u-tabs button i { position: absolute; inset: 0; z-index: -1; border-radius: inherit; background: var(--utility-accent); }
-.filters-logic .u-tabs button.is-active { color: #fff; }
+.filters-logic .u-tabs button.is-active { color: var(--utility-accent-ink); }
 .filters-rules { display: grid; min-height: 0; gap: 0.38rem; overflow: auto; scrollbar-width: none; }
 .filter-rule { display: grid; min-height: 2.45rem; grid-template-columns: auto 1fr 0.72fr 1fr auto; align-items: center; gap: 0.25rem; border-radius: 0.72rem; background: color-mix(in srgb, var(--utility-surface-strong) 68%, transparent); padding: 0.3rem; }
 .filter-rule > span { display: grid; width: 1.35rem; height: 1.35rem; place-items: center; border-radius: 50%; background: color-mix(in srgb, var(--utility-accent) 12%, transparent); color: var(--utility-accent); font-size: 0.42rem; }
@@ -317,7 +317,7 @@
 .onboarding-task.is-done { opacity: 0.62; }
 .onboarding-task.is-done .u-grow b { text-decoration: line-through; }
 .onboarding-check { display: grid; width: 1.55rem; height: 1.55rem; flex: none; place-items: center; border-radius: 50%; background: transparent; color: var(--utility-muted); cursor: pointer; }
-.onboarding-check > span { display: grid; width: 1.25rem; height: 1.25rem; place-items: center; border-radius: 50%; background: var(--utility-accent); color: #fff; }
+.onboarding-check > span { display: grid; width: 1.25rem; height: 1.25rem; place-items: center; border-radius: 50%; background: var(--utility-accent); color: var(--utility-accent-ink); }
 .onboarding-time { flex: none; color: var(--utility-muted); font-size: 0.4rem; }
 .onboarding-tip { display: flex; flex: none; align-items: center; gap: 0.4rem; border-top: 1px solid var(--utility-line); margin-top: 0.55rem; padding-top: 0.55rem; color: var(--utility-muted); font-size: 0.45rem; }
 .onboarding-complete { display: grid; height: 100%; place-content: center; justify-items: center; text-align: center; }
@@ -336,8 +336,8 @@
 .timeline-head b { font-family: var(--font-editorial); font-size: 0.91rem; }
 .timeline-filters { display: flex; flex: none; gap: 0.22rem; margin: 0.58rem 0; overflow-x: auto; scrollbar-width: none; }
 .timeline-filters button { position: relative; isolation: isolate; border-radius: 999px; background: transparent; padding: 0.35rem 0.55rem; color: var(--utility-muted); cursor: pointer; font-size: 0.45rem; }
-.timeline-filters button span { position: absolute; inset: 0; z-index: -1; border-radius: inherit; background: var(--utility-accent); }
-.timeline-filters button.is-active { color: #fff; }
+.timeline-filters button > span:not(.u-liquid-indicator) { position: relative; z-index: 1; }
+.timeline-filters button.is-active { color: var(--utility-accent-ink); }
 .timeline-events { min-height: 0; overflow: auto; margin: 0; padding: 0; list-style: none; scrollbar-width: none; }
 .timeline-events li { position: relative; display: grid; grid-template-columns: auto 1fr; gap: 0.55rem; padding: 0.33rem 0 0.55rem; }
 .timeline-icon { position: relative; z-index: 2; display: grid; width: 2rem; height: 2rem; place-items: center; border-radius: 0.68rem; background: rgb(121 91 190 / 0.16); color: #7859bc; }
@@ -370,7 +370,7 @@
 .data-row.is-selected { background: color-mix(in srgb, var(--utility-accent) 8%, transparent); }
 .data-head { min-height: 1.75rem; background: color-mix(in srgb, var(--utility-surface-strong) 55%, transparent); font-size: 0.38rem; font-weight: 650; letter-spacing: 0.05em; text-transform: uppercase; }
 .table-check { display: grid; width: 0.9rem; height: 0.9rem; place-items: center; border: 1px solid var(--utility-line); border-radius: 0.25rem; background: transparent; cursor: pointer; }
-.table-check.is-on { border-color: var(--utility-accent); background: var(--utility-accent); color: #fff; }
+.table-check.is-on { border-color: var(--utility-accent); background: var(--utility-accent); color: var(--utility-accent-ink); }
 .data-person { display: flex; min-width: 0; align-items: center; gap: 0.38rem; color: var(--utility-text); }
 .data-person .u-avatar { width: 1.45rem; height: 1.45rem; font-size: 0.38rem; }
 .data-person b { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
@@ -380,7 +380,7 @@
 .data-status.is-planejado { background: rgb(122 103 181 / 0.13); color: #725daf; }
 .data-progress { display: flex; align-items: center; gap: 0.3rem; }
 .data-progress > i { width: 2.5rem; height: 0.2rem; overflow: hidden; border-radius: 99px; background: var(--utility-line); }
-.data-progress > i b { display: block; height: 100%; border-radius: inherit; background: var(--utility-accent); }
+.data-progress > i b { display: block; width: 100%; height: 100%; border-radius: inherit; background: var(--utility-accent); }
 .data-progress small { font-size: 0.37rem; }
 .table-more { display: grid; place-items: center; background: transparent; color: var(--utility-muted); cursor: pointer; }
 .table-pagination { display: flex; flex: none; align-items: center; justify-content: space-between; margin-top: 0.45rem; color: var(--utility-muted); font-size: 0.4rem; }
@@ -415,3 +415,103 @@
 .utility-card.is-small .table-toolbar .u-secondary { width: 2.25rem; padding: 0; }
 .utility-card.is-small .table-toolbar .u-secondary span { display: none; }
 .utility-card.is-small .data-row { min-width: 17rem; grid-template-columns: 1.2rem 1.35fr 0.75fr 0.9fr 1rem; }
+
+/* Shared liquid-selection language --------------------------------------- */
+:where(
+  .search-liquid-filters > button,
+  .search-liquid-result,
+  .booking-liquid-days > button,
+  .booking-liquid-times > button,
+  .checkout-liquid-steps > button,
+  .checkout-liquid-shipping > button
+) {
+  position: relative;
+  isolation: isolate;
+}
+
+:where(
+  .search-filter-label,
+  .search-liquid-result > :not(.u-liquid-indicator),
+  .booking-liquid-days > button > :not(.u-liquid-indicator),
+  .booking-liquid-times > button > :not(.u-liquid-indicator),
+  .checkout-step-liquid-marker > :not(.u-liquid-indicator),
+  .checkout-liquid-steps > button > small,
+  .checkout-liquid-shipping > button > :not(.u-liquid-indicator)
+) {
+  position: relative;
+  z-index: 1;
+}
+
+.search-liquid-filters > button,
+.booking-liquid-days > button,
+.booking-liquid-times > button,
+.checkout-liquid-steps > button,
+.checkout-liquid-shipping > button,
+.search-liquid-result {
+  overflow: visible;
+}
+
+.search-liquid-result.is-selected {
+  color: var(--utility-ink);
+}
+
+.search-liquid-result.is-selected .search-type,
+.search-liquid-result.is-selected .search-result-liquid-arrow {
+  color: var(--utility-accent);
+}
+
+.search-result-liquid-indicator {
+  inset: -1px;
+  border-radius: inherit;
+}
+
+.booking-liquid-days > button.is-active {
+  color: var(--utility-accent-ink);
+}
+
+.booking-day-liquid-indicator {
+  inset: -1px;
+}
+
+.booking-liquid-times > button.is-active,
+.search-liquid-filters > button.is-active,
+.checkout-liquid-shipping > button.is-active {
+  color: var(--utility-accent);
+}
+
+.checkout-step-liquid-marker {
+  position: relative;
+  isolation: isolate;
+  overflow: visible;
+}
+
+.checkout-liquid-steps > button:is(.is-active, .is-done) {
+  color: var(--utility-accent);
+}
+
+.checkout-liquid-steps > button:is(.is-active, .is-done) .checkout-step-liquid-marker {
+  color: var(--utility-accent-ink);
+}
+
+.checkout-step-liquid-indicator {
+  inset: -1px;
+  border-radius: 50%;
+}
+
+.checkout-step-liquid-value {
+  display: grid;
+  place-items: center;
+}
+
+.checkout-shipping-liquid-indicator {
+  inset: -1px;
+  border-radius: inherit;
+}
+
+.checkout-shipping-liquid-icon,
+.checkout-shipping-liquid-arrow,
+.booking-format-liquid-icon,
+.booking-format-liquid-arrow,
+.search-result-liquid-arrow {
+  display: inline-flex;
+}

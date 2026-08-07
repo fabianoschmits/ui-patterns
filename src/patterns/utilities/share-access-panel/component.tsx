@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   Check,
   ChevronDown,
@@ -37,6 +37,45 @@ export default function ShareAccessPanel(props: PatternPreviewProps) {
   const [invite, setInvite] = useState("");
   const [publicLink, setPublicLink] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [copyError, setCopyError] = useState(false);
+  const copiedTimerRef = useRef<number | null>(null);
+
+  useEffect(() => () => {
+    if (copiedTimerRef.current !== null) {
+      window.clearTimeout(copiedTimerRef.current);
+    }
+  }, []);
+
+  const copyPublicLink = async () => {
+    if (copiedTimerRef.current !== null) {
+      window.clearTimeout(copiedTimerRef.current);
+    }
+
+    const link = "https://lume.co/aurora";
+    let success = false;
+    try {
+      await navigator.clipboard.writeText(link);
+      success = true;
+    } catch {
+      const field = document.createElement("textarea");
+      field.value = link;
+      field.setAttribute("readonly", "");
+      field.style.position = "fixed";
+      field.style.opacity = "0";
+      document.body.appendChild(field);
+      field.select();
+      success = document.execCommand("copy");
+      field.remove();
+    }
+
+    setCopied(success);
+    setCopyError(!success);
+    copiedTimerRef.current = window.setTimeout(() => {
+      setCopied(false);
+      setCopyError(false);
+      copiedTimerRef.current = null;
+    }, 1400);
+  };
 
   return (
     <UtilityShowcase
@@ -79,7 +118,7 @@ export default function ShareAccessPanel(props: PatternPreviewProps) {
             <motion.ul layout className="u-list share-people">
               <AnimatePresence mode="popLayout" initial={false}>
                 {people.slice(0, size === "small" ? 4 : size === "medium" ? 5 : 6).map((person) => (
-                  <motion.li layout key={person.id} className="u-list-item" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, x: 18 }} transition={utilitySpring}>
+                  <motion.li layout="position" key={person.id} className="u-list-item" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, x: 18, scale: 0.97 }} transition={utilitySpring}>
                     <span className="u-avatar">{person.initials}</span>
                     <div className="u-grow"><b>{person.name}</b><small>{person.email}</small></div>
                     <button type="button" className="share-role">{person.role}<ChevronDown size={12} /></button>
@@ -92,14 +131,54 @@ export default function ShareAccessPanel(props: PatternPreviewProps) {
             <div className="share-link">
               <span className="u-list-icon">{publicLink ? <Globe2 size={15} /> : <Lock size={15} />}</span>
               <div className="u-grow"><b>{publicLink ? "Qualquer pessoa com o link" : "Link restrito"}</b><small>{publicLink ? "Pode visualizar sem entrar" : "Somente convidados"}</small></div>
-              <button type="button" className={`u-switch${publicLink ? " is-on" : ""}`} aria-pressed={publicLink} onClick={() => setPublicLink((value) => !value)}><motion.span animate={{ x: publicLink ? 16 : 0 }} transition={utilityQuickSpring} /></button>
+              <button
+                type="button"
+                className={`u-switch${publicLink ? " is-on" : ""}`}
+                aria-label={publicLink ? "Desativar link público" : "Ativar link público"}
+                aria-pressed={publicLink}
+                onClick={() => {
+                  setPublicLink((value) => !value);
+                  setCopied(false);
+                  setCopyError(false);
+                }}
+              >
+                <motion.span animate={{ x: publicLink ? 16 : 0 }} transition={utilityQuickSpring} />
+              </button>
             </div>
 
-            {publicLink ? (
-              <motion.button type="button" className="share-copy u-secondary" initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 39 }} onClick={() => { setCopied(true); window.setTimeout(() => setCopied(false), 1400); }}>
-                {copied ? <><Check size={14} /> Link copiado</> : <><Link2 size={14} /> lume.co/aurora <Copy size={13} /></>}
-              </motion.button>
-            ) : null}
+            <AnimatePresence mode="popLayout" initial={false}>
+              {publicLink ? (
+                <motion.button
+                  layout
+                  key="public-link-copy"
+                  type="button"
+                  aria-label={copied ? "Link copiado" : copyError ? "Não foi possível copiar" : "Copiar link público lume.co/aurora"}
+                  className="share-copy u-secondary"
+                  style={{ transformOrigin: "top center" }}
+                  initial={{ opacity: 0, y: -7, scaleY: 0.76 }}
+                  animate={{ opacity: 1, y: 0, scaleY: 1 }}
+                  exit={{ opacity: 0, y: -6, scaleY: 0.82 }}
+                  transition={utilityQuickSpring}
+                  onClick={copyPublicLink}
+                >
+                  <AnimatePresence mode="popLayout" initial={false}>
+                    <motion.span
+                      layout
+                      key={copied ? "copied" : copyError ? "error" : "copy"}
+                      role="status"
+                      aria-live="polite"
+                      style={{ display: "inline-flex", alignItems: "center", gap: "0.45rem" }}
+                      initial={{ opacity: 0, y: 5, scale: 0.92 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: -5, scale: 0.92 }}
+                      transition={utilityQuickSpring}
+                    >
+                      {copied ? <><Check size={14} /> Link copiado</> : copyError ? <><X size={14} /> Não foi possível copiar</> : <><Link2 size={14} /> lume.co/aurora <Copy size={13} /></>}
+                    </motion.span>
+                  </AnimatePresence>
+                </motion.button>
+              ) : null}
+            </AnimatePresence>
           </main>
         </div>
       )}

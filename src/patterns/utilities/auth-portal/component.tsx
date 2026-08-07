@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useId, useState } from "react";
 import {
   ArrowLeft,
   ArrowRight,
@@ -14,9 +14,10 @@ import {
   Sparkles,
   UserRound,
 } from "lucide-react";
-import { AnimatePresence, motion } from "motion/react";
+import { AnimatePresence, LayoutGroup, motion } from "motion/react";
 import type { PatternPreviewProps } from "@/types/pattern";
 import {
+  UtilityLiquidIndicator,
   UtilityShowcase,
   utilityQuickSpring,
   utilitySpring,
@@ -45,12 +46,13 @@ const modeCopy: Record<AuthMode, { kicker: string; title: string; copy: string }
 };
 
 export default function AuthPortal(props: PatternPreviewProps) {
+  const uid = useId().replace(/:/g, "");
   const [mode, setMode] = useState<AuthMode>("login");
   const [showPassword, setShowPassword] = useState(false);
   const [remember, setRemember] = useState(true);
   const [complete, setComplete] = useState(false);
   const copy = modeCopy[mode];
-  const alternateMode: AuthMode = mode === "register" ? "login" : mode === "recovery" ? "login" : "register";
+  const selectedAccountMode = mode === "register" ? "register" : "login";
 
   const changeMode = (next: AuthMode) => {
     setComplete(false);
@@ -64,6 +66,7 @@ export default function AuthPortal(props: PatternPreviewProps) {
       title="Login & Cadastro"
       description="Um portal de acesso delicado, com transições contínuas entre entrada, criação de conta e recuperação."
       accent={props.accent ?? "#10b9ae"}
+      frame="narrow"
       showAppChrome={false}
     >
       {({ size }) => (
@@ -74,7 +77,7 @@ export default function AuthPortal(props: PatternPreviewProps) {
               Lume
             </div>
 
-            <AnimatePresence mode="wait" initial={false}>
+            <AnimatePresence mode="popLayout" initial={false}>
               <motion.div
                 key={mode}
                 className="auth-aside-copy"
@@ -97,42 +100,54 @@ export default function AuthPortal(props: PatternPreviewProps) {
 
           <motion.div layout className="u-main auth-main" transition={utilitySpring}>
             <div className="auth-main-shell">
-              <div className="auth-mode-toolbar">
-                <AnimatePresence mode="popLayout" initial={false}>
-                  <motion.span
-                    key={`prompt-${mode}`}
-                    initial={{ opacity: 0, y: 6 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -6 }}
-                    transition={utilitySpring}
-                  >
-                    {mode === "login" ? "Ainda não tem conta?" : mode === "register" ? "Já tem uma conta?" : "Lembrou sua senha?"}
-                  </motion.span>
-                </AnimatePresence>
-                <motion.button
-                  layout
-                  type="button"
-                  className="auth-mode-switch"
-                  onClick={() => changeMode(alternateMode)}
-                  whileTap={{ scale: 0.94 }}
-                  transition={utilityQuickSpring}
-                >
+              <LayoutGroup id={`auth-mode-${uid}`}>
+                <div className="auth-mode-toolbar">
                   <AnimatePresence mode="popLayout" initial={false}>
                     <motion.span
-                      key={`switch-${mode}`}
-                      initial={{ opacity: 0, x: 8 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      exit={{ opacity: 0, x: -8 }}
-                      transition={utilityQuickSpring}
+                      key={`prompt-${mode}`}
+                      className="auth-mode-context"
+                      initial={{ opacity: 0, y: 6 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -6 }}
+                      transition={utilitySpring}
                     >
-                      {mode === "login" ? "Criar conta" : "Entrar"}
+                      {mode === "recovery" ? "Recuperação segura" : "Acesse do seu jeito"}
                     </motion.span>
                   </AnimatePresence>
-                  <motion.i animate={{ rotate: mode === "register" || mode === "recovery" ? 180 : 0 }} transition={utilityQuickSpring}>
-                    <ArrowRight size={13} />
-                  </motion.i>
-                </motion.button>
-              </div>
+
+                  <div className="auth-mode-segment" role="tablist" aria-label="Acesso à conta">
+                    {(["login", "register"] as const).map((item) => {
+                      const active = selectedAccountMode === item;
+                      return (
+                        <motion.button
+                          type="button"
+                          role="tab"
+                          key={item}
+                          className={active ? "is-active" : undefined}
+                          aria-selected={active}
+                          onClick={() => changeMode(item)}
+                          whileTap={{ scale: 0.92 }}
+                          transition={utilityQuickSpring}
+                        >
+                          {active ? (
+                            <UtilityLiquidIndicator
+                              layoutId={`auth-mode-indicator-${uid}`}
+                              className="auth-mode-liquid-indicator"
+                            />
+                          ) : null}
+                          <motion.span
+                            className="auth-mode-label"
+                            animate={{ y: active ? -1 : 0, scale: active ? 1.03 : 1 }}
+                            transition={utilityQuickSpring}
+                          >
+                            {item === "login" ? "Login" : "Cadastro"}
+                          </motion.span>
+                        </motion.button>
+                      );
+                    })}
+                  </div>
+                </div>
+              </LayoutGroup>
 
               <AnimatePresence mode="popLayout" initial={false}>
                 {complete ? (
@@ -218,30 +233,70 @@ export default function AuthPortal(props: PatternPreviewProps) {
                             type={showPassword ? "text" : "password"}
                             placeholder={mode === "register" ? "Mínimo de 6 caracteres" : "Sua senha"}
                           />
-                          <button
+                          <motion.button
                             type="button"
+                            className="auth-password-toggle"
                             aria-label={showPassword ? "Ocultar senha" : "Mostrar senha"}
+                            aria-pressed={showPassword}
                             onClick={() => setShowPassword((value) => !value)}
+                            whileTap={{ scale: 0.84 }}
+                            transition={utilityQuickSpring}
                           >
-                            {showPassword ? <EyeOff size={14} /> : <Eye size={14} />}
-                          </button>
+                            <AnimatePresence mode="popLayout" initial={false}>
+                              <motion.span
+                                key={showPassword ? "password-visible" : "password-hidden"}
+                                className="auth-password-toggle-icon"
+                                initial={{ opacity: 0, scale: 0.62, rotate: -18 }}
+                                animate={{ opacity: 1, scale: 1, rotate: 0 }}
+                                exit={{ opacity: 0, scale: 0.62, rotate: 18 }}
+                                transition={utilityQuickSpring}
+                              >
+                                {showPassword ? <EyeOff size={14} /> : <Eye size={14} />}
+                              </motion.span>
+                            </AnimatePresence>
+                          </motion.button>
                         </span>
                       </label>
                     ) : null}
 
                     {mode === "login" ? (
                       <div className="u-row auth-options">
-                        <button
+                        <motion.button
                           type="button"
                           className="auth-check"
                           aria-pressed={remember}
                           onClick={() => setRemember((value) => !value)}
+                          whileTap={{ scale: 0.94 }}
+                          transition={utilityQuickSpring}
                         >
-                          <span className={cn(remember && "is-checked")}>
-                            {remember ? <Check size={11} /> : null}
-                          </span>
-                          Lembrar de mim
-                        </button>
+                          <motion.span
+                            className={cn("auth-check-box", remember && "is-checked")}
+                            animate={{ scale: remember ? 1.04 : 1, borderRadius: remember ? 6 : 5 }}
+                            transition={utilityQuickSpring}
+                          >
+                            <AnimatePresence initial={false}>
+                              {remember ? (
+                                <motion.span
+                                  key="remember-check"
+                                  className="auth-check-mark"
+                                  initial={{ opacity: 0, scale: 0.35, rotate: -24 }}
+                                  animate={{ opacity: 1, scale: 1, rotate: 0 }}
+                                  exit={{ opacity: 0, scale: 0.35, rotate: 24 }}
+                                  transition={utilityQuickSpring}
+                                >
+                                  <Check size={11} />
+                                </motion.span>
+                              ) : null}
+                            </AnimatePresence>
+                          </motion.span>
+                          <motion.span
+                            className="auth-check-label"
+                            animate={{ x: remember ? 1 : 0 }}
+                            transition={utilityQuickSpring}
+                          >
+                            Lembrar de mim
+                          </motion.span>
+                        </motion.button>
                         <button type="button" className="u-link-button" onClick={() => changeMode("recovery")}>
                           Esqueci a senha
                         </button>

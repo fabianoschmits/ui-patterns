@@ -13,6 +13,7 @@ import {
 import { AnimatePresence, LayoutGroup, motion } from "motion/react";
 import type { PatternPreviewProps } from "@/types/pattern";
 import {
+  UtilityLiquidIndicator,
   UtilityShowcase,
   utilityQuickSpring,
   utilitySpring,
@@ -38,6 +39,12 @@ export default function NotificationCenter(props: PatternPreviewProps) {
     [filter, items],
   );
 
+  const markAsRead = (id: number) => {
+    setItems((current) => current.map((item) => (
+      item.id === id && item.unread ? { ...item, unread: false } : item
+    )));
+  };
+
   return (
     <UtilityShowcase
       {...props}
@@ -45,6 +52,7 @@ export default function NotificationCenter(props: PatternPreviewProps) {
       title="Central de notificações"
       description="Mensagens, aprovações e atividades reunidas em uma fila clara, interativa e silenciosa."
       accent={props.accent ?? "#8769dc"}
+      frame="narrow"
     >
       {({ size }) => (
         <div className="utility-view u-split notify-view">
@@ -66,12 +74,12 @@ export default function NotificationCenter(props: PatternPreviewProps) {
           <main className="u-main notify-main">
             <div className="u-row notify-head">
               <LayoutGroup id="notification-tabs">
-                <div className="u-tabs notify-tabs">
+                <div className="u-tabs notify-tabs" role="group" aria-label="Filtrar notificações">
                   {(["all", "unread"] as const).map((item) => {
                     const active = filter === item;
                     return (
-                      <button key={item} type="button" className={active ? "is-active" : undefined} onClick={() => setFilter(item)}>
-                        {active ? <motion.span layoutId="notification-pill" className="u-tab-pill" transition={utilityQuickSpring} /> : null}
+                      <button key={item} type="button" className={active ? "is-active" : undefined} aria-pressed={active} onClick={() => setFilter(item)}>
+                        {active ? <UtilityLiquidIndicator layoutId="notification-pill" /> : null}
                         {item === "all" ? "Todas" : `Não lidas ${unread}`}
                       </button>
                     );
@@ -90,33 +98,44 @@ export default function NotificationCenter(props: PatternPreviewProps) {
 
             <AnimatePresence mode="popLayout" initial={false}>
               {visible.length ? (
-                <motion.ul layout className="u-list notify-list">
-                  {visible.slice(0, size === "small" ? 4 : size === "medium" ? 6 : 8).map((item) => {
-                    const Icon = item.Icon;
-                    return (
-                      <motion.li
-                        layout
-                        key={item.id}
-                        className={`u-list-item notify-item${item.unread ? " is-unread" : ""}`}
-                        initial={{ opacity: 0, x: 14 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        exit={{ opacity: 0, x: 22, scale: 0.97 }}
-                        transition={utilitySpring}
-                        onClick={() => setItems((current) => current.map((entry) => entry.id === item.id ? { ...entry, unread: false } : entry))}
-                      >
-                        <span className="u-list-icon"><Icon size={15} /></span>
-                        <div className="u-grow">
-                          <b>{item.title}</b>
-                          <p>{item.copy}</p>
-                        </div>
-                        <small>{item.time}</small>
-                        {item.unread ? <i aria-label="Não lida" /> : null}
-                      </motion.li>
-                    );
-                  })}
+                <motion.ul key="notification-list" layout className="u-list notify-list">
+                  <AnimatePresence mode="popLayout" initial={false}>
+                    {visible.slice(0, size === "small" ? 4 : size === "medium" ? 6 : 8).map((item) => {
+                      const Icon = item.Icon;
+                      return (
+                        <motion.li
+                          layout="position"
+                          key={item.id}
+                          className={`u-list-item notify-item${item.unread ? " is-unread" : ""}`}
+                          role="button"
+                          tabIndex={0}
+                          aria-label={item.unread ? `Marcar ${item.title} como lida` : `Notificação lida: ${item.title}`}
+                          initial={{ opacity: 0, x: 14 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          exit={{ opacity: 0, x: 22, scale: 0.97 }}
+                          transition={utilitySpring}
+                          onClick={() => markAsRead(item.id)}
+                          onKeyDown={(event) => {
+                            if (event.key === "Enter" || event.key === " ") {
+                              event.preventDefault();
+                              markAsRead(item.id);
+                            }
+                          }}
+                        >
+                          <span className="u-list-icon"><Icon size={15} /></span>
+                          <div className="u-grow">
+                            <b>{item.title}</b>
+                            <p>{item.copy}</p>
+                          </div>
+                          <small>{item.time}</small>
+                          {item.unread ? <i aria-hidden="true" /> : null}
+                        </motion.li>
+                      );
+                    })}
+                  </AnimatePresence>
                 </motion.ul>
               ) : (
-                <motion.div className="u-empty" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
+                <motion.div key="notification-empty" className="u-empty" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }} transition={utilitySpring}>
                   <span><CheckCheck size={19} /></span>
                   <b>Tudo em dia</b>
                   <p>Novas atualizações aparecerão aqui.</p>

@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Activity, CheckCircle2, Clock3, FileText, GitCommitHorizontal, MessageCircle, MoreHorizontal, Sparkles, UserPlus } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import type { PatternPreviewProps } from "@/types/pattern";
-import { UtilityShowcase, utilityQuickSpring, utilitySpring } from "@/patterns/utilities/shared/utility-showcase";
+import { UtilityLiquidIndicator, UtilityShowcase, utilitySpring } from "@/patterns/utilities/shared/utility-showcase";
 
 const events = [
   { id: 1, type: "equipe", icon: MessageCircle, person: "Marina", action: "comentou no protótipo", detail: "A transição ficou muito mais natural agora.", time: "há 8 min", tone: "violet" },
@@ -34,8 +34,8 @@ export default function ActivityTimeline(props: PatternPreviewProps) {
           </aside>
 
           <main className="u-main timeline-main">
-            <div className="u-row timeline-head"><div><span className="u-kicker">Hoje · 6 de agosto</span><b>Movimentos recentes</b></div><button type="button" className="u-icon-button"><MoreHorizontal size={15} /></button></div>
-            <div className="timeline-filters">{[["todos", "Tudo"], ["equipe", "Equipe"], ["projeto", "Projeto"], ["sistema", "Sistema"]].map(([value, label]) => <button type="button" key={value} className={filter === value ? "is-active" : ""} onClick={() => setFilter(value)}>{filter === value ? <motion.span layoutId="timeline-filter" transition={utilityQuickSpring} /> : null}{label}</button>)}</div>
+            <div className="u-row timeline-head"><div><span className="u-kicker">Hoje · 6 de agosto</span><b>Movimentos recentes</b></div><button type="button" className="u-icon-button" aria-label="Mais opções da atividade"><MoreHorizontal size={15} /></button></div>
+            <div className="timeline-filters" role="group" aria-label="Filtrar atividades">{[["todos", "Tudo"], ["equipe", "Equipe"], ["projeto", "Projeto"], ["sistema", "Sistema"]].map(([value, label]) => <button type="button" key={value} className={filter === value ? "is-active" : ""} aria-pressed={filter === value} onClick={() => setFilter(value)}>{filter === value ? <UtilityLiquidIndicator layoutId="timeline-filter" /> : null}<span>{label}</span></button>)}</div>
             <motion.ol layout className="timeline-events">
               <AnimatePresence mode="popLayout" initial={false}>{visible.slice(0, size === "small" ? 4 : size === "medium" ? 7 : 9).map((event) => { const Icon = event.icon; return <motion.li layout key={event.id} initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, x: 20 }} transition={utilitySpring}><div className={`timeline-icon tone-${event.tone}`}><Icon size={14} /></div><div className="timeline-line" /><div><p><b>{event.person}</b> {event.action}</p><span>{event.detail}</span><small><Clock3 size={10} />{event.time}</small></div></motion.li>; })}</AnimatePresence>
             </motion.ol>

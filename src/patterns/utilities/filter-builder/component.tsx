@@ -4,7 +4,7 @@ import { useMemo, useState } from "react";
 import { Check, ChevronDown, Filter, Layers3, Plus, SlidersHorizontal, Sparkles, Trash2, X } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import type { PatternPreviewProps } from "@/types/pattern";
-import { UtilityShowcase, utilityQuickSpring, utilitySpring } from "@/patterns/utilities/shared/utility-showcase";
+import { UtilityLiquidIndicator, UtilityShowcase, utilitySpring } from "@/patterns/utilities/shared/utility-showcase";
 
 const choices = [
   ["Status", "é", "Em andamento"],
@@ -32,8 +32,8 @@ export default function FilterBuilder(props: PatternPreviewProps) {
           </aside>
 
           <main className="u-main filters-main">
-            <div className="u-row filters-head"><div><span className="u-kicker">Refinar projetos</span><b>Todos os filtros</b></div><button type="button" className="u-icon-button" onClick={() => { setRules([]); setApplied(false); }}><X size={14} /></button></div>
-            <div className="filters-logic"><span>Mostrar itens que atendem</span><div className="u-tabs">{(["E", "OU"] as const).map((value) => <button type="button" key={value} className={logic === value ? "is-active" : ""} onClick={() => setLogic(value)}>{value}{logic === value ? <motion.i layoutId="filter-logic" transition={utilityQuickSpring} /> : null}</button>)}</div><span>às regras</span></div>
+            <div className="u-row filters-head"><div><span className="u-kicker">Refinar projetos</span><b>Todos os filtros</b></div><button type="button" className="u-icon-button" aria-label="Limpar filtros" onClick={() => { setRules([]); setApplied(false); }}><X size={14} /></button></div>
+            <div className="filters-logic"><span>Mostrar itens que atendem</span><div className="u-tabs" role="group" aria-label="Lógica dos filtros">{(["E", "OU"] as const).map((value) => <button type="button" key={value} className={logic === value ? "is-active" : ""} aria-pressed={logic === value} onClick={() => setLogic(value)}>{logic === value ? <UtilityLiquidIndicator layoutId="filter-logic" /> : null}<span>{value}</span></button>)}</div><span>às regras</span></div>
 
             <motion.div layout className="filters-rules">
               <AnimatePresence mode="popLayout" initial={false}>
