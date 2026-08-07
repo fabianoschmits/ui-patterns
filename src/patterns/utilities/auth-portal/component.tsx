@@ -14,7 +14,7 @@ import {
   Sparkles,
   UserRound,
 } from "lucide-react";
-import { AnimatePresence, LayoutGroup, motion } from "motion/react";
+import { AnimatePresence, motion } from "motion/react";
 import type { PatternPreviewProps } from "@/types/pattern";
 import {
   UtilityShowcase,
@@ -50,6 +50,7 @@ export default function AuthPortal(props: PatternPreviewProps) {
   const [remember, setRemember] = useState(true);
   const [complete, setComplete] = useState(false);
   const copy = modeCopy[mode];
+  const alternateMode: AuthMode = mode === "register" ? "login" : mode === "recovery" ? "login" : "register";
 
   const changeMode = (next: AuthMode) => {
     setComplete(false);
@@ -94,9 +95,47 @@ export default function AuthPortal(props: PatternPreviewProps) {
           </motion.aside>
 
           <motion.div layout className="u-main auth-main" transition={utilitySpring}>
-            <AnimatePresence mode="wait" initial={false}>
-              {complete ? (
-                <motion.div
+            <div className="auth-main-shell">
+              <div className="auth-mode-toolbar">
+                <AnimatePresence mode="popLayout" initial={false}>
+                  <motion.span
+                    key={`prompt-${mode}`}
+                    initial={{ opacity: 0, y: 6 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -6 }}
+                    transition={utilitySpring}
+                  >
+                    {mode === "login" ? "Ainda não tem conta?" : mode === "register" ? "Já tem uma conta?" : "Lembrou sua senha?"}
+                  </motion.span>
+                </AnimatePresence>
+                <motion.button
+                  layout
+                  type="button"
+                  className="auth-mode-switch"
+                  onClick={() => changeMode(alternateMode)}
+                  whileTap={{ scale: 0.94 }}
+                  transition={utilityQuickSpring}
+                >
+                  <AnimatePresence mode="popLayout" initial={false}>
+                    <motion.span
+                      key={`switch-${mode}`}
+                      initial={{ opacity: 0, x: 8 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: -8 }}
+                      transition={utilityQuickSpring}
+                    >
+                      {mode === "login" ? "Criar conta" : "Entrar"}
+                    </motion.span>
+                  </AnimatePresence>
+                  <motion.i animate={{ rotate: mode === "register" || mode === "recovery" ? 180 : 0 }} transition={utilityQuickSpring}>
+                    <ArrowRight size={13} />
+                  </motion.i>
+                </motion.button>
+              </div>
+
+              <AnimatePresence mode="popLayout" initial={false}>
+                {complete ? (
+                  <motion.div
                   key="complete"
                   className="auth-complete"
                   initial={{ opacity: 0, scale: 0.9, y: 16 }}
@@ -123,46 +162,16 @@ export default function AuthPortal(props: PatternPreviewProps) {
                   <button type="button" className="u-secondary" onClick={() => setComplete(false)}>
                     <ArrowLeft size={14} /> Voltar ao formulário
                   </button>
-                </motion.div>
-              ) : (
-                <motion.div
+                  </motion.div>
+                ) : (
+                  <motion.div
                   key={mode}
+                  className="auth-screen"
                   initial={{ opacity: 0, x: mode === "register" ? 24 : -18 }}
                   animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0, x: mode === "register" ? -20 : 20 }}
                   transition={utilitySpring}
                 >
-                  {mode !== "recovery" ? (
-                    <LayoutGroup id="auth-tabs">
-                      <div className="u-tabs auth-tabs">
-                        {(["login", "register"] as const).map((item) => {
-                          const active = item === mode;
-                          return (
-                            <button
-                              key={item}
-                              type="button"
-                              className={active ? "is-active" : undefined}
-                              onClick={() => changeMode(item)}
-                            >
-                              {active ? (
-                                <motion.span
-                                  layoutId="auth-active-tab"
-                                  className="u-tab-pill"
-                                  transition={utilityQuickSpring}
-                                />
-                              ) : null}
-                              {item === "login" ? "Entrar" : "Criar conta"}
-                            </button>
-                          );
-                        })}
-                      </div>
-                    </LayoutGroup>
-                  ) : (
-                    <button type="button" className="auth-back" onClick={() => changeMode("login")}>
-                      <ArrowLeft size={14} /> Voltar para o login
-                    </button>
-                  )}
-
                   <div className="auth-form-head">
                     <span className="u-kicker">
                       {mode === "login" ? "Acesso pessoal" : mode === "register" ? "Nova conta" : "Recuperação"}
@@ -258,9 +267,10 @@ export default function AuthPortal(props: PatternPreviewProps) {
                       </div>
                     </>
                   ) : null}
-                </motion.div>
-              )}
-            </AnimatePresence>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
           </motion.div>
         </div>
       )}
