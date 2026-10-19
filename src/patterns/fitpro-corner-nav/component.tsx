@@ -7,7 +7,6 @@ import {
   Dumbbell,
   Play,
   BarChart3,
-  MoreHorizontal,
   ChevronUp,
   X,
   CornerUpRight,
@@ -22,7 +21,7 @@ import {
   Flame,
   CheckCircle2,
 } from "lucide-react";
-import { motion, AnimatePresence } from "motion/react";
+import { motion, AnimatePresence, LayoutGroup } from "motion/react";
 import type { PatternPreviewProps } from "@/types/pattern";
 import "./fitpro-corner.css";
 
@@ -39,7 +38,6 @@ const MAIN_TABS: MainTab[] = [
   { id: "plan", label: "Planos", icon: Calendar },
   { id: "workout", label: "Treinar", icon: Dumbbell, isAction: true },
   { id: "stats", label: "Evolução", icon: BarChart3 },
-  { id: "more", label: "Mais", icon: MoreHorizontal },
 ];
 
 // Links do "Mais" verticais (Fit Pro Player More.jsx)
@@ -77,6 +75,7 @@ export default function FitproCornerNavDemo(props: PatternPreviewProps) {
   const currentMain = MAIN_TABS.find((t) => t.id === activeTab);
   const currentMore = MORE_ITEMS.find((m) => m.id === activeTab);
   const activeLabel = currentMain ? currentMain.label : currentMore ? currentMore.title : "Início";
+  const ActiveIcon = currentMain ? currentMain.icon : currentMore ? currentMore.icon : Home;
 
   // Fechar ao clicar fora
   useEffect(() => {
@@ -93,6 +92,7 @@ export default function FitproCornerNavDemo(props: PatternPreviewProps) {
   // Sistema de Drag & Scrub (arrasto contínuo para seleção como no Fit Pro Player)
   const handlePointerDown = (e: ReactPointerEvent<HTMLDivElement>) => {
     if (e.pointerType === "mouse" && e.button !== 0) return;
+    if ((e.target as HTMLElement).closest(".fpp-drag-toggle-tab")) return;
     const arm = horizontalArmRef.current;
     if (!arm) return;
 
@@ -135,9 +135,7 @@ export default function FitproCornerNavDemo(props: PatternPreviewProps) {
 
       const finalTarget = findNearest(upEvt.clientX);
       if (finalTarget) {
-        if (finalTarget === "more") {
-          setVerticalOpen((prev) => !prev);
-        } else if (finalTarget === "workout") {
+        if (finalTarget === "workout") {
           setIsWorkoutActive((prev) => !prev);
           setActiveTab("workout");
         } else {
@@ -153,9 +151,7 @@ export default function FitproCornerNavDemo(props: PatternPreviewProps) {
   };
 
   const handleTabClick = (tab: MainTab) => {
-    if (tab.id === "more") {
-      setVerticalOpen((prev) => !prev);
-    } else if (tab.id === "workout") {
+    if (tab.id === "workout") {
       setIsWorkoutActive((prev) => !prev);
       setActiveTab("workout");
     } else {
@@ -214,6 +210,7 @@ export default function FitproCornerNavDemo(props: PatternPreviewProps) {
       {/* Dock de Canto Draggable / Articulado */}
       <motion.div
         className="fpp-corner-dock"
+        data-draggable={isDraggableMode}
         drag={isDraggableMode}
         dragMomentum={false}
         dragConstraints={containerRef}
@@ -264,12 +261,12 @@ export default function FitproCornerNavDemo(props: PatternPreviewProps) {
               )}
             </AnimatePresence>
 
-            {/* Gatilho de Canto (Esconder / Mostrar) */}
+            {/* Gatilho de Canto (Esconder / Mostrar com nome do local dentro do botão abaixo do ícone) */}
             <button
               type="button"
               className="fpp-corner-trigger"
-              title={open ? "Esconder Menu de Canto" : "Abrir Menu de Canto"}
-              aria-label={open ? "Fechar navegação" : "Abrir navegação"}
+              title={open ? "Fechar navegação" : `Local atual: ${activeLabel} • Clique para abrir`}
+              aria-label={open ? "Fechar navegação" : `Local atual: ${activeLabel}`}
               onClick={() => {
                 if (open) {
                   setOpen(false);
@@ -279,7 +276,10 @@ export default function FitproCornerNavDemo(props: PatternPreviewProps) {
                 }
               }}
             >
-              {open ? <X size={24} /> : <CornerUpRight size={24} />}
+              {open ? <X size={20} /> : <ActiveIcon size={20} />}
+              <span className="fpp-corner-trigger-label">
+                {open ? "Fechar" : activeLabel}
+              </span>
               <span className="fpp-corner-dot-hinge" />
             </button>
           </div>
@@ -342,19 +342,51 @@ export default function FitproCornerNavDemo(props: PatternPreviewProps) {
                 transition={{ duration: 0.24, delay: 0.04, ease: [0.2, 0.8, 0.2, 1] }}
                 onPointerDown={handlePointerDown}
               >
-                {dragTab && (
-                  <span className="fpp-scrub-indicator">
-                    Deslizando: {MAIN_TABS.find((t) => t.id === dragTab)?.label}
-                  </span>
-                )}
+                <LayoutGroup id="fpp-horizontal-tabs">
+                  {dragTab && (
+                    <span className="fpp-scrub-indicator">
+                      Deslizando: {MAIN_TABS.find((t) => t.id === dragTab)?.label}
+                    </span>
+                  )}
 
-                {MAIN_TABS.map((tab) => {
-                  const Icon = tab.icon;
-                  const isCurActive = (dragTab ?? activeTab) === tab.id;
-                  const isDragHover = dragTab === tab.id;
+                  {MAIN_TABS.map((tab) => {
+                    const Icon = tab.icon;
+                    const isCurActive = (dragTab ?? activeTab) === tab.id;
+                    const isDragHover = dragTab === tab.id;
 
-                  if (tab.isAction) {
-                    // Botão Start / Treino com destaque especial
+                    if (tab.isAction) {
+                      // Botão Start / Treino com destaque especial
+                      return (
+                        <button
+                          key={tab.id}
+                          ref={(el) => {
+                            if (el) tabRefs.current.set(tab.id, el);
+                            else tabRefs.current.delete(tab.id);
+                          }}
+                          type="button"
+                          className={`fpp-tab-button is-start${isCurActive ? " is-active" : ""}${
+                            isWorkoutActive ? " is-recording" : ""
+                          }${isDragHover ? " is-drag-target" : ""}`}
+                          onClick={() => handleTabClick(tab)}
+                          title={isWorkoutActive ? "Treino ativo • Clique para pausar/finalizar" : "Iniciar Treino"}
+                        >
+                          {isCurActive && (
+                            <motion.span
+                              layoutId="fpp-active-pill"
+                              className="fpp-tab-pill-bg"
+                              initial={false}
+                              transition={{ type: "spring", stiffness: 450, damping: 35 }}
+                              aria-hidden="true"
+                            />
+                          )}
+                          <div className="fpp-start-circle">
+                            {isWorkoutActive ? <Flame size={18} /> : <Play size={18} />}
+                          </div>
+                          <span>{isWorkoutActive ? "Gravando" : tab.label}</span>
+                        </button>
+                      );
+                    }
+
                     return (
                       <button
                         key={tab.id}
@@ -363,57 +395,48 @@ export default function FitproCornerNavDemo(props: PatternPreviewProps) {
                           else tabRefs.current.delete(tab.id);
                         }}
                         type="button"
-                        className={`fpp-tab-button is-start${isCurActive ? " is-active" : ""}${
-                          isWorkoutActive ? " is-recording" : ""
-                        }${isDragHover ? " is-drag-target" : ""}`}
+                        className={`fpp-tab-button${isCurActive ? " is-active" : ""}${
+                          isDragHover ? " is-drag-target" : ""
+                        }`}
                         onClick={() => handleTabClick(tab)}
-                        title={isWorkoutActive ? "Treino ativo • Clique para pausar/finalizar" : "Iniciar Treino"}
                       >
-                        <div className="fpp-start-circle">
-                          {isWorkoutActive ? <Flame size={18} /> : <Play size={18} />}
-                        </div>
-                        <span>{isWorkoutActive ? "Gravando" : tab.label}</span>
+                        {isCurActive && (
+                          <motion.span
+                            layoutId="fpp-active-pill"
+                            className="fpp-tab-pill-bg"
+                            initial={false}
+                            transition={{ type: "spring", stiffness: 450, damping: 35 }}
+                            aria-hidden="true"
+                          />
+                        )}
+                        <Icon size={19} />
+                        <span>{tab.label}</span>
                       </button>
                     );
-                  }
+                  })}
 
-                  return (
-                    <button
-                      key={tab.id}
-                      ref={(el) => {
-                        if (el) tabRefs.current.set(tab.id, el);
-                        else tabRefs.current.delete(tab.id);
-                      }}
-                      type="button"
-                      className={`fpp-tab-button${isCurActive ? " is-active" : ""}${
-                        isDragHover ? " is-drag-target" : ""
-                      }`}
-                      onClick={() => handleTabClick(tab)}
-                    >
-                      {isCurActive && (
-                        <motion.span
-                          layoutId="fpp-active-pill"
-                          className="fpp-tab-pill-bg"
-                          transition={{ type: "spring", stiffness: 420, damping: 32 }}
-                        />
-                      )}
-                      <Icon size={19} />
-                      <span>{tab.label}</span>
-                    </button>
-                  );
-                })}
+                  {/* Divisor e Botão de Modo Arrasto Livre / Fixo dentro do Menu */}
+                  <div className="fpp-arm-divider" />
+                  <button
+                    type="button"
+                    className={`fpp-tab-button fpp-drag-toggle-tab${isDraggableMode ? " is-drag-active" : ""}`}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setIsDraggableMode((prev) => !prev);
+                    }}
+                    title={
+                      isDraggableMode
+                        ? "Modo arrasto livre ativo • Clique para fixar"
+                        : "Modo fixo • Clique para ativar arrasto livre"
+                    }
+                    aria-label="Alternar modo arrasto livre"
+                  >
+                    <Move size={18} />
+                    {isDraggableMode && <span className="fpp-drag-active-dot" />}
+                  </button>
+                </LayoutGroup>
               </motion.div>
-            ) : (
-              <motion.div
-                className="fpp-current-badge"
-                initial={{ opacity: 0, x: -10 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0 }}
-              >
-                <span className="fpp-current-badge-dot" />
-                <span>{activeLabel}</span>
-              </motion.div>
-            )}
+            ) : null}
           </AnimatePresence>
         </div>
       </motion.div>
@@ -446,10 +469,10 @@ export default function FitproCornerNavDemo(props: PatternPreviewProps) {
             title="Permite mover o menu livremente pelo canvas"
           >
             <Move size={14} style={{ display: "inline", verticalAlign: "middle", marginRight: 4 }} />
-            {isDraggableMode ? "Arrasto Livre Ativo" : "Ativar Arrasto Livre"}
+            {isDraggableMode ? "✓ Modo Livre Ativo" : "Alternar Modo Livre / Fixo"}
           </button>
           <span style={{ fontSize: 11, color: "rgba(235, 235, 245, 0.4)" }}>
-            Dica: arraste o mouse pela barra para seleção rápida (scrub)
+            Dica: arraste o mouse pela barra para seleção (scrub) ou use Livre para reposicionar
           </span>
         </div>
       </div>

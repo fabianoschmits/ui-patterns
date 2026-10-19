@@ -242,17 +242,20 @@
 /* Main Corner Open/Close Trigger */
 .fpp-corner-trigger {
   position: relative;
-  width: 56px;
-  height: 56px;
+  min-width: 64px;
+  height: 60px;
+  padding: 6px 8px;
   border-radius: 18px;
   background: linear-gradient(135deg, #0F8B8D 0%, #09595a 100%);
   border: 1px solid rgba(64, 200, 224, 0.4);
   color: #ffffff;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
+  gap: 3px;
   cursor: pointer;
-  transition: transform 0.2s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.2s ease;
+  transition: transform 0.2s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.2s ease, border-color 0.2s ease;
   box-shadow: 0 6px 20px rgba(15, 139, 141, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.3);
 }
 
@@ -265,9 +268,22 @@
   transform: scale(0.95);
 }
 
+.fpp-corner-trigger-label {
+  font-size: 10px;
+  font-weight: 600;
+  line-height: 1.1;
+  text-align: center;
+  max-width: 58px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  letter-spacing: -0.01em;
+  color: rgba(255, 255, 255, 0.95);
+}
+
 .fpp-corner-dot-hinge {
   position: absolute;
-  bottom: 6px;
+  bottom: 5px;
   left: 6px;
   width: 4px;
   height: 4px;
@@ -291,6 +307,61 @@
   box-shadow: 0 12px 36px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.1);
   transform-origin: left center;
   touch-action: none;
+}
+
+.fpp-arm-divider {
+  width: 1px;
+  height: 26px;
+  background: rgba(255, 255, 255, 0.12);
+  margin: 0 2px;
+  flex-shrink: 0;
+}
+
+.fpp-drag-toggle-tab {
+  min-width: 44px !important;
+  width: 44px;
+  height: 50px;
+  padding: 0 !important;
+  border: 1px dashed rgba(255, 255, 255, 0.18) !important;
+  background: rgba(255, 255, 255, 0.03) !important;
+  border-radius: 12px !important;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.fpp-drag-toggle-tab:hover {
+  background: rgba(255, 255, 255, 0.08) !important;
+  border-color: rgba(64, 200, 224, 0.4) !important;
+  color: #ffffff;
+}
+
+.fpp-drag-toggle-tab.is-drag-active {
+  background: rgba(15, 139, 141, 0.28) !important;
+  border: 1px solid #40c8e0 !important;
+  color: #40c8e0 !important;
+  box-shadow: 0 0 14px rgba(64, 200, 224, 0.35);
+}
+
+.fpp-drag-active-dot {
+  position: absolute;
+  top: 5px;
+  right: 6px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #40c8e0;
+  box-shadow: 0 0 6px #40c8e0;
+}
+
+/* Draggable State for the Dock */
+.fpp-corner-dock[data-draggable="true"] {
+  cursor: grab;
+}
+
+.fpp-corner-dock[data-draggable="true"]:active {
+  cursor: grabbing;
 }
 
 /* Drag & Scrub Info Pill */
