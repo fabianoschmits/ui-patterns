@@ -1,0 +1,30 @@
+.magnetic-tiles { position: relative; isolation: isolate; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 10px; width: min(100%, 444px); padding: 20px 12px 9px; perspective: 700px; }
+.magnetic-tiles-plinth { position: absolute; z-index: -2; left: 4px; right: 4px; top: 62px; height: 17px; border: 1px solid var(--cm-line); border-radius: 5px; background: color-mix(in srgb, var(--cm-surface) 94%, var(--cm-ink)); box-shadow: 0 4px 0 color-mix(in srgb, var(--cm-ink) 12%, transparent), 0 17px 18px -15px color-mix(in srgb, var(--cm-ink) 40%, transparent); }
+.magnetic-tiles-item { position: relative; display: flex; min-width: 0; flex-direction: column; align-items: center; justify-content: flex-start; gap: 15px; padding: 0 0 12px; border: 0; border-radius: 8px; background: transparent; color: var(--cm-muted); cursor: pointer; -webkit-tap-highlight-color: transparent; }
+.magnetic-tiles-tile { position: relative; display: grid; flex: 0 0 auto; width: 56px; height: 56px; place-items: center; padding-bottom: 4px; border: 1px solid color-mix(in srgb, var(--cm-line) 80%, var(--cm-ink)); border-bottom-width: 5px; border-radius: 11px; background: linear-gradient(150deg, color-mix(in srgb, var(--cm-surface) 86%, white), var(--cm-surface) 66%); box-shadow: inset 0 1px 0 #ffffff70, 0 3px 3px color-mix(in srgb, var(--cm-ink) 8%, transparent), 0 11px 13px -9px color-mix(in srgb, var(--cm-ink) 30%, transparent); transform-style: preserve-3d; }
+.magnetic-tiles-rim { position: absolute; pointer-events: none; inset: 4px 4px 6px; border: 1px solid color-mix(in srgb, var(--cm-line) 56%, transparent); border-radius: 6px; }
+.magnetic-tiles-groove { position: absolute; bottom: 5px; display: flex; gap: 2px; }
+.magnetic-tiles-groove i { width: 7px; height: 1px; background: color-mix(in srgb, var(--cm-ink) 17%, transparent); }
+.magnetic-tiles-item[data-selected="true"] { color: var(--cm-ink); }
+.magnetic-tiles-item[data-selected="true"] .magnetic-tiles-tile { background: linear-gradient(145deg, color-mix(in srgb, var(--cm-accent) 18%, var(--cm-surface)), color-mix(in srgb, var(--cm-accent) 31%, var(--cm-surface))); border-color: color-mix(in srgb, var(--cm-accent) 48%, var(--cm-line)); border-bottom-color: color-mix(in srgb, var(--cm-accent) 68%, var(--cm-ink)); }
+.magnetic-tiles-item[data-selected="true"] .magnetic-tiles-rim { border-color: color-mix(in srgb, var(--cm-accent) 25%, transparent); }
+.magnetic-tiles-label { overflow: hidden; max-width: 100%; padding: 0 1px; font-size: 10px; font-weight: 550; line-height: 1.25; white-space: nowrap; text-overflow: ellipsis; }
+.magnetic-tiles-item[data-selected="true"] .magnetic-tiles-label { font-weight: 750; }
+.magnetic-tiles-status { position: absolute; bottom: 2px; display: flex; align-items: center; gap: 3px; height: 3px; }
+.magnetic-tiles-status i { width: 3px; height: 3px; border: 1px solid var(--cm-line); border-radius: 1px; }
+.magnetic-tiles-item[data-selected="true"] .magnetic-tiles-status i { width: 6px; background: var(--cm-accent); border-color: var(--cm-accent); }
+.magnetic-tiles-item:focus-visible { outline: 2px solid var(--cm-accent); outline-offset: 5px; }
+.magnetic-tiles[data-expanded="false"] { width: min(100%, 370px); gap: 8px; }
+.magnetic-tiles[data-expanded="false"] .magnetic-tiles-item { padding-bottom: 12px; }
+.magnetic-tiles[data-orientation="vertical"] { grid-template-columns: minmax(0, 1fr); width: min(100%, 218px); gap: 13px; padding: 12px 13px 12px 20px; }
+.magnetic-tiles[data-orientation="vertical"] .magnetic-tiles-item { flex-direction: row; justify-content: flex-start; gap: 19px; min-height: 56px; padding: 0 10px 0 0; }
+.magnetic-tiles[data-orientation="vertical"] .magnetic-tiles-label { font-size: 12px; }
+.magnetic-tiles[data-orientation="vertical"] .magnetic-tiles-status { bottom: auto; left: -13px; flex-direction: column; height: auto; }
+.magnetic-tiles[data-orientation="vertical"] .magnetic-tiles-status i { width: 3px; height: 3px; }
+.magnetic-tiles[data-orientation="vertical"] .magnetic-tiles-item[data-selected="true"] .magnetic-tiles-status i { width: 3px; height: 6px; }
+.magnetic-tiles[data-orientation="vertical"] .magnetic-tiles-plinth { inset: 4px auto 4px 5px; width: 27px; height: auto; }
+.magnetic-tiles[data-orientation="vertical"][data-expanded="false"] { width: 91px; padding-right: 15px; }
+.magnetic-tiles[data-orientation="vertical"][data-expanded="false"] .magnetic-tiles-item { padding: 0; }
+.magnetic-tiles[data-motion-off="true"] *, .magnetic-tiles[data-motion-off="true"] *::before, .magnetic-tiles[data-motion-off="true"] *::after { transition-duration: 0s !important; animation: none !important; }
+@media (max-width: 420px) { .magnetic-tiles { gap: 5px; padding-inline: 5px; } .magnetic-tiles-tile { width: 47px; height: 49px; border-radius: 9px; } .magnetic-tiles-plinth { top: 57px; } .magnetic-tiles-label { font-size: 9px; letter-spacing: -.025em; } .magnetic-tiles[data-orientation="vertical"] .magnetic-tiles-tile { width: 56px; height: 56px; } }
+@media (prefers-reduced-motion: reduce) { .magnetic-tiles *, .magnetic-tiles *::before, .magnetic-tiles *::after { transition-duration: 0s !important; animation: none !important; } }

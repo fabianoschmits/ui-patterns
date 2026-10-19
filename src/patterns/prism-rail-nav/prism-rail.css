@@ -1,0 +1,62 @@
+.prism-rail {
+  position: relative;
+  isolation: isolate;
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 5px;
+  width: min(100%, 472px);
+  padding: 11px 10px 13px;
+  border: 1px solid var(--cm-line);
+  border-radius: 13px;
+  background: linear-gradient(145deg, color-mix(in srgb, var(--cm-surface) 89%, white), var(--cm-surface));
+  box-shadow: inset 0 1px 0 #ffffff40, 0 2px 0 color-mix(in srgb, var(--cm-ink) 15%, transparent), 0 17px 30px -22px color-mix(in srgb, var(--cm-ink) 45%, transparent);
+}
+.prism-rail-channel { position: absolute; inset: auto 20px 5px; height: 2px; border-radius: 2px; background: var(--cm-line); }
+.prism-rail-key {
+  position: relative;
+  display: flex;
+  min-width: 0;
+  min-height: 62px;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 10px 4px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--cm-muted);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.prism-rail-face {
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  border: 1px solid color-mix(in srgb, var(--cm-line) 75%, transparent);
+  border-bottom-width: 3px;
+  border-radius: 6px;
+  background: linear-gradient(155deg, color-mix(in srgb, var(--cm-surface) 94%, white), color-mix(in srgb, var(--cm-surface) 94%, var(--cm-ink)));
+  box-shadow: inset 0 1px 0 #ffffff40;
+}
+.prism-rail-key[data-selected="true"] { color: var(--cm-ink); }
+.prism-rail-key[data-selected="true"] .prism-rail-face { border-color: color-mix(in srgb, var(--cm-accent) 40%, var(--cm-line)); border-bottom-color: color-mix(in srgb, var(--cm-accent) 64%, var(--cm-ink)); background: linear-gradient(145deg, color-mix(in srgb, var(--cm-accent) 13%, var(--cm-surface)), color-mix(in srgb, var(--cm-accent) 23%, var(--cm-surface))); }
+.prism-rail-key:hover:not([data-selected="true"]) .prism-rail-face { background: var(--cm-soft); }
+.prism-rail-glyph { display: flex; flex: 0 0 auto; }
+.prism-rail-label { position: relative; overflow: hidden; max-width: 100%; font-size: 10px; font-weight: 550; line-height: 1.2; text-overflow: ellipsis; white-space: nowrap; }
+.prism-rail-key[data-selected="true"] .prism-rail-label { font-weight: 750; }
+.prism-rail-cursor { position: absolute; bottom: -9px; left: calc(50% - 9px); width: 18px; height: 3px; border-radius: 1px; background: var(--cm-accent); box-shadow: 0 1px 0 color-mix(in srgb, var(--cm-ink) 18%, transparent); }
+.prism-rail-key:focus-visible { outline: 2px solid var(--cm-accent); outline-offset: 4px; }
+.prism-rail[data-expanded="false"] { width: min(100%, 344px); }
+.prism-rail[data-expanded="false"] .prism-rail-key { min-height: 50px; }
+.prism-rail[data-orientation="vertical"] { width: min(100%, 224px); grid-template-columns: minmax(0, 1fr); gap: 7px; padding: 12px 13px 12px 18px; }
+.prism-rail[data-orientation="vertical"] .prism-rail-channel { inset: 24px auto 24px 7px; width: 2px; height: auto; }
+.prism-rail[data-orientation="vertical"] .prism-rail-key { min-height: 51px; flex-direction: row; justify-content: flex-start; gap: 13px; padding: 12px 14px; }
+.prism-rail[data-orientation="vertical"] .prism-rail-label { flex: 1; font-size: 12px; text-align: left; }
+.prism-rail[data-orientation="vertical"] .prism-rail-cursor { inset: calc(50% - 10px) auto auto -12px; width: 3px; height: 20px; }
+.prism-rail-chevron { display: flex; color: var(--cm-accent); }
+.prism-rail[data-orientation="vertical"][data-expanded="false"] { width: 80px; }
+.prism-rail[data-orientation="vertical"][data-expanded="false"] .prism-rail-key { justify-content: center; padding-inline: 5px; }
+.prism-rail[data-motion-off="true"] *, .prism-rail[data-motion-off="true"] *::before, .prism-rail[data-motion-off="true"] *::after { transition-duration: 0s !important; animation: none !important; }
+@media (max-width: 420px) { .prism-rail { gap: 4px; padding-inline: 7px; } .prism-rail-key { padding-inline: 2px; } .prism-rail-label { font-size: 9px; letter-spacing: -.02em; } }
+@media (prefers-reduced-motion: reduce) { .prism-rail *, .prism-rail *::before, .prism-rail *::after { transition-duration: 0s !important; animation: none !important; } }
