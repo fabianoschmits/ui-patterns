@@ -431,7 +431,7 @@ export default function FitproCornerNavDemo(props: PatternPreviewProps) {
                     }
                     aria-label="Alternar modo arrasto livre"
                   >
-                    <Move size={18} />
+                    <Move size={13} />
                     {isDraggableMode && <span className="fpp-drag-active-dot" />}
                   </button>
                 </LayoutGroup>
