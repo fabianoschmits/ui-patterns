@@ -161,52 +161,6 @@ export default function FitproCornerNavDemo(props: PatternPreviewProps) {
 
   return (
     <div className="fpp-corner-wrap" ref={containerRef}>
-      {/* Cenário de Fundo Simulado do Fit Pro Player */}
-      <div className="fpp-screen-backdrop">
-        <div className="fpp-screen-header">
-          <div className="fpp-user-badge">
-            <div className="fpp-avatar-circle">FS</div>
-            <div className="fpp-user-text">
-              <h3>Fabiano Schmits</h3>
-              <p>Plano Hipertrofia A • Semana 4</p>
-            </div>
-          </div>
-
-          {isWorkoutActive && (
-            <motion.div
-              className="fpp-active-workout-pill"
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-            >
-              <span className="fpp-workout-dot" />
-              <span>TREINO EM ANDAMENTO (00:42)</span>
-            </motion.div>
-          )}
-        </div>
-
-        {/* Card de Treino do Dia */}
-        <div className="fpp-mock-card">
-          <div className="fpp-mock-card-title">
-            <span>Treino do Dia: Peitoral & Tríceps</span>
-            <span style={{ color: "#40c8e0" }}>5 exercícios</span>
-          </div>
-          <div className="fpp-mock-stats">
-            <div className="fpp-mock-stat-item">
-              <span className="fpp-mock-stat-num">52 min</span>
-              <span className="fpp-mock-stat-lbl">Tempo estimado</span>
-            </div>
-            <div className="fpp-mock-stat-item">
-              <span className="fpp-mock-stat-num">16</span>
-              <span className="fpp-mock-stat-lbl">Séries totais</span>
-            </div>
-            <div className="fpp-mock-stat-item">
-              <span className="fpp-mock-stat-num">480 kcal</span>
-              <span className="fpp-mock-stat-lbl">Gasto calórico</span>
-            </div>
-          </div>
-        </div>
-      </div>
-
       {/* Dock de Canto Draggable / Articulado */}
       <motion.div
         className="fpp-corner-dock"
@@ -256,7 +210,7 @@ export default function FitproCornerNavDemo(props: PatternPreviewProps) {
                   exit={{ opacity: 0, y: 10, scale: 0.8 }}
                   transition={{ duration: 0.2, ease: [0.2, 0.8, 0.2, 1] }}
                 >
-                  <ChevronUp size={22} className="fpp-up-trigger-icon" />
+                  <ChevronUp size={12} strokeWidth={2.2} className="fpp-up-trigger-icon" />
                 </motion.button>
               )}
             </AnimatePresence>
@@ -431,7 +385,7 @@ export default function FitproCornerNavDemo(props: PatternPreviewProps) {
                     }
                     aria-label="Alternar modo arrasto livre"
                   >
-                    <Move size={13} />
+                    <Move size={10} strokeWidth={2.4} />
                     {isDraggableMode && <span className="fpp-drag-active-dot" />}
                   </button>
                 </LayoutGroup>
@@ -440,42 +394,6 @@ export default function FitproCornerNavDemo(props: PatternPreviewProps) {
           </AnimatePresence>
         </div>
       </motion.div>
-
-      {/* Painel de Controles da Demonstração */}
-      <div className="fpp-demo-controls">
-        <div className="fpp-control-group">
-          <span style={{ fontSize: 12, color: "rgba(235, 235, 245, 0.6)" }}>Opções:</span>
-          <button
-            type="button"
-            className={`fpp-control-btn${isWorkoutActive ? " is-active" : ""}`}
-            onClick={() => setIsWorkoutActive((prev) => !prev)}
-          >
-            {isWorkoutActive ? "✓ Treino Ativo" : "Simular Treino Ativo"}
-          </button>
-          <button
-            type="button"
-            className={`fpp-control-btn${verticalOpen ? " is-active" : ""}`}
-            onClick={() => setVerticalOpen((prev) => !prev)}
-          >
-            {verticalOpen ? "Ocultar 'Mais'" : "Abrir 'Mais' (Seta ⬆)"}
-          </button>
-        </div>
-
-        <div className="fpp-control-group">
-          <button
-            type="button"
-            className={`fpp-control-btn${isDraggableMode ? " is-active" : ""}`}
-            onClick={() => setIsDraggableMode((prev) => !prev)}
-            title="Permite mover o menu livremente pelo canvas"
-          >
-            <Move size={14} style={{ display: "inline", verticalAlign: "middle", marginRight: 4 }} />
-            {isDraggableMode ? "✓ Modo Livre Ativo" : "Alternar Modo Livre / Fixo"}
-          </button>
-          <span style={{ fontSize: 11, color: "rgba(235, 235, 245, 0.4)" }}>
-            Dica: arraste o mouse pela barra para seleção (scrub) ou use Livre para reposicionar
-          </span>
-        </div>
-      </div>
     </div>
   );
 }
