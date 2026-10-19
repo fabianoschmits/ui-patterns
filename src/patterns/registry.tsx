@@ -23,6 +23,7 @@ export const patternPreviews: Record<string, ComponentType<PatternPreviewProps>>
   "orbit-ring-nav": dynamic(() => import("./orbit-ring-nav/component"), { loading }),
   "fan-action-nav": dynamic(() => import("./fan-action-nav/component"), { loading }),
   "corner-hinge-nav": dynamic(() => import("./corner-hinge-nav/component"), { loading }),
+  "fitpro-corner-nav": dynamic(() => import("./fitpro-corner-nav/component"), { loading }),
   "stacked-deck-nav": dynamic(() => import("./stacked-deck-nav/component"), { loading }),
   "auth-portal": dynamic(() => import("./utilities/auth-portal/component"), { loading }),
   "smart-search": dynamic(() => import("./utilities/smart-search/component"), { loading }),

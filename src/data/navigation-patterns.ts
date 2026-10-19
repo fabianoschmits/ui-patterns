@@ -11,6 +11,7 @@ const definitions: NavigationInput[] = [
   { slug: "orbit-ring-nav", name: "Anel orbital", eyebrow: "Destinos ao redor", description: "Cinco destinos em um anel compacto, com a seleção no centro e marcação radial.", accent: "blue", tags: ["radial", "ring", "navigation", "motion"] },
   { slug: "fan-action-nav", name: "Leque de ações", eyebrow: "Abrir em um gesto", description: "Um gatilho desdobra os destinos em leque com abertura sequenciada e retorno suave.", accent: "cream", tags: ["fan", "expand", "navigation", "motion"] },
   { slug: "corner-hinge-nav", name: "Menu de canto", eyebrow: "Duas direções", description: "Braços articulados abrem uma navegação de canto com destinos sempre ao alcance.", accent: "lavender", tags: ["corner", "hinge", "compact", "motion"] },
+  { slug: "fitpro-corner-nav", name: "Menu de Canto Fit Pro Player", eyebrow: "Articulação dupla & Mais", description: "Menu de canto escamoteável com design Fit Pro Player, barra horizontal de drag & scrub e haste vertical articulada acionada por seta para opções adicionais.", accent: "mint", tags: ["corner", "hinge", "fitproplayer", "drag", "scrub", "motion"] },
   { slug: "stacked-deck-nav", name: "Pilha retrátil", eyebrow: "Camadas de atalhos", description: "Uma pilha compacta se abre em uma lista de destinos e recolhe após a escolha.", accent: "peach", tags: ["stack", "dropdown", "compact", "motion"] },
 ];
 
